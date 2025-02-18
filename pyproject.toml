@@ -1,0 +1,79 @@
+[project]
+name = "django-pyhub-rag"
+version = "0.1.1"
+description = "Django app library for RAG integration"
+authors = [{ name = "Chinseok Lee", email = "me@pyhub.kr" }]
+requires-python = ">=3.10"
+readme = "README.md"
+license = { text = "MIT" }
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Framework :: Django",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+dependencies = [
+    "django>=4.0.0",
+    "django-lifecycle",
+    "pgvector",
+    "tiktoken",
+    "openai",
+    "psycopg2-binary",
+]
+
+[project.optional-dependencies]
+dev = ["pre_commit", "black", "isort", "ruff", "djlint"]
+test = ["pytest", "pytest-django", "pytest-testdox", "pytest-asyncio"]
+build = ["setuptools", "wheel", "build", "twine"]
+
+[project.urls]
+Homepage = "https://github.com/pyhub-kr/django-pyhub-rag"
+Documentation = "https://ai.pyhub.kr"
+Repository = "https://github.com/pyhub-kr/django-pyhub-rag"
+Issues = "https://github.com/pyhub-kr/django-pyhub-rag/issues"
+# Changelog = "https://github.com/pyhub-kr/django-pyhub-rag/blob/main/CHANGELOG.md"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/pyhub"]
+exclude = ["**/__pycache__", "**/.DS_Store"]
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+python_files = ["test_*.py", "*_test.py"]
+addopts = "-ra --testdox --disable-warnings"
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+#env = ["DATABASE_URL=sqlite://:memory:"]
+
+[tool.black]
+line-length = 120
+target-version = ["py310", "py311", "py312"]
+include = '\.pyi?$'
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+
+[tool.ruff]
+line-length = 120
+target-version = "py310"
+
+# https://www.djlint.com/docs/configuration/
+[tool.djlint]
+profile = "django"
+indent = 2
