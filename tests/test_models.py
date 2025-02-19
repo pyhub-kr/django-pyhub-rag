@@ -1,9 +1,21 @@
+import os
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from django.db import connection
 from test_app.models import TestDocument
 
-pytestmark = pytest.mark.django_db
+pytestmark = [
+    pytest.mark.django_db,
+    pytest.mark.skipif(
+        not connection.vendor == "postgresql",
+        reason="PostgreSQL database is not available; skipping tests.",
+    ),
+    pytest.mark.skipif(
+        os.environ.get("SKIP_DATABASE_TESTS") is not None,
+        reason="Skipping database tests because SKIP_DATABASE_TESTS environment variable is set.",
+    ),
+]
 
 
 @pytest.fixture

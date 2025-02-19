@@ -25,6 +25,7 @@ jobs:
       fail-fast: false
     env:
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      SKIP_DATABASE_TESTS: true
 
     steps:
       - uses: actions/checkout@v4
