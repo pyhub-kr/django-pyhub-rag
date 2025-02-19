@@ -1,3 +1,6 @@
+import os
+from typing import Any
+
 from django.conf import settings
 
 DEFAULTS = {
@@ -10,17 +13,22 @@ DEFAULTS = {
 
 
 class RagSettings:
-    def __init__(self, defaults):
+    def __init__(self, defaults) -> None:
         self.defaults = defaults
 
-    def __getattr__(self, attr):
-        value = getattr(settings, attr, None)
+    def __getattr__(self, attr_name: str) -> Any:
+        value = getattr(settings, attr_name, None)
+
+        if value is None and attr_name == "RAG_OPENAI_API_KEY":
+            value = getattr(settings, "OPENAI_API_KEY", None)
+            if value is None:
+                value = os.environ.get("OPENAI_API_KEY", None)
+
         if value is None:
             try:
-                value = self.defaults[attr]
+                value = self.defaults[attr_name]
             except KeyError:
-                raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{attr}'")
-
+                raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{attr_name}'")
         return value
 
 
