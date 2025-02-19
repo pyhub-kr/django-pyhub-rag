@@ -6,7 +6,9 @@ from pyhub.rag.utils import make_groups_by_length
 
 def test_make_groups_by_length():
     encoder = tiktoken.encoding_for_model("text-embedding-3-small")
-    length_func = lambda s: len(encoder.encode(s))
+
+    def length_func(s: str) -> int:
+        return len(encoder.encode(s))
 
     texts = ["one", "two", "three", "four"]
     groups = list(make_groups_by_length(text_list=texts, group_max_length=4, length_func=length_func))
