@@ -317,6 +317,15 @@ wheels = [
 ]
 
 [[package]]
+name = "django-environ"
+version = "0.12.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/d6/04/65d2521842c42f4716225f20d8443a50804920606aec018188bbee30a6b0/django_environ-0.12.0.tar.gz", hash = "sha256:227dc891453dd5bde769c3449cf4a74b6f2ee8f7ab2361c93a07068f4179041a", size = 56804 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/83/b3/0a3bec4ecbfee960f39b1842c2f91e4754251e0a6ed443db9fe3f666ba8f/django_environ-0.12.0-py2.py3-none-any.whl", hash = "sha256:92fb346a158abda07ffe6eb23135ce92843af06ecf8753f43adf9d2366dcc0ca", size = 19957 },
+]
+
+[[package]]
 name = "django-lifecycle"
 version = "1.2.4"
 source = { registry = "https://pypi.org/simple" }
@@ -334,6 +343,7 @@ version = "0.1.1"
 source = { editable = "." }
 dependencies = [
     { name = "django" },
+    { name = "django-environ" },
     { name = "django-lifecycle" },
     { name = "openai" },
     { name = "pgvector" },
@@ -367,6 +377,7 @@ requires-dist = [
     { name = "black", marker = "extra == 'dev'" },
     { name = "build", marker = "extra == 'build'" },
     { name = "django", specifier = ">=4.0.0" },
+    { name = "django-environ" },
     { name = "django-lifecycle" },
     { name = "djlint", marker = "extra == 'dev'" },
     { name = "isort", marker = "extra == 'dev'" },

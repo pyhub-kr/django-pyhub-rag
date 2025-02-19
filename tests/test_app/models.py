@@ -1,9 +1,9 @@
 from pgvector.django import HnswIndex
 
-from pyhub.rag.models import Document
+from pyhub.rag.models import AbstractDocument
 
 
-class TestDocument(Document):
+class TestDocument(AbstractDocument):
     class Meta:
         app_label = "test_app"
         indexes = [

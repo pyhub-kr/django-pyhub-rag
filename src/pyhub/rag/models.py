@@ -13,7 +13,6 @@ from django_lifecycle import BEFORE_CREATE, BEFORE_UPDATE, LifecycleModelMixin, 
 from pgvector.django import CosineDistance, HnswIndex, IvfflatIndex, L2Distance
 
 from pyhub.rag.fields import VectorField
-from pyhub.rag.settings import rag_settings
 from pyhub.rag.utils import make_groups_by_length
 from pyhub.rag.validators import MaxTokenValidator
 
@@ -30,7 +29,7 @@ class DocumentQuerySet(models.QuerySet):
         await self._assign_embeddings(objs, max_retry, interval)
         return await super().abulk_create(objs, *args, **kwargs)
 
-    async def search(self, query: str, k: int = 4) -> List["Document"]:
+    async def search(self, query: str, k: int = 4) -> List["AbstractDocument"]:
         query_embedding: List[float] = await self.model.aembed(query)
 
         qs = None
@@ -86,13 +85,10 @@ class DocumentQuerySet(models.QuerySet):
         return repr(list(self))
 
 
-class Document(LifecycleModelMixin, models.Model):
+class AbstractDocument(LifecycleModelMixin, models.Model):
     page_content = models.TextField()
-    metadata = models.JSONField(default=dict)
-    embedding = VectorField(
-        dimensions=rag_settings.RAG_EMBEDDING_DIMENSIONS,
-        editable=False,
-    )
+    metadata = models.JSONField(default=dict, blank=True)
+    embedding = VectorField(editable=False)
 
     objects = DocumentQuerySet.as_manager()
 
@@ -202,4 +198,4 @@ class Document(LifecycleModelMixin, models.Model):
         abstract = True
 
 
-__all__ = ["Document"]
+__all__ = ["AbstractDocument"]

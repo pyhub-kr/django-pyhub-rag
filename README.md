@@ -12,14 +12,14 @@ PostgreSQL 데이터베이스의 `pgvector` 확장을 활용하여 유사도 기
 
 ## 주요 기능
 
-`Document` 모델은 텍스트 문서와 해당 문서의 임베딩 벡터를 저장하고 관리하는 추상 기본 모델입니다.
+`AbstractDocument` 모델은 텍스트 문서와 해당 문서의 임베딩 벡터를 저장하고 관리하는 추상 기본 모델입니다.
 이 모델을 상속받아 사용자 정의 문서 모델을 쉽게 구현할 수 있습니다.
 
 ```python
-from pyhub.rag import Document
+from pyhub.rag.models import AbstractDocument
 from pgvector.django import HnswIndex
 
-class TaxlawDocument(Document):
+class TaxlawDocument(AbstractDocument):
     class Meta:
         indexes = [
             HnswIndex(
@@ -32,7 +32,7 @@ class TaxlawDocument(Document):
         ]
 ```
 
-`Document` 모델의 `objects` 모델 매니저로서 `DocumentQuerySet`이 지정되어있고,
+`AbstractDocument` 모델의 `objects` 모델 매니저로서 `DocumentQuerySet`이 지정되어있고,
 유사 문서 검색을 위한 `search` 메서드를 지원합니다.
 
 ```python

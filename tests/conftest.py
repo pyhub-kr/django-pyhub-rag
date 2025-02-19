@@ -1,17 +1,17 @@
 from django.conf import settings
+from environ import Env
 
 
 def pytest_configure():
+
+    env = Env()
+
     settings.configure(
         DATABASES={
-            "default": {
-                "ENGINE": "django.db.backends.postgresql",
-                "NAME": "django_db",
-                "USER": "djangouser",
-                "PASSWORD": "djangopw",
-                "HOST": "localhost",
-                "PORT": "45432",
-            }
+            "default": env.db(
+                "DATABASE_URL",
+                default="postgresql://djangouser:djangopw@localhost:5432/django_db",
+            ),
         },
         INSTALLED_APPS=[
             "django.contrib.contenttypes",
