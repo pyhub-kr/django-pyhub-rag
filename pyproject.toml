@@ -26,13 +26,12 @@ dependencies = [
     "django-lifecycle",
     "tiktoken",
     "openai",
-    "psycopg2-binary",
 ]
 
 [project.optional-dependencies]
 dev = ["pre_commit", "black", "isort", "ruff", "djlint"]
 build = ["setuptools", "wheel", "build", "twine"]
-postgres = ["pgvector"]
+postgres = ["psycopg2-binary", "pgvector"]
 sqlite = ["sqlite-vec", "numpy"]
 test = ["pytest", "pytest-django", "pytest-testdox", "pytest-asyncio"]
 
