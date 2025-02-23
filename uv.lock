@@ -340,7 +340,7 @@ wheels = [
 
 [[package]]
 name = "django-pyhub-rag"
-version = "0.1.2"
+version = "0.2.0"
 source = { editable = "." }
 dependencies = [
     { name = "django" },
@@ -404,7 +404,7 @@ requires-dist = [
     { name = "twine", marker = "extra == 'build'" },
     { name = "wheel", marker = "extra == 'build'" },
 ]
-provides-extras = ["dev", "test", "build", "postgres", "sqlite"]
+provides-extras = ["dev", "build", "postgres", "sqlite", "test"]
 
 [[package]]
 name = "djlint"

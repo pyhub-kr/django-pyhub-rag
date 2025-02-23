@@ -10,5 +10,4 @@ class PyhubRagConfig(AppConfig):
     name = "pyhub.rag"
 
     def ready(self):
-        logger.debug("pyhub.rag app ready")
         import pyhub.rag.signals  # noqa

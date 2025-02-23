@@ -61,8 +61,8 @@ class SQLiteDocument(AbstractDocument):
             add_error(
                 "SQLiteDocument 모델은 pyhub.db.backends.sqlite3 데이터베이스 엔진에서 지원합니다.",
                 hint=(
-                    f"settings.DATABASES sqlite3 설정에 pyhub.db.backends.sqlite3 데이터베이스 엔진을 적용해주세요.\n"
-                    f"\n"
+                    "settings.DATABASES sqlite3 설정에 pyhub.db.backends.sqlite3 데이터베이스 엔진을 적용해주세요.\n"
+                    "\n"
                     "\t\tDATABASES = {\n"
                     '\t\t    "default": {\n'
                     '\t\t        "ENGINE": "pyhub.db.backends.sqlite3",  # <-- \n'

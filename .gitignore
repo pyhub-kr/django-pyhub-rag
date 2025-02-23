@@ -6,6 +6,7 @@ __pycache__
 .DS_Store
 .venv
 .tool-versions
+.env*
 
 /src/mysite
 /src/manage.py

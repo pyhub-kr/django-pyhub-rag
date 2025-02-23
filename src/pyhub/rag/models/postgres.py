@@ -6,8 +6,8 @@ from django.core import checks
 from django.core.exceptions import ImproperlyConfigured
 from pgvector.django import CosineDistance, HnswIndex, IvfflatIndex, L2Distance
 
-from .base import AbstractDocument, BaseDocumentQuerySet
 from ..fields.postgres import PGVectorField
+from .base import AbstractDocument, BaseDocumentQuerySet
 
 logger = logging.getLogger(__name__)
 

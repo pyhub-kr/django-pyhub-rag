@@ -11,6 +11,7 @@ from django_lifecycle import BEFORE_CREATE, BEFORE_UPDATE, LifecycleModelMixin, 
 from ..fields import BaseVectorField
 from ..utils import make_groups_by_length
 from ..validators import MaxTokenValidator
+from . import patch  # noqa
 
 logger = logging.getLogger(__name__)
 

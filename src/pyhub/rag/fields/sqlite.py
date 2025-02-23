@@ -140,16 +140,16 @@ class SQLiteVectorField(BaseVectorField):
             if self.dimensions > 2000:
                 add_error(
                     f"{self.dimensions} 차원은 {self.embedding_model} 모델로 임베딩할 수 없습니다.",
-                    hint=f"2000차원 이상은 text-embedding-3-large 모델로 변경해주세요.",
+                    hint="2000차원 이상은 text-embedding-3-large 모델로 변경해주세요.",
                 )
 
         db = sqlite3.connect(":memory:")
         if hasattr(db, "enable_load_extension") is False:
             add_error(
-                f"현재 파이썬 사용 중이신 파이썬 인터프리터의 sqlite3 모듈은 확장을 지원하지 않습니다.",
+                "현재 파이썬 사용 중이신 파이썬 인터프리터의 sqlite3 모듈은 확장을 지원하지 않습니다.",
                 hint=(
-                    f"sqlite3 확장이 지원되는 파이썬 인터프리터를 설치하신 후에 활용해주세요.\n"
-                    f"(참고: https://ai.pyhub.kr/setup/vector-stores/sqlite-vec, 문의: help@pyhub.kr)"
+                    "sqlite3 확장이 지원되는 파이썬 인터프리터를 설치하신 후에 활용해주세요.\n"
+                    "(참고: https://ai.pyhub.kr/setup/vector-stores/sqlite-vec, 문의: help@pyhub.kr)"
                 ),
             )
 
