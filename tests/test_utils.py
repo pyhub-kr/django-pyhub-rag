@@ -1,9 +1,10 @@
 import pytest
 import tiktoken
 
-from pyhub.rag.utils import make_groups_by_length
+from pyhub.rag.utils import aenumerate, make_groups_by_length
 
 
+@pytest.mark.it("make_groups_by_length 함수가 올바르게 텍스트를 그룹화하는지 테스트합니다.")
 def test_make_groups_by_length():
     encoder = tiktoken.encoding_for_model("text-embedding-3-small")
 
@@ -18,10 +19,9 @@ def test_make_groups_by_length():
     assert groups[1] == ["four"]
 
 
+@pytest.mark.it("aenumerate 함수가 올바르게 비동기 생성기에서 인덱스와 아이템 쌍을 생성하는지 테스트합니다.")
 @pytest.mark.asyncio
 async def test_aenumerate():
-    from pyhub.rag.utils import aenumerate
-
     async def async_gen():
         for idx in range(3):
             yield f"item{idx}"

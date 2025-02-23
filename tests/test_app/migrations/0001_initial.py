@@ -1,5 +1,13 @@
+import logging
+
 from django.db import migrations, models
-from pgvector.django import HnswIndex, VectorField
+from pgvector.django import HalfVectorField, HnswIndex
+
+from pyhub.db.migrations import CreateModelOnlyPostgres, CreateModelOnlySqlite
+from pyhub.rag.fields.postgres import PGVectorField
+from pyhub.rag.fields.sqlite import SQLiteVectorField
+
+logger = logging.getLogger(__name__)
 
 
 class Migration(migrations.Migration):
@@ -8,8 +16,8 @@ class Migration(migrations.Migration):
     dependencies = []
 
     operations = [
-        migrations.CreateModel(
-            name="TestDocument",
+        CreateModelOnlyPostgres(
+            name="TestPostgresDocument1536",
             fields=[
                 (
                     "id",
@@ -22,13 +30,12 @@ class Migration(migrations.Migration):
                 ),
                 ("page_content", models.TextField()),
                 ("metadata", models.JSONField()),
-                # embedding 필드는 차원을 1536로 설정한 VectorField를 사용합니다.
-                ("embedding", VectorField(dimensions=1536)),
+                ("embedding", PGVectorField(dimensions=1536)),
             ],
             options={
                 "indexes": [
                     HnswIndex(
-                        name="test_document_embedding_idx",
+                        name="test_document_embedding_idx_1536",
                         fields=["embedding"],
                         m=16,
                         ef_construction=64,
@@ -36,5 +43,67 @@ class Migration(migrations.Migration):
                     ),
                 ],
             },
+        ),
+        CreateModelOnlyPostgres(
+            name="TestPostgresDocument3072",
+            fields=[
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("page_content", models.TextField()),
+                ("metadata", models.JSONField()),
+                ("embedding", HalfVectorField(dimensions=1536 * 2)),
+            ],
+            options={
+                "indexes": [
+                    HnswIndex(
+                        name="test_document_embedding_idx_3072",
+                        fields=["embedding"],
+                        m=16,
+                        ef_construction=64,
+                        opclasses=["halfvec_cosine_ops"],
+                    ),
+                ],
+            },
+        ),
+        CreateModelOnlySqlite(
+            name="TestSQLiteDocument1536",
+            fields=[
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("page_content", models.TextField()),
+                ("metadata", models.JSONField()),
+                ("embedding", SQLiteVectorField(dimensions=1536)),
+            ],
+        ),
+        CreateModelOnlySqlite(
+            name="TestSQLiteDocument3072",
+            fields=[
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("page_content", models.TextField()),
+                ("metadata", models.JSONField()),
+                ("embedding", SQLiteVectorField(dimensions=1536 * 2)),
+            ],
         ),
     ]

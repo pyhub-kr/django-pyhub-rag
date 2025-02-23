@@ -4,3 +4,10 @@ __pycache__
 .vscode
 *.sqlite3
 .DS_Store
+.venv
+.tool-versions
+
+/src/mysite
+/src/manage.py
+/src/app
+

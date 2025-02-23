@@ -24,7 +24,6 @@ dependencies = [
     "django>=4.0.0",
     "django-environ",
     "django-lifecycle",
-    "pgvector",
     "tiktoken",
     "openai",
     "psycopg2-binary",
@@ -32,8 +31,10 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pre_commit", "black", "isort", "ruff", "djlint"]
-test = ["pytest", "pytest-django", "pytest-testdox", "pytest-asyncio"]
 build = ["setuptools", "wheel", "build", "twine"]
+postgres = ["pgvector"]
+sqlite = ["sqlite-vec", "numpy"]
+test = ["pytest", "pytest-django", "pytest-testdox", "pytest-asyncio"]
 
 [project.urls]
 Homepage = "https://github.com/pyhub-kr/django-pyhub-rag"
@@ -59,7 +60,6 @@ python_files = ["test_*.py", "*_test.py"]
 addopts = "-ra --testdox --disable-warnings"
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
-#env = ["DATABASE_URL=sqlite://:memory:"]
 
 [tool.black]
 line-length = 120

@@ -1,3 +1,4 @@
+import sqlite3
 from logging import getLogger
 from typing import Any, AsyncIterator, Callable, Generator, Iterable, List, Tuple
 
@@ -32,3 +33,13 @@ def make_groups_by_length(
         msg = "Made group : length=%d, item size=%d"
         logger.debug(msg, group_length, len(batch))
         yield batch  # 마지막 배치 반환
+
+
+def load_sqlite_vec_extension(connection: sqlite3.Connection):
+    import sqlite_vec
+
+    connection.enable_load_extension(True)
+    sqlite_vec.load(connection)
+    connection.enable_load_extension(False)
+
+    logger.debug("sqlite-vec extension loaded")

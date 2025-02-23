@@ -1,8 +1,8 @@
 .PHONY: test clean build publish
 
 test:
-	uv pip install -e ".[test]"
-	uv run pytest tests/
+	uv pip install -e ".[test,postgres,sqlite]"
+	uv run pytest $(filter-out $@,$(MAKECMDGOALS))
 
 format:
 	uv pip install -e ".[dev]"

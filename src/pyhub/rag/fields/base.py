@@ -1,11 +1,14 @@
+import logging
+from typing import Optional
+
 from django.db import models
-from pgvector.django import HalfVectorField
-from pgvector.django import VectorField as OrigVectorField
 
 from pyhub.rag.settings import rag_settings
 
+logger = logging.getLogger(__name__)
 
-class VectorField(models.Field):
+
+class BaseVectorField(models.Field):
     def __init__(
         self,
         dimensions=None,
@@ -15,15 +18,13 @@ class VectorField(models.Field):
         embedding_max_tokens_limit=None,
         **kwargs,
     ):
+        super().__init__(**kwargs)
+        self.vector_field: Optional[models.Field] = None
         self.dimensions = dimensions or rag_settings.RAG_EMBEDDING_DIMENSIONS
         self.openai_api_key = openai_api_key or rag_settings.RAG_OPENAI_API_KEY
         self.openai_base_url = openai_base_url or rag_settings.RAG_OPENAI_BASE_URL
         self.embedding_model = embedding_model or rag_settings.RAG_EMBEDDING_MODEL
         self.embedding_max_tokens_limit = embedding_max_tokens_limit or rag_settings.RAG_EMBEDDING_MAX_TOKENS_LIMIT
-
-        self.vector_field_class = OrigVectorField if self.dimensions <= 2000 else HalfVectorField
-        self.vector_field = self.vector_field_class(dimensions=self.dimensions, **kwargs)
-        super().__init__(**kwargs)
 
     def deconstruct(self):
         name, path, args, kwargs = super().deconstruct()
@@ -39,13 +40,19 @@ class VectorField(models.Field):
         return name, path, args, kwargs
 
     def db_type(self, connection):
+        if self.vector_field is None:
+            raise NotImplementedError("BaseVectorField 클래스를 상속받은 필드를 사용해주세요.")
         return self.vector_field.db_type(connection)
 
     def get_prep_value(self, value):
+        if self.vector_field is None:
+            raise NotImplementedError("BaseVectorField 클래스를 상속받은 필드를 사용해주세요.")
         return self.vector_field.get_prep_value(value)
 
     def from_db_value(self, value, expression, connection):
+        if self.vector_field is None:
+            raise NotImplementedError("BaseVectorField 클래스를 상속받은 필드를 사용해주세요.")
         return self.vector_field.from_db_value(value, expression, connection)
 
 
-__all__ = ["VectorField"]
+__all__ = ["BaseVectorField"]
