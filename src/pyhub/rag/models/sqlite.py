@@ -11,7 +11,7 @@ from .base import AbstractDocument, BaseDocumentQuerySet
 logger = logging.getLogger(__name__)
 
 
-class SQLiteDocumentQuerySet(BaseDocumentQuerySet):
+class SQLiteVectorDocumentQuerySet(BaseDocumentQuerySet):
     async def search(self, query: str, k: int = 4) -> List["AbstractDocument"]:
         model_cls: Type[AbstractDocument] = self.model
 
@@ -38,13 +38,13 @@ class SQLiteDocumentQuerySet(BaseDocumentQuerySet):
         return await sync_to_async(list)(qs)  # noqa
 
 
-class SQLiteDocument(AbstractDocument):
+class SQLiteVectorDocument(AbstractDocument):
     """
     SQLite 환경에서 사용하는 Document 모델
     """
 
     embedding = SQLiteVectorField(editable=False)
-    objects = SQLiteDocumentQuerySet.as_manager()
+    objects = SQLiteVectorDocumentQuerySet.as_manager()
 
     @classmethod
     def check(cls, **kwargs):
@@ -59,7 +59,7 @@ class SQLiteDocument(AbstractDocument):
 
         if engine != "pyhub.db.backends.sqlite3":
             add_error(
-                "SQLiteDocument 모델은 pyhub.db.backends.sqlite3 데이터베이스 엔진에서 지원합니다.",
+                "SQLiteVectorDocument 모델은 pyhub.db.backends.sqlite3 데이터베이스 엔진에서 지원합니다.",
                 hint=(
                     "settings.DATABASES sqlite3 설정에 pyhub.db.backends.sqlite3 데이터베이스 엔진을 적용해주세요.\n"
                     "\n"
@@ -78,4 +78,4 @@ class SQLiteDocument(AbstractDocument):
         abstract = True
 
 
-__all__ = ["SQLiteDocument"]
+__all__ = ["SQLiteVectorDocument"]

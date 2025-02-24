@@ -29,10 +29,10 @@ def mock_embedding_response(dimensions: int, count: int = 1):
 @pytest.mark.parametrize(
     "document_model,database_vendor",
     [
-        (models.TestPostgresDocument1536, "postgresql"),
-        (models.TestPostgresDocument3072, "postgresql"),
-        (models.TestSQLiteDocument1536, "sqlite"),
-        (models.TestSQLiteDocument3072, "sqlite"),
+        (models.TestPGVectorDocument1536, "postgresql"),
+        (models.TestPGVectorDocument3072, "postgresql"),
+        (models.TestSQLiteVectorDocument1536, "sqlite"),
+        (models.TestSQLiteVectorDocument3072, "sqlite"),
     ],
 )
 class TestDocumentModels:

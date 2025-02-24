@@ -340,14 +340,13 @@ wheels = [
 
 [[package]]
 name = "django-pyhub-rag"
-version = "0.2.0"
+version = "0.3.2"
 source = { editable = "." }
 dependencies = [
     { name = "django" },
     { name = "django-environ" },
     { name = "django-lifecycle" },
     { name = "openai" },
-    { name = "psycopg2-binary" },
     { name = "tiktoken" },
 ]
 
@@ -367,6 +366,7 @@ dev = [
 ]
 postgres = [
     { name = "pgvector" },
+    { name = "psycopg2-binary" },
 ]
 sqlite = [
     { name = "numpy" },
@@ -392,7 +392,7 @@ requires-dist = [
     { name = "openai" },
     { name = "pgvector", marker = "extra == 'postgres'" },
     { name = "pre-commit", marker = "extra == 'dev'" },
-    { name = "psycopg2-binary" },
+    { name = "psycopg2-binary", marker = "extra == 'postgres'" },
     { name = "pytest", marker = "extra == 'test'" },
     { name = "pytest-asyncio", marker = "extra == 'test'" },
     { name = "pytest-django", marker = "extra == 'test'" },

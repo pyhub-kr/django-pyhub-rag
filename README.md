@@ -14,14 +14,14 @@ PostgreSQL 데이터베이스의 `pgvector` 확장을 활용하여 유사도 기
 
 `sqlite-vec`와 `pgvector` 라이브러리를 지원합니다.
 
-* `SQLiteDocument` 모델 상속을 통해 `sqlite-vec` 기반으로 텍스트 문서와 메타데이터, 임베딩 벡터를 저장하고, 유사 문서를 검색할 수 있습니다.
-* `PostgresDocument` 모델 상속을 통해 `pgvector` 기반으로 텍스트 문서와 메타데이터, 임베딩 벡터를 저장하고, 유사 문서를 검색할 수 있습니다.
+* `SQLiteVectorDocument` 모델 상속을 통해 `sqlite-vec` 기반으로 텍스트 문서와 메타데이터, 임베딩 벡터를 저장하고, 유사 문서를 검색할 수 있습니다.
+* `PGVectorDocument` 모델 상속을 통해 `pgvector` 기반으로 텍스트 문서와 메타데이터, 임베딩 벡터를 저장하고, 유사 문서를 검색할 수 있습니다.
 
 ```python
-from pyhub.rag.models.sqlite import SQLiteDocument
+from pyhub.rag.models.sqlite import SQLiteVectorDocument
 
 
-class TaxlawDocument(SQLiteDocument):
+class TaxlawDocument(SQLiteVectorDocument):
     pass
 ```
 

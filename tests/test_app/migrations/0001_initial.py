@@ -17,7 +17,7 @@ class Migration(migrations.Migration):
 
     operations = [
         CreateModelOnlyPostgres(
-            name="TestPostgresDocument1536",
+            name="TestPGVectorDocument1536",
             fields=[
                 (
                     "id",
@@ -45,7 +45,7 @@ class Migration(migrations.Migration):
             },
         ),
         CreateModelOnlyPostgres(
-            name="TestPostgresDocument3072",
+            name="TestPGVectorDocument3072",
             fields=[
                 (
                     "id",
@@ -73,7 +73,7 @@ class Migration(migrations.Migration):
             },
         ),
         CreateModelOnlySqlite(
-            name="TestSQLiteDocument1536",
+            name="TestSQLiteVectorDocument1536",
             fields=[
                 (
                     "id",
@@ -90,7 +90,7 @@ class Migration(migrations.Migration):
             ],
         ),
         CreateModelOnlySqlite(
-            name="TestSQLiteDocument3072",
+            name="TestSQLiteVectorDocument3072",
             fields=[
                 (
                     "id",

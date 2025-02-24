@@ -12,7 +12,7 @@ from .base import AbstractDocument, BaseDocumentQuerySet
 logger = logging.getLogger(__name__)
 
 
-class PostgresDocumentQuerySet(BaseDocumentQuerySet):
+class PGVectorDocumentQuerySet(BaseDocumentQuerySet):
     async def search(self, query: str, k: int = 4) -> List["AbstractDocument"]:
         model_cls: Type[AbstractDocument] = self.model
 
@@ -35,9 +35,9 @@ class PostgresDocumentQuerySet(BaseDocumentQuerySet):
         return await sync_to_async(list)(qs[:k])  # noqa
 
 
-class PostgresDocument(AbstractDocument):
+class PGVectorDocument(AbstractDocument):
     embedding = PGVectorField(editable=False)
-    objects = PostgresDocumentQuerySet.as_manager()
+    objects = PGVectorDocumentQuerySet.as_manager()
 
     @classmethod
     def make_hnsw_index(
@@ -153,4 +153,4 @@ class PostgresDocument(AbstractDocument):
         abstract = True
 
 
-__all__ = ["PostgresDocument"]
+__all__ = ["PGVectorDocument"]
