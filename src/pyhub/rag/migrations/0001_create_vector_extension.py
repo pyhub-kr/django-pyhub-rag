@@ -1,6 +1,5 @@
 import logging
 
-from django.contrib.postgres.operations import CreateExtension
 from django.db import migrations
 from django.db.backends.base.schema import BaseDatabaseSchemaEditor
 from django.db.migrations.operations.base import Operation
@@ -22,6 +21,8 @@ class VectorExtension(Operation):
         to_state: ProjectState,
     ) -> None:
         if schema_editor.connection.vendor == "postgresql":
+            from django.contrib.postgres.operations import CreateExtension
+
             extension = CreateExtension("vector")
             extension.database_forwards(app_label, schema_editor, from_state, to_state)
         else:
@@ -35,6 +36,8 @@ class VectorExtension(Operation):
         to_state: ProjectState,
     ) -> None:
         if schema_editor.connection.vendor == "postgresql":
+            from django.contrib.postgres.operations import CreateExtension
+
             extension = CreateExtension("vector")
             extension.database_backwards(app_label, schema_editor, from_state, to_state)
 
