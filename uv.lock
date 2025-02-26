@@ -340,7 +340,7 @@ wheels = [
 
 [[package]]
 name = "django-pyhub-rag"
-version = "0.5.2"
+version = "0.5.3"
 source = { editable = "." }
 dependencies = [
     { name = "django" },
