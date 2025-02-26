@@ -20,7 +20,7 @@ class SQLiteVectorDocumentQuerySet(BaseDocumentQuerySet):
 
         query_embedding: List[float] = await model_cls.aembed(query)
 
-        field_names = [field.name for field in model_cls._meta.local_fields]
+        field_names = [field.name for field in model_cls._meta.local_fields if field.name != field_name]
         fields_sql = ", ".join(field_names)
 
         # TODO: 다양한 거리 측정 방법 지원
