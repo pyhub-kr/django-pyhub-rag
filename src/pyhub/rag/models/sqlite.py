@@ -26,7 +26,8 @@ class SQLiteVectorDocumentQuerySet(BaseDocumentQuerySet):
         # KNN 쿼리
         raw_query = f"""
             SELECT
-              {fields_sql}
+              {fields_sql},
+              distance
             FROM {table_name}
             WHERE {field_name} MATCH vec_f32(?)
             ORDER BY distance
