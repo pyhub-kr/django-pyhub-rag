@@ -1,6 +1,9 @@
 import importlib
 import json
 import os
+import urllib.parse
+import urllib.request
+from urllib.error import URLError
 
 from django.apps import apps
 from django.core.management.base import BaseCommand, CommandError
@@ -12,21 +15,34 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument("model_path", type=str, help="Path to the document model (e.g., app.FairTradeLawDocument)")
-        parser.add_argument("jsonl_path", type=str, help="Path to the JSONL file")
+        parser.add_argument("jsonl_path", type=str, help="Path to the JSONL file or URL")
 
     def handle(self, *args, **options):
         model_path = options["model_path"]
         jsonl_path = options["jsonl_path"]
 
+        # Check if jsonl_path is a URL
+        is_url = jsonl_path.startswith(("http://", "https://"))
+
+        if is_url:
+            self.stdout.write(f"Downloading JSONL from URL: {jsonl_path}")
+            try:
+                # Create a temporary file for the downloaded content
+                temp_file = os.path.join(os.getcwd(), os.path.basename(urllib.parse.urlparse(jsonl_path).path))
+                urllib.request.urlretrieve(jsonl_path, temp_file)
+                jsonl_path = temp_file
+                self.stdout.write(self.style.SUCCESS(f"Downloaded to: {jsonl_path}"))
+            except URLError as e:
+                raise CommandError(f"Failed to download JSONL file: {e}")
         # Validate JSONL file exists
-        if not os.path.exists(jsonl_path):
+        elif not os.path.exists(jsonl_path):
             raise CommandError(f"JSONL file does not exist: {jsonl_path}")
 
         # Import the model
         try:
             app_label, model_name = model_path.split(".")
             model = apps.get_model(app_label, model_name)
-        except (ValueError, LookupError) as e:
+        except (ValueError, LookupError):
             try:
                 # Try to import as a full module path
                 module_path, model_name = model_path.rsplit(".", 1)
@@ -49,6 +65,14 @@ class Command(BaseCommand):
                         self.stderr.write(self.style.WARNING(f"Error processing line {line_number}: {e}, skipping"))
         except Exception as e:
             raise CommandError(f"Error reading JSONL file: {e}")
+        finally:
+            # Clean up temporary file if it was downloaded
+            if is_url and os.path.exists(jsonl_path):
+                try:
+                    os.remove(jsonl_path)
+                    self.stdout.write("Temporary download file removed")
+                except OSError as e:
+                    self.stderr.write(f"Could not remove temporary file: {e}")
 
         if not instances:
             self.stdout.write(self.style.WARNING("No valid data found in the JSONL file"))
