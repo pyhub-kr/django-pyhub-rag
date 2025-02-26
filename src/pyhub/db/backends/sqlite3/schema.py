@@ -30,8 +30,10 @@ class VirtualTableSchemaEditor(SQLiteSchemaEditor):
             # 컬럼명에서 쌍따옴표 제거 (예: "id" -> id)
             sql = sql.replace('"', "")
 
-            # float[] 필드에는 NOT NULL 제약조건이 없으므로 제거
-            sql = re.sub(r"(float\[\d*\]) NOT NULL", r"\1", sql)
+            # float[] 필드에는 NOT NULL 제약조건이 없으므로 제거하고
+            # 이후 조회 시에 MATCH 절에서 자동으로 cosine distance를 활용하기
+            # TODO: 다양한 distance 지원하기
+            sql = re.sub(r"(float\[\d*\]) NOT NULL", r"\1 distance_metric=cosine", sql)
 
             logger.debug("translated to sqlite3 vec0 virtual table")
 

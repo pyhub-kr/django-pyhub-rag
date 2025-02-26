@@ -23,12 +23,12 @@ class SQLiteVectorDocumentQuerySet(BaseDocumentQuerySet):
         field_names = [field.name for field in model_cls._meta.local_fields if field.name != field_name]
         fields_sql = ", ".join(field_names)
 
-        # TODO: 다양한 거리 측정 방법 지원
+        # KNN 쿼리
         raw_query = f"""
             SELECT
-              {fields_sql},
-              vec_distance_cosine({field_name}, ?) AS distance
+              {fields_sql}
             FROM {table_name}
+            WHERE {field_name} MATCH vec_f32(?)
             ORDER BY distance
             LIMIT {k};
         """
