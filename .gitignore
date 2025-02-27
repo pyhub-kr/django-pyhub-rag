@@ -11,4 +11,5 @@ __pycache__
 /src/mysite
 /src/manage.py
 /src/app
+/src/chat
 
