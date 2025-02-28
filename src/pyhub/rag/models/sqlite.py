@@ -4,7 +4,6 @@ from typing import List, Type
 from asgiref.sync import sync_to_async
 from django.conf import settings
 from django.core import checks
-from django.db.models import QuerySet
 from django.db.models.query import RawQuerySet
 
 from ..decorators import warn_if_async
@@ -41,10 +40,10 @@ class SQLiteVectorDocumentQuerySet(BaseDocumentQuerySet):
         return qs
 
     @warn_if_async
-    def search(self, query: str, k: int = 4) -> QuerySet["AbstractDocument"]:
+    def search(self, query: str, k: int = 4) -> List["AbstractDocument"]:
         query_embedding = self.model.embed(query)
         qs = self._prepare_search_query(query_embedding, k)
-        return qs
+        return list(qs)
 
     async def asearch(self, query: str, k: int = 4) -> List["AbstractDocument"]:
         query_embedding = await self.model.aembed(query)
