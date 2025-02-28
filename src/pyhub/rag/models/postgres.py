@@ -41,7 +41,7 @@ class PGVectorDocumentQuerySet(BaseDocumentQuerySet):
         raise ImproperlyConfigured(f"{self.model.__name__} 모델에 embedding 필드에 대한 인덱스를 추가해주세요.")
 
     @warn_if_async
-    def search(self, query: str, k: int = 4) -> QuerySet["AbstractDocument"]:
+    def similarity_search(self, query: str, k: int = 4) -> QuerySet["AbstractDocument"]:
         """동기 검색 메서드"""
         model_cls: Type[AbstractDocument] = self.model
         query_embedding = model_cls.embed(query)
@@ -49,7 +49,7 @@ class PGVectorDocumentQuerySet(BaseDocumentQuerySet):
         qs = self._prepare_search_query(query_embedding)
         return qs[:k]
 
-    async def asearch(self, query: str, k: int = 4) -> List["AbstractDocument"]:
+    async def asimilarity_search(self, query: str, k: int = 4) -> List["AbstractDocument"]:
         """비동기 검색 메서드"""
         model_cls: Type[AbstractDocument] = self.model
         query_embedding = await model_cls.aembed(query)

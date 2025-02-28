@@ -53,10 +53,10 @@ class BaseDocumentQuerySet(models.QuerySet):
             for obj, embedding in zip(non_embedding_objs, embeddings):
                 obj.embedding = embedding
 
-    def search(self, query: str, k: int = 4) -> List["AbstractDocument"]:
+    def similarity_search(self, query: str, k: int = 4) -> List["AbstractDocument"]:
         raise NotImplementedError
 
-    async def asearch(self, query: str, k: int = 4) -> List["AbstractDocument"]:
+    async def asimilarity_search(self, query: str, k: int = 4) -> List["AbstractDocument"]:
         raise NotImplementedError
 
     def __repr__(self):
