@@ -4,8 +4,10 @@ from typing import List, Literal, Type
 from asgiref.sync import sync_to_async
 from django.core import checks
 from django.core.exceptions import ImproperlyConfigured
+from django.db.models import QuerySet
 from pgvector.django import CosineDistance, HnswIndex, IvfflatIndex, L2Distance
 
+from ..decorators import warn_if_async
 from ..fields.postgres import PGVectorField
 from .base import AbstractDocument, BaseDocumentQuerySet
 
@@ -13,28 +15,46 @@ logger = logging.getLogger(__name__)
 
 
 class PGVectorDocumentQuerySet(BaseDocumentQuerySet):
-    async def search(self, query: str, k: int = 4) -> List["AbstractDocument"]:
+    def _prepare_search_query(self, query_embedding: List[float]) -> QuerySet["AbstractDocument"]:
+        """검색 쿼리를 준비하는 내부 메서드"""
+
         model_cls: Type[AbstractDocument] = self.model
         embedding_field_name = model_cls.get_embedding_field().name
 
-        query_embedding: List[float] = await model_cls.aembed(query)
-
         qs = self.defer(embedding_field_name)
 
-        for index in model_cls._meta.indexes:
+        for index in self.model._meta.indexes:
             if embedding_field_name in index.fields:
                 # vector_cosine_ops, halfvec_cosine_ops, etc.
                 if any("_cosine_ops" in op for op in index.opclasses):
                     qs = qs.annotate(distance=CosineDistance(embedding_field_name, query_embedding))
                     qs = qs.order_by("distance")
+                    return qs
                 # vector_l2_ops, halfvec_l2_ops, etc.
                 elif any("_l2_ops" in op for op in index.opclasses):
                     qs = qs.annotate(distance=L2Distance(embedding_field_name, query_embedding))
                     qs = qs.order_by("distance")
+                    return qs
                 else:
                     raise NotImplementedError(f"{index.opclasses}에 대한 검색 구현이 필요합니다.")
-        if qs is None:
-            raise ImproperlyConfigured(f"{model_cls.__name__} 모델에 embedding 필드에 대한 인덱스를 추가해주세요.")
+
+        raise ImproperlyConfigured(f"{self.model.__name__} 모델에 embedding 필드에 대한 인덱스를 추가해주세요.")
+
+    @warn_if_async
+    def search(self, query: str, k: int = 4) -> QuerySet["AbstractDocument"]:
+        """동기 검색 메서드"""
+        model_cls: Type[AbstractDocument] = self.model
+        query_embedding = model_cls.embed(query)
+
+        qs = self._prepare_search_query(query_embedding)
+        return qs[:k]
+
+    async def asearch(self, query: str, k: int = 4) -> List["AbstractDocument"]:
+        """비동기 검색 메서드"""
+        model_cls: Type[AbstractDocument] = self.model
+        query_embedding = await model_cls.aembed(query)
+
+        qs = self._prepare_search_query(query_embedding)
         return await sync_to_async(list)(qs[:k])  # noqa
 
 

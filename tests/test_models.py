@@ -113,10 +113,30 @@ class TestDocumentModels:
             assert doc.embedding is not None
             assert len(doc.embedding) == self.dimensions
 
+    @pytest.mark.it("동기(OpenAI Mock) Client를 사용하여 문서 검색 기능이 올바르게 작동하는지 테스트합니다.")
+    @patch("openai.Client")
+    def test_document_search(self, mock_client):
+        count = 3
+        self._create_mock_embedding(mock_client)
+
+        # 테스트용 문서 생성
+        for i in range(1, count + 1):
+            self.document_model.objects.create(
+                id=i,
+                page_content=f"Document {i}",
+                embedding=[0.1] * self.dimensions,
+            )
+
+        # 유사 문서를 검색
+        results = self.document_model.objects.search("test query", k=2)
+
+        assert len(results) == 2
+        assert all(isinstance(doc, self.document_model) for doc in results)
+
     @pytest.mark.it("비동기(OpenAI Mock) Client를 사용하여 문서 검색 기능이 올바르게 작동하는지 테스트합니다.")
     @patch("openai.AsyncClient")
     @pytest.mark.asyncio
-    async def test_document_search(self, mock_client):
+    async def test_document_asearch(self, mock_client):
         count = 3
         response = mock_embedding_response(self.dimensions, count=count)
         mock_client.return_value.embeddings.create = AsyncMock(return_value=response)
@@ -130,7 +150,7 @@ class TestDocumentModels:
             )
 
         # 유사 문서를 검색
-        results = await self.document_model.objects.search("test query", k=2)
+        results = await self.document_model.objects.asearch("test query", k=2)
 
         assert len(results) == 2
         assert all(isinstance(doc, self.document_model) for doc in results)

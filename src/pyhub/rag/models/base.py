@@ -53,7 +53,10 @@ class BaseDocumentQuerySet(models.QuerySet):
             for obj, embedding in zip(non_embedding_objs, embeddings):
                 obj.embedding = embedding
 
-    async def search(self, query: str, k: int = 4) -> List["AbstractDocument"]:
+    def search(self, query: str, k: int = 4) -> List["AbstractDocument"]:
+        raise NotImplementedError
+
+    async def asearch(self, query: str, k: int = 4) -> List["AbstractDocument"]:
         raise NotImplementedError
 
     def __repr__(self):

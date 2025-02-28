@@ -4,7 +4,10 @@ from typing import List, Type
 from asgiref.sync import sync_to_async
 from django.conf import settings
 from django.core import checks
+from django.db.models import QuerySet
+from django.db.models.query import RawQuerySet
 
+from ..decorators import warn_if_async
 from ..fields.sqlite import SQLiteVectorField
 from .base import AbstractDocument, BaseDocumentQuerySet
 
@@ -12,15 +15,14 @@ logger = logging.getLogger(__name__)
 
 
 class SQLiteVectorDocumentQuerySet(BaseDocumentQuerySet):
-    async def search(self, query: str, k: int = 4) -> List["AbstractDocument"]:
+    def _prepare_search_query(self, query_embedding: List[float], k: int) -> RawQuerySet:
+
         model_cls: Type[AbstractDocument] = self.model
 
         table_name = model_cls._meta.db_table
-        field_name = model_cls.get_embedding_field().name
+        embedding_field_name = model_cls.get_embedding_field().name
 
-        query_embedding: List[float] = await model_cls.aembed(query)
-
-        field_names = [field.name for field in model_cls._meta.local_fields if field.name != field_name]
+        field_names = [field.name for field in model_cls._meta.local_fields if field.name != embedding_field_name]
         fields_sql = ", ".join(field_names)
 
         # KNN 쿼리
@@ -29,13 +31,25 @@ class SQLiteVectorDocumentQuerySet(BaseDocumentQuerySet):
               {fields_sql},
               distance
             FROM {table_name}
-            WHERE {field_name} MATCH vec_f32(?)
+            WHERE {embedding_field_name} MATCH vec_f32(?)
             ORDER BY distance
             LIMIT {k};
         """
 
         qs = self.raw(raw_query=raw_query, params=[str(query_embedding)])
 
+        return qs
+
+    @warn_if_async
+    def search(self, query: str, k: int = 4) -> QuerySet["AbstractDocument"]:
+        query_embedding = self.model.embed(query)
+        qs = self._prepare_search_query(query_embedding, k)
+        return qs
+
+    async def asearch(self, query: str, k: int = 4) -> List["AbstractDocument"]:
+        query_embedding = await self.model.aembed(query)
+
+        qs = self._prepare_search_query(query_embedding, k)
         return await sync_to_async(list)(qs)  # noqa
 
 
