@@ -1,10 +1,10 @@
 import logging
-from typing import List, Type
+from typing import List
 
 from asgiref.sync import sync_to_async
 from django.conf import settings
 from django.core import checks
-from django.db.models.query import RawQuerySet
+from django.db.models.query import QuerySet
 
 from ..decorators import warn_if_async
 from ..fields.sqlite import SQLiteVectorField
@@ -14,42 +14,25 @@ logger = logging.getLogger(__name__)
 
 
 class SQLiteVectorDocumentQuerySet(BaseDocumentQuerySet):
-    def _prepare_search_query(self, query_embedding: List[float], k: int) -> RawQuerySet:
-
-        model_cls: Type[AbstractDocument] = self.model
-
-        table_name = model_cls._meta.db_table
-        embedding_field_name = model_cls.get_embedding_field().name
-
-        field_names = [field.name for field in model_cls._meta.local_fields if field.name != embedding_field_name]
-        fields_sql = ", ".join(field_names)
-
-        # KNN 쿼리
-        raw_query = f"""
-            SELECT
-              {fields_sql},
-              distance
-            FROM {table_name}
-            WHERE {embedding_field_name} MATCH vec_f32(?)
-            ORDER BY distance
-            LIMIT {k};
-        """
-
-        qs = self.raw(raw_query=raw_query, params=[str(query_embedding)])
-
-        return qs
+    def _prepare_search_query(self, query_embedding: List[float]) -> QuerySet["AbstractDocument"]:
+        return self.extra(
+            select={"distance": "distance"},
+            where=["embedding MATCH vec_f32(?)"],
+            params=[str(query_embedding)],
+            order_by=["distance"],
+        ).defer("embedding")
 
     @warn_if_async
-    def similarity_search(self, query: str, k: int = 4) -> List["AbstractDocument"]:
+    def similarity_search(self, query: str, k: int = 4) -> QuerySet["AbstractDocument"]:
         query_embedding = self.model.embed(query)
-        qs = self._prepare_search_query(query_embedding, k)
-        return list(qs)
+        qs = self._prepare_search_query(query_embedding)
+        return qs[:k]
 
     async def asimilarity_search(self, query: str, k: int = 4) -> List["AbstractDocument"]:
         query_embedding = await self.model.aembed(query)
 
-        qs = self._prepare_search_query(query_embedding, k)
-        return await sync_to_async(list)(qs)  # noqa
+        qs = self._prepare_search_query(query_embedding)
+        return await sync_to_async(list)(qs[:k])  # noqa
 
 
 class SQLiteVectorDocument(AbstractDocument):
