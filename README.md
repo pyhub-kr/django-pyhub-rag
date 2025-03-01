@@ -25,32 +25,11 @@ class TaxlawDocument(SQLiteVectorDocument):
     pass
 ```
 
-## 설치 방법
+## 관련 튜토리얼
 
-1. 라이브러리 설치
+[장고로 만드는 RAG 웹 채팅 서비스](https://ai.pyhub.kr/hands-on-lab/django-webchat-rag/) 문서에서 본 라이브러리 사용법과
+이를 활용한 RAG 채팅 서비스 구현방법을 다루고 있으니 필독해주세요. ;-)
 
-`sqlite-vec` 확장을 사용하실 경우, 아래 라이브러리를 설치해주세요.
-
-```
-python -m pip install django-pyhub-rag sqlite-vec
-```
-
-`pgvector` 확장을 사용하실 경우, 아래 라이브러리를 설치해주세요.
-
-```
-python -m pip install django-pyhub-rag psycopg2-binary pgvector
-```
-
-2. `INSTALLED_APPS` 리스트에 추가:
-
-```python
-INSTALLED_APPS = [
-    # ...
-    "pyhub.rag",
-]
-```
-
-3. 모델 상속 및 마이그레이션
 
 ## 라이선스
 
