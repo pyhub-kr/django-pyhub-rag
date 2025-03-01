@@ -8,6 +8,7 @@ from asgiref.sync import async_to_sync
 from django.db import connections, models, router
 from django_lifecycle import BEFORE_CREATE, BEFORE_UPDATE, LifecycleModelMixin, hook
 
+from .. import django_lifecycle  # noqa
 from ..fields import BaseVectorField
 from ..utils import make_groups_by_length
 from ..validators import MaxTokenValidator
