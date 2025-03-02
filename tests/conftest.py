@@ -17,8 +17,7 @@ def pytest_configure():
             "pyhub.rag",
             "test_app",
         ],
-        RAG_OPENAI_API_KEY="test-api-key",
-        RAG_EMBEDDING_MODEL="text-embedding-3-small",
+        RAG_OPENAI_API_KEY=None,
         LOGGING={
             "version": 1,
             "disable_existing_loggers": False,

@@ -7,8 +7,8 @@ from pyhub.rag.settings import rag_settings
 @pytest.mark.it("BaseVectorField가 rag_settings의 기본 설정으로 초기화되는지 테스트합니다.")
 def test_field_initialization():
     field = BaseVectorField()
-    assert field.dimensions == rag_settings.RAG_EMBEDDING_DIMENSIONS
-    assert field.embedding_model == rag_settings.RAG_EMBEDDING_MODEL
+    assert field.dimensions == rag_settings.embedding_dimensions
+    assert field.embedding_model == rag_settings.embedding_model
 
 
 @pytest.mark.it("사용자 정의 차원이 기본값을 덮어쓰는지 테스트합니다.")

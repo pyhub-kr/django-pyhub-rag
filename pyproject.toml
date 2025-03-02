@@ -26,6 +26,8 @@ dependencies = [
     "django-lifecycle",
     "tiktoken",
     "openai",
+    "anthropic",
+    "google-genai",
 ]
 
 [project.optional-dependencies]

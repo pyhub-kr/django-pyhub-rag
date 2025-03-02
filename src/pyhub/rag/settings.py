@@ -1,35 +1,98 @@
 import os
-from typing import Any
+from typing import Any, Optional, Union
 
-from django.conf import settings
+from django.conf import settings as proj_settings
 
 DEFAULTS = {
-    "RAG_OPENAI_API_KEY": None,
-    "RAG_OPENAI_BASE_URL": "https://api.openai.com/v1",
-    "RAG_EMBEDDING_MODEL": "text-embedding-3-small",
-    "RAG_EMBEDDING_DIMENSIONS": 1536,
-    "RAG_EMBEDDING_MAX_TOKENS_LIMIT": 8191,
+    "openai_base_url": "https://api.openai.com/v1",
+    "embedding_model": "text-embedding-3-small",
+    "embedding_dimensions": 1536,
+    "embedding_max_tokens_limit": 8191,
 }
 
 
 class RagSettings:
-    def __init__(self, defaults) -> None:
-        self.defaults = defaults
+    def __init__(
+        self,
+        openai_api_key: Optional[str] = None,
+        openai_base_url: Optional[str] = None,
+        anthropic_api_key: Optional[str] = None,
+        google_api_key: Optional[str] = None,
+        embedding_model: Optional[str] = None,
+        embedding_dimensions: Optional[int] = None,
+        embedding_max_tokens_limit: Optional[int] = None,
+    ):
+        self.init_kwargs = {
+            "openai_api_key": openai_api_key,
+            "openai_base_url": openai_base_url,
+            "anthropic_api_key": anthropic_api_key,
+            "google_api_key": google_api_key,
+            "embedding_model": embedding_model,
+            "embedding_dimensions": embedding_dimensions,
+            "embedding_max_tokens_limit": embedding_max_tokens_limit,
+        }
 
-    def __getattr__(self, attr_name: str) -> Any:
-        value = getattr(settings, attr_name, None)
+        # 생성자에서 모든 값 초기화
+        self.openai_api_key = openai_api_key
+        self.openai_base_url = openai_base_url
+        self.anthropic_api_key = anthropic_api_key
+        self.google_api_key = google_api_key
+        self.embedding_model = embedding_model
+        self.embedding_dimensions = embedding_dimensions
+        self.embedding_max_tokens_limit = embedding_max_tokens_limit
+        self.reload()
 
-        if value is None and attr_name == "RAG_OPENAI_API_KEY":
-            value = getattr(settings, "OPENAI_API_KEY", None)
-            if value is None:
-                value = os.environ.get("OPENAI_API_KEY", None)
+    def reload(self):
+        for k, v in self.init_kwargs.items():
+            setattr(self, k, v)
 
-        if value is None:
-            try:
-                value = self.defaults[attr_name]
-            except KeyError:
-                raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{attr_name}'")
-        return value
+        # 2. 환경 변수나 Django 설정에서 값 가져오기
+        # API 키들은 특별 처리 (RAG_ 접두사 없는 버전도 확인)
+        if self.openai_api_key is None:
+            self.openai_api_key = self.get_proj_settings_or_environ(("RAG_OPENAI_API_KEY", "OPENAI_API_KEY"))
+
+        if self.anthropic_api_key is None:
+            self.anthropic_api_key = self.get_proj_settings_or_environ(("RAG_ANTHROPIC_API_KEY", "ANTHROPIC_API_KEY"))
+
+        if self.google_api_key is None:
+            self.google_api_key = self.get_proj_settings_or_environ(("RAG_GOOGLE_API_KEY", "GOOGLE_API_KEY"))
+
+        if self.openai_base_url is None:
+            self.openai_base_url = (
+                self.get_proj_settings_or_environ(("RAG_OPENAI_BASE_URL", "OPENAI_BASE_URL"))
+                or DEFAULTS["openai_base_url"]
+            )
+
+        if self.embedding_model is None:
+            self.embedding_model = (
+                self.get_proj_settings_or_environ(("RAG_EMBEDDING_MODEL", "EMBEDDING_MODEL"))
+                or DEFAULTS["embedding_model"]
+            )
+
+        if self.embedding_dimensions is None:
+            embedding_dim_str = self.get_proj_settings_or_environ(("RAG_EMBEDDING_DIMENSIONS", "EMBEDDING_DIMENSIONS"))
+            self.embedding_dimensions = (
+                int(embedding_dim_str) if embedding_dim_str else DEFAULTS["embedding_dimensions"]
+            )
+
+        if self.embedding_max_tokens_limit is None:
+            tokens_limit_str = self.get_proj_settings_or_environ("RAG_EMBEDDING_MAX_TOKENS_LIMIT")
+            self.embedding_max_tokens_limit = (
+                int(tokens_limit_str) if tokens_limit_str else DEFAULTS["embedding_max_tokens_limit"]
+            )
+
+    def get_proj_settings_or_environ(self, attr_name: Union[str, tuple[str, ...]]) -> Any:
+        if isinstance(attr_name, str):
+            attr_names = (attr_name,)
+        else:
+            attr_names = attr_name
+
+        for name in attr_names:
+            value = getattr(proj_settings, name, None) or os.environ.get(name, None)
+            if value:
+                return value
+
+        return None
 
 
-rag_settings = RagSettings(DEFAULTS)
+rag_settings = RagSettings()

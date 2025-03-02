@@ -20,11 +20,11 @@ class BaseVectorField(models.Field):
     ):
         super().__init__(**kwargs)
         self.vector_field: Optional[models.Field] = None
-        self.dimensions = dimensions or rag_settings.RAG_EMBEDDING_DIMENSIONS
-        self.openai_api_key = openai_api_key or rag_settings.RAG_OPENAI_API_KEY
-        self.openai_base_url = openai_base_url or rag_settings.RAG_OPENAI_BASE_URL
-        self.embedding_model = embedding_model or rag_settings.RAG_EMBEDDING_MODEL
-        self.embedding_max_tokens_limit = embedding_max_tokens_limit or rag_settings.RAG_EMBEDDING_MAX_TOKENS_LIMIT
+        self.dimensions = dimensions or rag_settings.embedding_dimensions
+        self.openai_api_key = openai_api_key or rag_settings.openai_api_key
+        self.openai_base_url = openai_base_url or rag_settings.openai_base_url
+        self.embedding_model = embedding_model or rag_settings.embedding_model
+        self.embedding_max_tokens_limit = embedding_max_tokens_limit or rag_settings.embedding_max_tokens_limit
 
     def deconstruct(self):
         name, path, args, kwargs = super().deconstruct()
