@@ -18,7 +18,7 @@ class RagSettings:
         openai_base_url: Optional[str] = None,
         anthropic_api_key: Optional[str] = None,
         google_api_key: Optional[str] = None,
-        embedding_model: Optional[str] = None,
+        embedding_model: Optional["LLMEmbeddingModel"] = None,
         embedding_dimensions: Optional[int] = None,
         embedding_max_tokens_limit: Optional[int] = None,
     ):

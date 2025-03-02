@@ -3,6 +3,7 @@ from typing import Optional
 
 from django.db import models
 
+from pyhub.rag.llm import LLMEmbeddingModel
 from pyhub.rag.settings import rag_settings
 
 logger = logging.getLogger(__name__)
@@ -11,11 +12,12 @@ logger = logging.getLogger(__name__)
 class BaseVectorField(models.Field):
     def __init__(
         self,
-        dimensions=None,
-        openai_api_key=None,
-        openai_base_url=None,
-        embedding_model=None,
-        embedding_max_tokens_limit=None,
+        dimensions: Optional[int] = None,
+        openai_api_key: Optional[str] = None,
+        openai_base_url: Optional[str] = None,
+        google_api_key: Optional[str] = None,
+        embedding_model: Optional[LLMEmbeddingModel] = None,
+        embedding_max_tokens_limit: Optional[int] = None,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -23,6 +25,7 @@ class BaseVectorField(models.Field):
         self.dimensions = dimensions or rag_settings.embedding_dimensions
         self.openai_api_key = openai_api_key or rag_settings.openai_api_key
         self.openai_base_url = openai_base_url or rag_settings.openai_base_url
+        self.google_api_key = google_api_key or rag_settings.google_api_key
         self.embedding_model = embedding_model or rag_settings.embedding_model
         self.embedding_max_tokens_limit = embedding_max_tokens_limit or rag_settings.embedding_max_tokens_limit
 
@@ -33,6 +36,7 @@ class BaseVectorField(models.Field):
                 "dimensions": self.dimensions,
                 "openai_api_key": self.openai_api_key,
                 "openai_base_url": self.openai_base_url,
+                "google_api_key": self.google_api_key,
                 "embedding_model": self.embedding_model,
                 "embedding_max_tokens_limit": self.embedding_max_tokens_limit,
             }

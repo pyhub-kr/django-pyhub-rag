@@ -1,7 +1,9 @@
+from typing import Literal, Union, Optional, List
+
 import pytest
 import tiktoken
 
-from pyhub.rag.utils import aenumerate, make_groups_by_length
+from pyhub.rag.utils import aenumerate, make_groups_by_length, get_literal_values
 
 
 @pytest.mark.it("make_groups_by_length 함수가 올바르게 텍스트를 그룹화하는지 테스트합니다.")
@@ -31,3 +33,29 @@ async def test_aenumerate():
         items.append((i, item))
 
     assert items == [(0, "item0"), (1, "item1"), (2, "item2")]
+
+
+@pytest.mark.it("get_literal_values 함수가 다양한 타입 힌트에서 리터럴 값을 올바르게 추출하는지 테스트합니다.")
+def test_get_literal_values():
+    # 단일 Literal 테스트
+    assert get_literal_values(Literal["a", "b", "c"]) == {"a", "b", "c"}
+
+    # Union 내부의 Literal 테스트
+    assert get_literal_values(Union[Literal["x", "y"], Literal["z"]]) == {"x", "y", "z"}
+
+    # Optional(Union[T, None]) 테스트
+    assert get_literal_values(Optional[Literal["p", "q"]]) == {"p", "q", None}
+
+    # 중첩된 복합 타입 테스트
+    complex_type = Union[Literal["one"], Optional[Literal["two", "three"]]]
+    assert get_literal_values(complex_type) == {"one", "two", "three", None}
+
+    # 비 Literal 타입에 대한 테스트
+    assert get_literal_values(str) == set()
+    assert get_literal_values(List[int]) == set()
+
+    # None 값 테스트
+    assert get_literal_values(None) == set()
+
+    # 실제 값 테스트
+    assert get_literal_values("actual_value") == {"actual_value"}

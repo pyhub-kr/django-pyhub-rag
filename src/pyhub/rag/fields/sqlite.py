@@ -1,5 +1,6 @@
 import json
 import sqlite3
+from typing import Optional
 
 import numpy as np
 from django import forms
@@ -19,7 +20,7 @@ class SQLiteVectorField(BaseVectorField):
     description = "SQLite vector"
     empty_strings_allowed = False
 
-    def __init__(self, dimensions=None, **kwargs):
+    def __init__(self, dimensions: Optional[int] = None, **kwargs):
         """
         :param dimensions: Expected number of vector components. If provided, the input vector
                            length is validated to match.
@@ -34,6 +35,7 @@ class SQLiteVectorField(BaseVectorField):
         kwargs.pop("embedding_model", None)
         kwargs.pop("openai_api_key", None)
         kwargs.pop("openai_base_url", None)
+        kwargs.pop("google_api_key", None)
 
         if self.dimensions is not None:
             kwargs["dimensions"] = self.dimensions

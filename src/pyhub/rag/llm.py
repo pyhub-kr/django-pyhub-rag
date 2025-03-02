@@ -1,6 +1,6 @@
 import abc
 import logging
-from typing import AsyncGenerator, Generator, List, Literal, Optional, Union
+from typing import AsyncGenerator, Generator, List, Literal, Optional, Union, cast
 
 from anthropic import NOT_GIVEN as ANTHROPIC_NOT_GIVEN
 from anthropic import Anthropic as SyncAnthropic
@@ -16,6 +16,17 @@ from typing_extensions import TypeAlias
 
 from pyhub.rag.settings import rag_settings
 
+
+OpenAIEmbeddingModel: TypeAlias = Union[
+    Literal["text-embedding-ada-002", "text-embedding-3-small", "text-embedding-3-large"],
+]
+
+# https://cloud.google.com/vertex-ai/generative-ai/docs/embeddings/get-text-embeddings?hl=ko
+GoogleEmbeddingModel: TypeAlias = Union[Literal["text-embedding-004"]]  # 768 차원
+
+LLMEmbeddingModel = Union[OpenAIEmbeddingModel, GoogleEmbeddingModel]
+
+
 # https://ai.google.dev/gemini-api/docs/models/gemini?hl=ko
 GoogleChatModel: TypeAlias = Union[
     Literal[
@@ -25,14 +36,10 @@ GoogleChatModel: TypeAlias = Union[
         "gemini-1.5-flash-8b",
         "gemini-1.5-pro",
     ],
-    str,
 ]
 
 
-if GoogleChatModel is not None:
-    LLMModelParams: TypeAlias = Union[str, OpenAIChatModel, AnthropicChatModel, GoogleChatModel]
-else:
-    LLMModelParams: TypeAlias = Union[str, OpenAIChatModel, AnthropicChatModel]
+LLMChatModel: TypeAlias = Union[OpenAIChatModel, AnthropicChatModel, GoogleChatModel]
 
 
 class Message(BaseModel):
@@ -46,7 +53,7 @@ logger = logging.getLogger(__name__)
 class LLM(abc.ABC):
     def __init__(
         self,
-        model: LLMModelParams = "gpt-4o-mini",
+        model: LLMChatModel = "gpt-4o-mini",
         temperature: float = 0.2,
         max_tokens: int = 1000,
         system_prompt: Optional[str] = None,
@@ -61,36 +68,36 @@ class LLM(abc.ABC):
         self.api_key = api_key
 
     @abc.abstractmethod
-    def _generate_response(self, messages: list[Message], model: LLMModelParams) -> str:
+    def _generate_response(self, messages: list[Message], model: LLMChatModel) -> str:
         """Generate a response using the specific LLM provider"""
         pass
 
     @abc.abstractmethod
-    async def _agenerate_response(self, messages: list[Message], model: LLMModelParams) -> str:
+    async def _agenerate_response(self, messages: list[Message], model: LLMChatModel) -> str:
         """Generate a response asynchronously using the specific LLM provider"""
         pass
 
     @abc.abstractmethod
-    def _generate_stream_response(self, messages: list[Message], model: LLMModelParams) -> Generator[str, None, None]:
+    def _generate_stream_response(self, messages: list[Message], model: LLMChatModel) -> Generator[str, None, None]:
         """Generate a streaming response using the specific LLM provider"""
         pass
 
     @abc.abstractmethod
     async def _agenerate_stream_response(
-        self, messages: list[Message], model: LLMModelParams
+        self, messages: list[Message], model: LLMChatModel
     ) -> AsyncGenerator[str, None]:
         """Generate a streaming response asynchronously using the specific LLM provider"""
         pass
 
     @classmethod
-    def create(cls, model: LLMModelParams, **kwargs) -> "LLM":
+    def create(cls, model: LLMChatModel, **kwargs) -> "LLM":
         """Factory method to create appropriate LLM instance based on model name"""
         if "claude" in model.lower():
-            return AnthropicLLM(model=model, **kwargs)
+            return AnthropicLLM(model=cast(AnthropicChatModel, model), **kwargs)
         elif "gemini" in model.lower():
-            return GoogleLLM(model=model, **kwargs)
+            return GoogleLLM(model=cast(GoogleChatModel, model), **kwargs)
         else:  # Default to OpenAI
-            return OpenAILLM(model=model, **kwargs)
+            return OpenAILLM(model=cast(OpenAIChatModel, model), **kwargs)
 
     def _prepare_messages(self, human_message: str, current_messages: List[Message]) -> List[Message]:
         if human_message is not None:
@@ -109,7 +116,7 @@ class LLM(abc.ABC):
     def _reply_impl(
         self,
         human_message: Optional[str] = None,
-        model: Optional[LLMModelParams] = None,
+        model: Optional[LLMChatModel] = None,
         *,
         is_async: bool = False,
     ) -> Union[str, "asyncio.Future[str]"]:
@@ -146,7 +153,7 @@ class LLM(abc.ABC):
     def reply(
         self,
         human_message: Optional[str] = None,
-        model: Optional[LLMModelParams] = None,
+        model: Optional[LLMChatModel] = None,
         stream: bool = False,
     ) -> Union[str, Generator[str, None, None]]:
         if not stream:
@@ -156,7 +163,7 @@ class LLM(abc.ABC):
     async def areply(
         self,
         human_message: Optional[str] = None,
-        model: Optional[LLMModelParams] = None,
+        model: Optional[LLMChatModel] = None,
         stream: bool = False,
     ) -> Union[str, AsyncGenerator[str, None]]:
         if not stream:
@@ -166,7 +173,7 @@ class LLM(abc.ABC):
     def _stream_reply_impl(
         self,
         human_message: Optional[str] = None,
-        model: Optional[LLMModelParams] = None,
+        model: Optional[LLMChatModel] = None,
         *,
         is_async: bool = False,
     ) -> Union[Generator[str, None, None], AsyncGenerator[str, None]]:
@@ -226,7 +233,7 @@ class OpenAILLM(LLM):
             api_key=api_key,
         )
 
-    def _prepare_openai_request(self, messages: list[Message], model: LLMModelParams) -> dict:
+    def _prepare_openai_request(self, messages: list[Message], model: LLMChatModel) -> dict:
         history = [*messages]
         if self.system_prompt:
             history.insert(0, {"role": "system", "content": self.system_prompt})
@@ -238,19 +245,19 @@ class OpenAILLM(LLM):
             "max_tokens": self.max_tokens,
         }
 
-    def _generate_response(self, messages: list[Message], model: LLMModelParams) -> str:
+    def _generate_response(self, messages: list[Message], model: LLMChatModel) -> str:
         sync_client = SyncOpenAI(api_key=self.api_key or rag_settings.openai_api_key)
         request_params = self._prepare_openai_request(messages, model)
         response = sync_client.chat.completions.create(**request_params)
         return response.choices[0].message.content
 
-    async def _agenerate_response(self, messages: list[Message], model: LLMModelParams) -> str:
+    async def _agenerate_response(self, messages: list[Message], model: LLMChatModel) -> str:
         async_client = AsyncOpenAI(api_key=self.api_key or rag_settings.openai_api_key)
         request_params = self._prepare_openai_request(messages, model)
         response = await async_client.chat.completions.create(**request_params)
         return response.choices[0].message.content
 
-    def _generate_stream_response(self, messages: list[Message], model: LLMModelParams) -> Generator[str, None, None]:
+    def _generate_stream_response(self, messages: list[Message], model: LLMChatModel) -> Generator[str, None, None]:
         sync_client = SyncOpenAI(api_key=self.api_key or rag_settings.openai_api_key)
         request_params = self._prepare_openai_request(messages, model)
         request_params["stream"] = True
@@ -261,7 +268,7 @@ class OpenAILLM(LLM):
                 yield chunk.choices[0].delta.content
 
     async def _agenerate_stream_response(
-        self, messages: list[Message], model: LLMModelParams
+        self, messages: list[Message], model: LLMChatModel
     ) -> AsyncGenerator[str, None]:
         async_client = AsyncOpenAI(api_key=self.api_key or rag_settings.openai_api_key)
         request_params = self._prepare_openai_request(messages, model)

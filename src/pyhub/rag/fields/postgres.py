@@ -1,22 +1,27 @@
+from typing import Optional
+
 from pgvector.django import HalfVectorField, VectorField
 
 from pyhub.rag.fields.base import BaseVectorField
+from pyhub.rag.llm import LLMEmbeddingModel
 
 
 class PGVectorField(BaseVectorField):
     def __init__(
         self,
-        dimensions=None,
-        openai_api_key=None,
-        openai_base_url=None,
-        embedding_model=None,
-        embedding_max_tokens_limit=None,
+        dimensions: Optional[int] = None,
+        openai_api_key: Optional[str] = None,
+        openai_base_url: Optional[str] = None,
+        google_api_key: Optional[str] = None,
+        embedding_model: Optional[LLMEmbeddingModel] = None,
+        embedding_max_tokens_limit: Optional[int] = None,
         **kwargs,
     ):
         super().__init__(
             dimensions=dimensions,
             openai_api_key=openai_api_key,
             openai_base_url=openai_base_url,
+            google_api_key=google_api_key,
             embedding_model=embedding_model,
             embedding_max_tokens_limit=embedding_max_tokens_limit,
             **kwargs,

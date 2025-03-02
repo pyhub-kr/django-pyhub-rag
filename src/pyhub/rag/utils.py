@@ -1,6 +1,20 @@
 import sqlite3
 from logging import getLogger
-from typing import Any, AsyncIterator, Callable, Generator, Iterable, List, Tuple
+from typing import (
+    Any,
+    AsyncIterator,
+    Callable,
+    Generator,
+    Iterable,
+    List,
+    Literal,
+    Optional,
+    Set,
+    Tuple,
+    Union,
+    get_args,
+    get_origin,
+)
 
 logger = getLogger(__name__)
 
@@ -43,3 +57,49 @@ def load_sqlite_vec_extension(connection: sqlite3.Connection):
     connection.enable_load_extension(False)
 
     logger.debug("sqlite-vec extension loaded")
+
+
+def get_literal_values(type_hint: Any) -> Set[Any]:
+    """
+    중첩된 타입 구조(Union, Literal 등)에서 모든 리터럴 값을 추출하는 함수
+
+    Args:
+        type_hint: 타입 힌트 (Union, Literal 등 중첩 가능)
+
+    Returns:
+        모든 리터럴 값의 집합
+    """
+    values = set()
+
+    # None인 경우 빈 집합 반환
+    if type_hint is None:
+        return values
+
+    # type(None)인 경우 None 값 추가
+    if type_hint is type(None):
+        values.add(None)
+        return values
+
+    # 타입 객체가 아닌 실제 값인 경우 그대로 추가
+    if not isinstance(type_hint, type) and not hasattr(type_hint, "__origin__"):
+        values.add(type_hint)
+        return values
+
+    # 타입의 origin 확인 (Union, Literal 등)
+    origin = get_origin(type_hint)
+
+    # Literal 타입인 경우
+    if origin is Literal:
+        values.update(get_args(type_hint))
+
+    # Union 타입인 경우 (typing.Union 또는 | 연산자)
+    elif origin is Union:
+        for arg in get_args(type_hint):
+            values.update(get_literal_values(arg))
+
+    # 그 외 복합 타입인 경우
+    elif origin is not None:
+        for arg in get_args(type_hint):
+            values.update(get_literal_values(arg))
+
+    return values
