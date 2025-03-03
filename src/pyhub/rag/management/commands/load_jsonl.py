@@ -75,7 +75,6 @@ class Command(BaseCommand):
 
             # 올바른 DB 연결을 위해 router를 사용하여 write 위한 데이터베이스를 지정받는다.
             db_write_alias = router.db_for_write(model)
-            db_connection = connections[db_write_alias]
 
             # 제너레이터를 사용하여 JSONL 파일 읽기 및 배치 단위로 처리
             batch_instances = []
