@@ -1,11 +1,19 @@
 import os
+import sys
+
 import sqlite3
 from enum import Enum
 
-import sqlite_vec
 import typer
 from rich.console import Console
 
+try:
+    import sqlite_vec
+except ImportError:
+    sqlite_vec = None
+
+# SQLite-vec 서브 명령 그룹 생성
+sqlite_vec_app = typer.Typer(name="sqlite-vec", help="SQLite-vec 관련 명령어")
 console = Console()
 
 
@@ -28,7 +36,43 @@ def load_extensions(conn: sqlite3.Connection):
     conn.enable_load_extension(False)
 
 
-def create_sqlite_vec_table(
+@sqlite_vec_app.command(name="check")
+def check():
+    """Check if sqlite-vec extension can be loaded properly"""
+
+    is_windows = sys.platform == "win32"
+    is_arm = "ARM" in sys.version
+    is_python_3_10_or_later = sys.version_info[:2] >= (3, 10)
+
+    if is_windows and is_arm:
+        console.print(
+            "[bold red]❌ ARM version of Python does not support sqlite-vec library. Please reinstall AMD64 version of Python.[/bold red]"
+        )
+        raise typer.Exit(code=1)
+
+    if not is_python_3_10_or_later:
+        console.print("[bold red]❌ Python 3.10 or later is required.[/bold red]")
+        raise typer.Exit(code=1)
+
+    if sqlite_vec is None:
+        console.print("[bold red]❌ Please install sqlite-vec library.[/bold red]")
+        raise typer.Exit(code=1)
+
+    with sqlite3.connect(":memory:") as db:
+        try:
+            load_extensions(db)
+        except AttributeError:
+            console.print(
+                "[bold red]❌ This Python does not support sqlite3 extension. Please refer to the guide and reinstall Python.[/bold red]"
+            )
+            raise typer.Exit(code=1)
+        else:
+            console.print("[bold green]✅ This Python supports sqlite3 extension.[/bold green]")
+            console.print("[bold green]✅ sqlite-vec extension is working properly.[/bold green]")
+
+
+@sqlite_vec_app.command(name="create-table")
+def create_table(
     db_path: str = typer.Argument(..., help="sqlite db path"),
     table_name: str = typer.Argument(..., help="table name"),
     dimensions: Dimensions = Dimensions.TEXT_EMBEDDING_3_SMALL,

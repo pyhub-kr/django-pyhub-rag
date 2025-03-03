@@ -47,7 +47,7 @@ Issues = "https://github.com/pyhub-kr/django-pyhub-rag/issues"
 # Changelog = "https://github.com/pyhub-kr/django-pyhub-rag/blob/main/CHANGELOG.md"
 
 [project.scripts]
-pyhub-rag = "pyhub.rag.__main__:app"
+"pyhub.rag" = "pyhub.rag.__main__:app"
 
 [build-system]
 requires = ["hatchling"]

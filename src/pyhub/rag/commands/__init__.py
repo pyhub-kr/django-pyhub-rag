@@ -1,13 +1,12 @@
 import typer
 from rich.console import Console
 
-from .sqlite_vec import create_sqlite_vec_table
+from . import sqlite_vec
 
 app = typer.Typer()
 console = Console()
 
-
-app.command()(create_sqlite_vec_table)
+app.add_typer(sqlite_vec.sqlite_vec_app)
 
 
 @app.callback(invoke_without_command=True)
