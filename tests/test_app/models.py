@@ -18,7 +18,11 @@ class TestPGVectorDocument1536(PGVectorDocument):
 
 
 class TestPGVectorDocument3072(PGVectorDocument):
-    embedding = PGVectorField(dimensions=3072, editable=False)
+    embedding = PGVectorField(
+        dimensions=3072,
+        editable=False,
+        embedding_model="text-embedding-3-large",
+    )
 
     class Meta:
         app_label = "test_app"
@@ -36,4 +40,8 @@ class TestSQLiteVectorDocument1536(SQLiteVectorDocument):
 
 
 class TestSQLiteVectorDocument3072(SQLiteVectorDocument):
-    embedding = SQLiteVectorField(dimensions=3072, editable=False)
+    embedding = SQLiteVectorField(
+        dimensions=3072,
+        editable=False,
+        embedding_model="text-embedding-3-large",
+    )

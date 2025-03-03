@@ -9,7 +9,7 @@ from typing import (
     cast,
 )
 
-from .types import LLMChatModel, Message, Reply
+from .types import LLMChatModel, LLMEmbeddingModel, Message, Reply
 
 logger = logging.getLogger(__name__)
 
@@ -18,6 +18,7 @@ class BaseLLM(abc.ABC):
     def __init__(
         self,
         model: LLMChatModel = "gpt-4o-mini",
+        embedding_model: LLMEmbeddingModel = "text-embedding-3-small",
         temperature: float = 0.2,
         max_tokens: int = 1000,
         system_prompt: Optional[str] = None,
@@ -25,6 +26,7 @@ class BaseLLM(abc.ABC):
         api_key: Optional[str] = None,
     ):
         self.model = model
+        self.embedding_model = embedding_model
         self.temperature = temperature
         self.max_tokens = max_tokens
         self.system_prompt = system_prompt
@@ -185,3 +187,22 @@ class BaseLLM(abc.ABC):
             return async_stream_handler()
         else:
             return sync_stream_handler()
+
+    #
+    # embed
+    #
+    @abc.abstractmethod
+    def embed(
+        self,
+        input: Union[str, List[str]],
+        model: Optional[LLMEmbeddingModel] = None,
+    ) -> Union[List[float], List[List[float]]]:
+        pass
+
+    @abc.abstractmethod
+    async def aembed(
+        self,
+        input: Union[str, List[str]],
+        model: Optional[LLMEmbeddingModel] = None,
+    ) -> Union[List[float], List[List[float]]]:
+        pass

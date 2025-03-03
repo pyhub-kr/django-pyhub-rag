@@ -2,23 +2,20 @@ import asyncio
 import logging
 from typing import List, Union, cast
 
-import openai
 import tiktoken
 from asgiref.sync import async_to_sync
 from django.db import connections, models, router
 from django_lifecycle import BEFORE_CREATE, BEFORE_UPDATE, LifecycleModelMixin, hook
-from google import genai
 from typing_extensions import Optional
 
 from pyhub.llm.types import (
-    GoogleEmbeddingModel,
     LLMEmbeddingModel,
-    OpenAIEmbeddingModel,
 )
 
+from ...llm.exceptions import RateLimitError
 from .. import django_lifecycle  # noqa
 from ..fields import BaseVectorField
-from ..utils import get_literal_values, make_groups_by_length
+from ..utils import make_groups_by_length
 from ..validators import MaxTokenValidator
 from . import patch  # noqa
 
@@ -51,7 +48,7 @@ class BaseDocumentQuerySet(models.QuerySet):
                     try:
                         embeddings.extend(self.model.embed(group))
                         break
-                    except openai.RateLimitError as e:
+                    except RateLimitError as e:
                         if retry == max_retry:
                             raise e
                         else:
@@ -131,34 +128,7 @@ class AbstractDocument(LifecycleModelMixin, models.Model):
         model: Optional[LLMEmbeddingModel] = None,
     ) -> Union[List[float], List[List[float]]]:
         field = cls.get_embedding_field()
-        embedding_model = model or field.embedding_model
-
-        if embedding_model in get_literal_values(OpenAIEmbeddingModel):
-            client = openai.Client(
-                api_key=field.openai_api_key,
-                base_url=field.openai_base_url,
-            )
-            response = client.embeddings.create(
-                input=input,
-                model=embedding_model,
-            )
-            if isinstance(input, str):
-                return response.data[0].embedding
-            return [v.embedding for v in response.data]
-
-        elif embedding_model in get_literal_values(GoogleEmbeddingModel):
-            client = genai.Client(api_key=field.google_api_key)
-            response = client.models.embed_content(
-                model=embedding_model,
-                contents=input,
-                # config=EmbedContentConfig(output_dimensionality=10),
-            )
-            if isinstance(input, str):
-                return response.embeddings[0].values
-            return [v.values for v in response.embeddings]
-
-        else:
-            raise NotImplementedError(f"Embedding model '{embedding_model}' is not supported yet.")
+        return field.embed(input, model)
 
     @classmethod
     async def aembed(
@@ -167,34 +137,7 @@ class AbstractDocument(LifecycleModelMixin, models.Model):
         model: Optional[LLMEmbeddingModel] = None,
     ) -> Union[List[float], List[List[float]]]:
         field = cls.get_embedding_field()
-        embedding_model = model or field.embedding_model
-
-        if embedding_model in get_literal_values(OpenAIEmbeddingModel):
-            client = openai.AsyncClient(
-                api_key=field.openai_api_key,
-                base_url=field.openai_base_url,
-            )
-            response = await client.embeddings.create(
-                input=input,
-                model=embedding_model,
-            )
-            if isinstance(input, str):
-                return response.data[0].embedding
-            return [v.embedding for v in response.data]
-
-        elif embedding_model in get_literal_values(GoogleEmbeddingModel):
-            client = genai.Client(api_key=field.google_api_key)
-            response = await client.aio.models.embed_content(
-                model=embedding_model,
-                contents=input,
-                # config=EmbedContentConfig(output_dimensionality=10),
-            )
-            if isinstance(input, str):
-                return response.embeddings[0].values
-            return [v.values for v in response.embeddings]
-
-        else:
-            raise NotImplementedError(f"Embedding model '{embedding_model}' is not supported yet.")
+        return await field.aembed(input, model)
 
     @classmethod
     def get_token_size(cls, text: str) -> int:

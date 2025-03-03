@@ -1,4 +1,5 @@
 import sqlite3
+from functools import lru_cache
 from logging import getLogger
 from typing import (
     Any,
@@ -58,6 +59,7 @@ def load_sqlite_vec_extension(connection: sqlite3.Connection):
     logger.debug("sqlite-vec extension loaded")
 
 
+@lru_cache(maxsize=32)
 def get_literal_values(type_hint: Any) -> Set[Any]:
     """
     중첩된 타입 구조(Union, Literal 등)에서 모든 리터럴 값을 추출하는 함수

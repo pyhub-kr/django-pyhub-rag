@@ -1,4 +1,4 @@
-from typing import AsyncGenerator, Generator, Optional
+from typing import AsyncGenerator, Generator, List, Optional, Union
 
 from anthropic import NOT_GIVEN as ANTHROPIC_NOT_GIVEN
 from anthropic import Anthropic as SyncAnthropic
@@ -7,7 +7,7 @@ from anthropic import AsyncAnthropic
 from pyhub.rag.settings import rag_settings
 
 from .base import BaseLLM
-from .types import AnthropicChatModel, Message, Reply, Usage
+from .types import AnthropicChatModel, LLMEmbeddingModel, Message, Reply, Usage
 
 
 class AnthropicLLM(BaseLLM):
@@ -26,11 +26,11 @@ class AnthropicLLM(BaseLLM):
             max_tokens=max_tokens,
             system_prompt=system_prompt,
             initial_messages=initial_messages,
-            api_key=api_key,
+            api_key=api_key or rag_settings.anthropic_api_key,
         )
 
     def _make_reply(self, messages: list[Message], model: AnthropicChatModel) -> Reply:
-        sync_client = SyncAnthropic(api_key=self.api_key or rag_settings.anthropic_api_key)
+        sync_client = SyncAnthropic(api_key=self.api_key)
         response = sync_client.messages.create(
             model=model,
             system=self.system_prompt or ANTHROPIC_NOT_GIVEN,
@@ -42,7 +42,7 @@ class AnthropicLLM(BaseLLM):
         return Reply(response.content[0].text, usage)
 
     async def _make_reply_async(self, messages: list[Message], model: AnthropicChatModel) -> Reply:
-        async_client = AsyncAnthropic(api_key=self.api_key or rag_settings.anthropic_api_key)
+        async_client = AsyncAnthropic(api_key=self.api_key)
         response = await async_client.messages.create(
             model=model,
             system=self.system_prompt or ANTHROPIC_NOT_GIVEN,
@@ -55,7 +55,7 @@ class AnthropicLLM(BaseLLM):
 
     def _make_reply_stream(self, messages: list[Message], model: AnthropicChatModel) -> Generator[Reply, None, None]:
 
-        sync_client = SyncAnthropic(api_key=self.api_key or rag_settings.anthropic_api_key)
+        sync_client = SyncAnthropic(api_key=self.api_key)
         response = sync_client.messages.create(
             model=model,
             system=self.system_prompt or ANTHROPIC_NOT_GIVEN,
@@ -91,7 +91,7 @@ class AnthropicLLM(BaseLLM):
         self, messages: list[Message], model: AnthropicChatModel
     ) -> AsyncGenerator[Reply, None]:
 
-        async_client = AsyncAnthropic(api_key=self.api_key or rag_settings.anthropic_api_key)
+        async_client = AsyncAnthropic(api_key=self.api_key)
         response = await async_client.messages.create(
             model=model,
             system=self.system_prompt or ANTHROPIC_NOT_GIVEN,
@@ -128,16 +128,28 @@ class AnthropicLLM(BaseLLM):
         human_message: Optional[str] = None,
         model: Optional[AnthropicChatModel] = None,
         stream: bool = False,
+        raise_errors: bool = False,
     ) -> Reply:
-        return super().reply(human_message, model, stream)
+        return super().reply(human_message, model, stream, raise_errors)
 
     async def areply(
         self,
         human_message: Optional[str] = None,
         model: Optional[AnthropicChatModel] = None,
         stream: bool = False,
+        raise_errors: bool = False,
     ) -> Reply:
-        return await super().areply(human_message, model, stream)
+        return await super().areply(human_message, model, stream, raise_errors)
+
+    def embed(
+        self, input: Union[str, List[str]], model: Optional[LLMEmbeddingModel] = None
+    ) -> Union[List[float], List[List[float]]]:
+        raise NotImplementedError
+
+    async def aembed(
+        self, input: Union[str, List[str]], model: Optional[LLMEmbeddingModel] = None
+    ) -> Union[List[float], List[List[float]]]:
+        raise NotImplementedError
 
 
 __all__ = ["AnthropicLLM"]

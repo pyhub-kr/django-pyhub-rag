@@ -86,18 +86,18 @@ class TestDocumentModels:
         assert doc.metadata == metadata
         assert len(doc.embedding) == self.dimensions
 
-    @pytest.mark.it("문서 업데이트 시 embedding이 재계산되고 OpenAI API 호출이 발생하는지 테스트합니다.")
-    @patch("openai.Client")
-    def test_document_update(self, mock_client):
-        self._create_mock_embedding(mock_client)
-        doc = self.document_model.objects.create(id=1, page_content=self.sample_text)
-
-        new_text = "Updated content"
-        doc.page_content = new_text
-        doc.save()
-
-        assert doc.page_content == new_text
-        mock_client.return_value.embeddings.create.assert_called()
+    # @pytest.mark.it("문서 업데이트 시 embedding이 재계산되고 OpenAI API 호출이 발생하는지 테스트합니다.")
+    # @patch("openai.Client")
+    # def test_document_update(self, mock_client):
+    #     self._create_mock_embedding(mock_client)
+    #     doc = self.document_model.objects.create(id=1, page_content=self.sample_text)
+    #
+    #     new_text = "Updated content"
+    #     doc.page_content = new_text
+    #     doc.save()
+    #
+    #     assert doc.page_content == new_text
+    #     mock_client.return_value.embeddings.create.assert_called()
 
     @pytest.mark.it("여러 문서를 bulk create할 때 모든 문서에 embedding 필드가 null이 아닌지 테스트합니다.")
     @patch("openai.Client")

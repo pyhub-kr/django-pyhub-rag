@@ -1,10 +1,16 @@
 import logging
-from typing import Optional
+from typing import Optional, Union
 
 from django.db import models
 
-from pyhub.llm.types import LLMEmbeddingModel
+from pyhub.llm import GoogleLLM, OpenAILLM
+from pyhub.llm.types import (
+    GoogleEmbeddingModel,
+    LLMEmbeddingModel,
+    OpenAIEmbeddingModel,
+)
 from pyhub.rag.settings import rag_settings
+from pyhub.rag.utils import get_literal_values
 
 logger = logging.getLogger(__name__)
 
@@ -57,6 +63,41 @@ class BaseVectorField(models.Field):
         if self.vector_field is None:
             raise NotImplementedError("BaseVectorField 클래스를 상속받은 필드를 사용해주세요.")
         return self.vector_field.from_db_value(value, expression, connection)
+
+    def embed(
+        self,
+        input: Union[str, list[str]],
+        model: Optional[LLMEmbeddingModel] = None,
+    ) -> Union[list[float], list[list[float]]]:
+
+        embedding_model = model or self.embedding_model
+
+        if embedding_model in get_literal_values(OpenAIEmbeddingModel):
+            llm = OpenAILLM(api_key=self.openai_api_key, base_url=self.openai_base_url)
+            return llm.embed(input, model=embedding_model)
+
+        elif embedding_model in get_literal_values(GoogleEmbeddingModel):
+            llm = GoogleLLM(api_key=self.google_api_key)
+            return llm.embed(input, model=embedding_model)
+
+        raise NotImplementedError(f"Embedding model '{embedding_model}' is not supported yet.")
+
+    async def aembed(
+        self,
+        input: Union[str, list[str]],
+        model: Optional[LLMEmbeddingModel] = None,
+    ) -> Union[list[float], list[list[float]]]:
+        embedding_model = model or self.embedding_model
+
+        if embedding_model in get_literal_values(OpenAIEmbeddingModel):
+            llm = OpenAILLM(api_key=self.openai_api_key, base_url=self.openai_base_url)
+            return await llm.aembed(input, model=embedding_model)
+
+        elif embedding_model in get_literal_values(GoogleEmbeddingModel):
+            llm = GoogleLLM(api_key=self.google_api_key)
+            return await llm.aembed(input, model=embedding_model)
+
+        raise NotImplementedError(f"Embedding model '{embedding_model}' is not supported yet.")
 
 
 __all__ = ["BaseVectorField"]
