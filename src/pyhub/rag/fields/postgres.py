@@ -2,8 +2,8 @@ from typing import Optional
 
 from pgvector.django import HalfVectorField, VectorField
 
+from pyhub.llm.types import LLMEmbeddingModel
 from pyhub.rag.fields.base import BaseVectorField
-from pyhub.rag.llm import LLMEmbeddingModel
 
 
 class PGVectorField(BaseVectorField):

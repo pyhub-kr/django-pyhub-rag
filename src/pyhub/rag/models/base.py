@@ -10,9 +10,14 @@ from django_lifecycle import BEFORE_CREATE, BEFORE_UPDATE, LifecycleModelMixin, 
 from google import genai
 from typing_extensions import Optional
 
+from pyhub.llm.types import (
+    GoogleEmbeddingModel,
+    LLMEmbeddingModel,
+    OpenAIEmbeddingModel,
+)
+
 from .. import django_lifecycle  # noqa
 from ..fields import BaseVectorField
-from ..llm import GoogleEmbeddingModel, OpenAIEmbeddingModel, LLMEmbeddingModel
 from ..utils import get_literal_values, make_groups_by_length
 from ..validators import MaxTokenValidator
 from . import patch  # noqa

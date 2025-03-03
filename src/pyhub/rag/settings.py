@@ -2,6 +2,9 @@ import os
 from typing import Any, Optional, Union
 
 from django.conf import settings as proj_settings
+from django.core.exceptions import ImproperlyConfigured
+
+from pyhub.llm.types import LLMEmbeddingModel
 
 DEFAULTS = {
     "openai_base_url": "https://api.openai.com/v1",
@@ -18,7 +21,7 @@ class RagSettings:
         openai_base_url: Optional[str] = None,
         anthropic_api_key: Optional[str] = None,
         google_api_key: Optional[str] = None,
-        embedding_model: Optional["LLMEmbeddingModel"] = None,
+        embedding_model: Optional[LLMEmbeddingModel] = None,
         embedding_dimensions: Optional[int] = None,
         embedding_max_tokens_limit: Optional[int] = None,
     ):
@@ -88,8 +91,17 @@ class RagSettings:
             attr_names = attr_name
 
         for name in attr_names:
-            value = getattr(proj_settings, name, None) or os.environ.get(name, None)
-            if value:
+            # 장고 프로젝트가 로딩되지 않은 상황에서는 ImproperlyConfigured 예외가 발생합니다.
+            # 장고 프로젝트가 없는 상황에서도 pyhub.llm 팩키지를 사용할 수 있습니다.
+            try:
+                value = getattr(proj_settings, name, None)
+                if value is not None:
+                    return value
+            except ImproperlyConfigured:
+                pass
+
+            value = os.environ.get(name, None)
+            if value is not None:
                 return value
 
         return None

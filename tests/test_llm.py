@@ -2,8 +2,48 @@ from typing import AsyncGenerator, Generator
 
 import pytest
 
-from pyhub.rag.llm import AnthropicLLM, GoogleLLM, OpenAILLM
+from pyhub.llm import AnthropicLLM, BaseLLM, GoogleLLM, OpenAILLM
+from pyhub.llm.types import Reply
 from pyhub.rag.settings import rag_settings
+
+
+def check_reply(reply):
+    assert isinstance(reply, Reply)
+    assert "Error" not in reply.text
+
+
+async def check_reply_generator(generator):
+    assert isinstance(generator, (Generator, AsyncGenerator))
+    if isinstance(generator, AsyncGenerator):
+        reply_list = [reply async for reply in generator]
+    else:
+        reply_list = [reply for reply in generator]
+    assert all(isinstance(reply, Reply) for reply in reply_list)
+    assert "".join(reply.text for reply in reply_list)
+    assert not any("Error" in reply.text for reply in reply_list), f"Error in chunks : {reply_list}"
+
+
+async def check_llm(llm: BaseLLM):
+    reply1 = llm.reply("hello. my name is chinseok.")
+    check_reply(reply1)
+    assert len(llm) == 2
+
+    reply2 = await llm.areply("what is my name?")
+    check_reply(reply2)
+    assert "chinseok" in reply2.text.lower()
+    assert len(llm) == 4
+
+    llm.clear()
+    assert len(llm) == 0
+
+    gen1 = llm.reply("hello. my name is chinseok.", stream=True)
+    await check_reply_generator(gen1)
+    assert len(llm) == 2
+
+    gen2 = await llm.areply("what is my name?", stream=True)
+    await check_reply_generator(gen2)
+    assert "chinseok" in reply2.text.lower()
+    assert len(llm) == 4
 
 
 @pytest.mark.asyncio
@@ -12,28 +52,8 @@ from pyhub.rag.settings import rag_settings
     reason="OpenAI API key not available",
 )
 async def test_openai():
-    reply1 = OpenAILLM().reply("hello")
-    assert isinstance(reply1, str)
-    assert "Error" not in reply1
-
-    reply2 = await OpenAILLM().areply("hello")
-    assert isinstance(reply2, str)
-    assert "Error" not in reply2
-
-    # Test streaming
-    stream1 = OpenAILLM().reply("hello", stream=True)
-    assert isinstance(stream1, Generator)
-    chunks1 = list(stream1)
-    assert all(isinstance(chunk, str) for chunk in chunks1)
-    assert "".join(chunks1)
-    assert not any("Error" in chunk for chunk in chunks1)
-
-    stream2 = await OpenAILLM().areply("hello", stream=True)
-    assert isinstance(stream2, AsyncGenerator)
-    chunks2 = [chunk async for chunk in stream2]
-    assert all(isinstance(chunk, str) for chunk in chunks2)
-    assert "".join(chunks2)
-    assert not any("Error" in chunk for chunk in chunks2)
+    llm = OpenAILLM()
+    await check_llm(llm)
 
 
 @pytest.mark.asyncio
@@ -42,52 +62,12 @@ async def test_openai():
     reason="Anthropic API key not available",
 )
 async def test_anthropic():
-    reply1 = AnthropicLLM().reply("hello")
-    assert isinstance(reply1, str)
-    assert "Error" not in reply1
-
-    reply2 = await AnthropicLLM().areply("hello")
-    assert isinstance(reply2, str)
-    assert "Error" not in reply1
-
-    # Test streaming
-    stream1 = AnthropicLLM().reply("hello", stream=True)
-    assert isinstance(stream1, Generator)
-    chunks1 = list(stream1)
-    assert all(isinstance(chunk, str) for chunk in chunks1)
-    assert "".join(chunks1)
-    assert not any("Error" in chunk for chunk in chunks1), f"Error in chunks : {chunks1}"
-
-    stream2 = await AnthropicLLM().areply("hello", stream=True)
-    assert isinstance(stream2, AsyncGenerator)
-    chunks2 = [chunk async for chunk in stream2]
-    assert all(isinstance(chunk, str) for chunk in chunks2)
-    assert "".join(chunks2)
-    assert not any("Error" in chunk for chunk in chunks2), f"Error in chunks : {chunks2}"
+    llm = AnthropicLLM()
+    await check_llm(llm)
 
 
 @pytest.mark.asyncio
 @pytest.mark.skipif(not rag_settings.google_api_key, reason="Google API key not available")
 async def test_google():
-    reply1 = GoogleLLM().reply("hello")
-    assert isinstance(reply1, str)
-    assert "Error" not in reply1
-
-    reply2 = await GoogleLLM().areply("hello")
-    assert isinstance(reply2, str)
-    assert "Error" not in reply2
-
-    # Test streaming
-    stream1 = GoogleLLM().reply("hello", stream=True)
-    assert isinstance(stream1, Generator)
-    chunks1 = list(stream1)
-    assert all(isinstance(chunk, str) for chunk in chunks1)
-    assert "".join(chunks1)
-    assert not any("Error" in chunk for chunk in chunks1)
-
-    stream2 = await GoogleLLM().areply("hello", stream=True)
-    assert isinstance(stream2, AsyncGenerator)
-    chunks2 = [chunk async for chunk in stream2]
-    assert all(isinstance(chunk, str) for chunk in chunks2)
-    assert "".join(chunks2)
-    assert not any("Error" in chunk for chunk in chunks2)
+    llm = GoogleLLM()
+    await check_llm(llm)

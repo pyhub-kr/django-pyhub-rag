@@ -3,7 +3,7 @@ from typing import Optional
 
 from django.db import models
 
-from pyhub.rag.llm import LLMEmbeddingModel
+from pyhub.llm.types import LLMEmbeddingModel
 from pyhub.rag.settings import rag_settings
 
 logger = logging.getLogger(__name__)

@@ -1,9 +1,9 @@
-from typing import Literal, Union, Optional, List
+from typing import List, Literal, Optional, Union
 
 import pytest
 import tiktoken
 
-from pyhub.rag.utils import aenumerate, make_groups_by_length, get_literal_values
+from pyhub.rag.utils import aenumerate, get_literal_values, make_groups_by_length
 
 
 @pytest.mark.it("make_groups_by_length 함수가 올바르게 텍스트를 그룹화하는지 테스트합니다.")
