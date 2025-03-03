@@ -77,7 +77,6 @@ class TestDocumentModels:
         metadata = {"source": "test"}
 
         doc = self.document_model.objects.create(
-            id=1,  # FIXME: id 자동 생성이 되지 않아, 직접 지정
             page_content=self.sample_text,
             metadata=metadata,
         )
@@ -122,7 +121,6 @@ class TestDocumentModels:
         # 테스트용 문서 생성
         for i in range(1, count + 1):
             self.document_model.objects.create(
-                id=i,
                 page_content=f"Document {i}",
                 embedding=[0.1] * self.dimensions,
             )
@@ -144,7 +142,6 @@ class TestDocumentModels:
         # 테스트용 문서 생성
         for i in range(1, count + 1):
             await self.document_model.objects.acreate(
-                id=i,
                 page_content=f"Document {i}",
                 embedding=[0.1] * self.dimensions,
             )

@@ -30,6 +30,10 @@ class VirtualTableSchemaEditor(SQLiteSchemaEditor):
             # 컬럼명에서 쌍따옴표 제거 (예: "id" -> id)
             sql = sql.replace('"', "")
 
+            # id 컬럼이 NOT NULL이 있으면 아래 오류 발생 => NOT NULL 제약조건 제거
+            # OperationalError: Expected integer for INTEGER metadata column id, received NULL
+            sql = re.sub(r"(id\s+[a-zA-Z\d]+)\s+NOT\s+NULL", r"\1", sql)
+
             # float[] 필드에는 NOT NULL 제약조건이 없으므로 제거하고
             # 이후 조회 시에 MATCH 절에서 자동으로 cosine distance를 활용하기
             # TODO: 다양한 distance 지원하기

@@ -76,30 +76,12 @@ class Command(BaseCommand):
             # 올바른 DB 연결을 위해 router를 사용하여 write 위한 데이터베이스를 지정받는다.
             db_write_alias = router.db_for_write(model)
             db_connection = connections[db_write_alias]
-            # 현재 sqlite-vec 확장에서는 pk id 자동 생성이 안되므로 수동으로 설정해줘야 한다.
-            is_sqlite = db_connection.vendor == "sqlite"
-
-            # SQLite인 경우 마지막 ID 가져오기
-            last_id = 0
-            if is_sqlite:
-                try:
-                    # Get the last ID from the correct database using using()
-                    last_instance = model.objects.using(db_write_alias).order_by("-id").first()
-                    last_id = last_instance.id if last_instance else 0
-                except Exception as e:
-                    self.stderr.write(self.style.WARNING(f"Could not get last ID for SQLite: {e}"))
 
             # 제너레이터를 사용하여 JSONL 파일 읽기 및 배치 단위로 처리
             batch_instances = []
             total_created = 0
-            current_id = last_id
 
             for instance in self.read_jsonl(jsonl_path, model):
-                # SQLite인 경우 ID 수동 설정
-                if is_sqlite:
-                    current_id += 1
-                    instance.id = current_id
-
                 batch_instances.append(instance)
 
                 # 배치 크기에 도달하면 bulk_create 실행
