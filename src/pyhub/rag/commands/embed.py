@@ -9,12 +9,12 @@ from pyhub.llm.enum import LLMEmbeddingModelEnum
 from pyhub.llm.types import Usage
 from pyhub.rag.json import JSONDecodeError, json_dumps, json_loads
 
-app = typer.Typer(name="embed", help="embedding 관련 명령어")
+app = typer.Typer(name="embed", help="Commands related to embedding")
 console = Console()
 
 
 def validate_embeddings(data: List[Dict]) -> Optional[int]:
-    """임베딩 필드의 차원을 검증하고 일관된 차원을 반환합니다."""
+    """Validates the dimensions of embedding fields and returns the consistent dimension."""
     dimensions: Set[int] = set()
 
     for item in data:
@@ -30,7 +30,7 @@ def validate_embeddings(data: List[Dict]) -> Optional[int]:
 
 @app.command()
 def fill_jsonl(
-    jsonl_path: Path = typer.Argument(..., help="소스 JSONL 파일의 경로"),
+    jsonl_path: Path = typer.Argument(..., help="Path to the source JSONL file"),
     embedding_model: LLMEmbeddingModelEnum = LLMEmbeddingModelEnum.TEXT_EMBEDDING_3_SMALL,
 ):
     """Embeds the page_content field values from the JSONL file data and stores them in the embedding field."""
@@ -53,11 +53,11 @@ def fill_jsonl(
                 for i, line in enumerate(lines):
                     obj = json_loads(line.strip())
 
-                    # page_content 필드가 없으면 건너뜁니다.
+                    # Skip if page_content field doesn't exist
                     if "page_content" not in obj:
                         continue
 
-                    # embedding 필드가 없다면 생성
+                    # Create embedding field if it doesn't exist
                     embedding = obj.get("embedding")
                     if not embedding:
                         embedding = llm.embed(obj["page_content"])
@@ -67,14 +67,14 @@ def fill_jsonl(
 
                     out_f.write(json_dumps(obj, ensure_ascii=False) + "\n")
 
-                    # 진행율을 한 줄에 표시
+                    # Display progress on a single line
                     progress = (i + 1) / total_lines * 100
                     console.print(
                         f"Progress: {progress:.1f}% ({i+1}/{total_lines}) - tokens: {total_usage.input}",
                         end="\r",
                     )
 
-        # 작업 완료 메시지 표시
+        # Display completion message
         console.print("\n")
         console.print("[green]Embedding completed![/green]")
         console.print(f"Output file created: {jsonl_out_path}")

@@ -13,8 +13,8 @@ try:
 except ImportError:
     sqlite_vec = None
 
-# SQLite-vec 서브 명령 그룹 생성
-app = typer.Typer(name="sqlite-vec", help="SQLite-vec 관련 명령어")
+# Create SQLite-vec subcommand group
+app = typer.Typer(name="sqlite-vec", help="Commands related to SQLite-vec")
 console = Console()
 
 
