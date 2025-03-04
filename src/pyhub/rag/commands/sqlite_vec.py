@@ -275,10 +275,10 @@ def similarity_search(
         json_string: str = sample_row[0]
         embedding: list[float] = json_loads(json_string)
         current_dimensions = len(embedding)
-        console.print(f"Embedding dimensions: {current_dimensions}")
+        # console.print(f"Embedding dimensions: {current_dimensions}")
 
         llm = LLM.create(embedding_model.value)
-        console.print(f"Using {llm.embedding_model} (dimensions: {llm.get_embed_size()})")
+        # console.print(f"Using {llm.embedding_model} (dimensions: {llm.get_embed_size()})")
 
         if current_dimensions != llm.get_embed_size():
             console.print("[bold red]Embedding dimensions mismatch![/bold red]")
@@ -299,7 +299,6 @@ def similarity_search(
 
         for _id, page_content, metadata, distance in results:
             console.print()
-            console.print(f"[bold reverse]문서 #{_id} (distance: {distance})[/bold reverse]")
             console.print(page_content)
             console.print("metadata :", metadata)
-            console.print()
+            console.print("----\n")
