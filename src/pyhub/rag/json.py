@@ -19,7 +19,7 @@ def json_loads(s, **kwargs):
 
 
 def json_dumps(obj, **kwargs):
-    return json.dumps(obj, cls=PyhubJSONEncoder, **kwargs)
+    return json.dumps(obj, cls=PyhubJSONEncoder, ensure_ascii=False, **kwargs)
 
 
 __all__ = ["JSONDecodeError", "json_loads", "json_dumps"]

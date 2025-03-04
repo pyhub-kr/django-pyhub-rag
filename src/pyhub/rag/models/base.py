@@ -4,7 +4,7 @@ from typing import List, Union, cast
 
 import tiktoken
 from asgiref.sync import async_to_sync
-from django.db import connections, models, router
+from django.db import models
 from django_lifecycle import BEFORE_CREATE, BEFORE_UPDATE, LifecycleModelMixin, hook
 from typing_extensions import Optional
 
