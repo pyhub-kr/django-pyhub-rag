@@ -98,21 +98,6 @@ class AbstractDocument(LifecycleModelMixin, models.Model):
 
     @hook(BEFORE_CREATE)
     def on_before_create(self):
-        # SQLite3 엔진을 사용하는 경우, pk 값이 None일 때 최신 pk 값보다 +1 한 값을 지정
-        if self.pk is None:
-            if self._meta.model._default_manager.exists():
-                # Get the database alias for write operations with this model
-                db_alias = router.db_for_write(self.__class__)
-                connection = connections[db_alias]
-
-                if connection.vendor == "sqlite":
-                    # 최신 pk 값 조회
-                    latest_obj = self._meta.model._default_manager.order_by("-pk").first()
-                    if latest_obj:
-                        self.pk = latest_obj.pk + 1
-            else:
-                self.pk = 1
-
         # 생성 시에 임베딩 데이터가 저장되어있지 않으면 임베딩 데이터를 생성합니다.
         self.update_embedding()
 
