@@ -1,11 +1,12 @@
 import os
-import sys
-
 import sqlite3
+import sys
 from enum import Enum
 
 import typer
 from rich.console import Console
+
+from pyhub.llm.enum import EmbeddingDimensionsEnum
 
 try:
     import sqlite_vec
@@ -13,14 +14,8 @@ except ImportError:
     sqlite_vec = None
 
 # SQLite-vec 서브 명령 그룹 생성
-sqlite_vec_app = typer.Typer(name="sqlite-vec", help="SQLite-vec 관련 명령어")
+app = typer.Typer(name="sqlite-vec", help="SQLite-vec 관련 명령어")
 console = Console()
-
-
-class Dimensions(str, Enum):
-    TEXT_EMBEDDING_3_SMALL = "1536"
-    TEXT_EMBEDDING_3_LARGE = "3072"
-    TEXT_EMBEDDING_004 = "3072"
 
 
 class DistanceMetric(str, Enum):
@@ -36,7 +31,7 @@ def load_extensions(conn: sqlite3.Connection):
     conn.enable_load_extension(False)
 
 
-@sqlite_vec_app.command(name="check")
+@app.command(name="check")
 def check():
     """Check if sqlite-vec extension can be loaded properly"""
 
@@ -71,11 +66,11 @@ def check():
             console.print("[bold green]✅ sqlite-vec extension is working properly.[/bold green]")
 
 
-@sqlite_vec_app.command(name="create-table")
+@app.command(name="create-table")
 def create_table(
     db_path: str = typer.Argument(..., help="sqlite db path"),
     table_name: str = typer.Argument(..., help="table name"),
-    dimensions: Dimensions = Dimensions.TEXT_EMBEDDING_3_SMALL,
+    dimensions: EmbeddingDimensionsEnum = EmbeddingDimensionsEnum.D_1536,
     distance_metric: DistanceMetric = DistanceMetric.COSINE,
 ):
     """Create a vector table using sqlite-vec extension in SQLite database"""

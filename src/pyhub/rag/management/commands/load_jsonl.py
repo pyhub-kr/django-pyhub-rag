@@ -9,7 +9,7 @@ from urllib.error import URLError
 
 from django.apps import apps
 from django.core.management.base import BaseCommand, CommandError
-from django.db import connections, router
+from django.db import router
 
 
 class Command(BaseCommand):

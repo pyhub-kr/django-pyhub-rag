@@ -1,4 +1,4 @@
-from typing import AsyncGenerator, Generator, List, Optional, Union
+from typing import AsyncGenerator, Generator, Optional, Union
 
 from anthropic import NOT_GIVEN as ANTHROPIC_NOT_GIVEN
 from anthropic import Anthropic as SyncAnthropic
@@ -7,7 +7,15 @@ from anthropic import AsyncAnthropic
 from pyhub.rag.settings import rag_settings
 
 from .base import BaseLLM
-from .types import AnthropicChatModel, LLMEmbeddingModel, Message, Reply, Usage
+from .types import (
+    AnthropicChatModel,
+    Embed,
+    EmbedList,
+    LLMEmbeddingModel,
+    Message,
+    Reply,
+    Usage,
+)
 
 
 class AnthropicLLM(BaseLLM):
@@ -141,14 +149,12 @@ class AnthropicLLM(BaseLLM):
     ) -> Reply:
         return await super().areply(human_message, model, stream, raise_errors)
 
-    def embed(
-        self, input: Union[str, List[str]], model: Optional[LLMEmbeddingModel] = None
-    ) -> Union[List[float], List[List[float]]]:
+    def embed(self, input: Union[str, list[str]], model: Optional[LLMEmbeddingModel] = None) -> Union[Embed, EmbedList]:
         raise NotImplementedError
 
     async def aembed(
-        self, input: Union[str, List[str]], model: Optional[LLMEmbeddingModel] = None
-    ) -> Union[List[float], List[List[float]]]:
+        self, input: Union[str, list[str]], model: Optional[LLMEmbeddingModel] = None
+    ) -> Union[Embed, EmbedList]:
         raise NotImplementedError
 
 

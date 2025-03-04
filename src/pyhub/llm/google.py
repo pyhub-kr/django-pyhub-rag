@@ -1,4 +1,4 @@
-from typing import AsyncGenerator, Generator, List, Optional, Union, cast
+from typing import AsyncGenerator, Generator, Optional, Union, cast
 
 from google import genai
 from google.genai.types import Content, GenerateContentConfig, Part
@@ -7,6 +7,8 @@ from pyhub.rag.settings import rag_settings
 
 from .base import BaseLLM
 from .types import (
+    Embed,
+    EmbedList,
     GoogleChatModel,
     GoogleEmbeddingModel,
     LLMEmbeddingModel,
@@ -17,6 +19,10 @@ from .types import (
 
 
 class GoogleLLM(BaseLLM):
+    EMBEDDING_DIMENSIONS = {
+        "text-embedding-004": 768,
+    }
+
     def __init__(
         self,
         model: GoogleChatModel = "gemini-2.0-flash",
@@ -24,7 +30,7 @@ class GoogleLLM(BaseLLM):
         temperature: float = 0.2,
         max_tokens: int = 1000,
         system_prompt: Optional[str] = None,
-        initial_messages: Optional[List[Message]] = None,
+        initial_messages: Optional[list[Message]] = None,
         api_key: Optional[str] = None,
     ):
         super().__init__(
@@ -173,9 +179,7 @@ class GoogleLLM(BaseLLM):
     ) -> Reply:
         return await super().areply(human_message, model, stream, raise_errors)
 
-    def embed(
-        self, input: Union[str, List[str]], model: Optional[LLMEmbeddingModel] = None
-    ) -> Union[List[float], List[List[float]]]:
+    def embed(self, input: Union[str, list[str]], model: Optional[LLMEmbeddingModel] = None) -> Union[Embed, EmbedList]:
         embedding_model = cast(GoogleEmbeddingModel, model or self.embedding_model)
 
         client = genai.Client(api_key=self.api_key)
@@ -184,13 +188,14 @@ class GoogleLLM(BaseLLM):
             contents=input,
             # config=EmbedContentConfig(output_dimensionality=10),
         )
+        usage = None  # TODO: response에 usage_metadata가 없음
         if isinstance(input, str):
-            return response.embeddings[0].values
-        return [v.values for v in response.embeddings]
+            return Embed(response.embeddings[0].values, usage=usage)
+        return EmbedList([Embed(v.values) for v in response.embeddings], usage=usage)
 
     async def aembed(
-        self, input: Union[str, List[str]], model: Optional[LLMEmbeddingModel] = None
-    ) -> Union[List[float], List[List[float]]]:
+        self, input: Union[str, list[str]], model: Optional[LLMEmbeddingModel] = None
+    ) -> Union[Embed, EmbedList]:
         embedding_model = cast(GoogleEmbeddingModel, model or self.embedding_model)
 
         client = genai.Client(api_key=self.api_key)
@@ -199,9 +204,10 @@ class GoogleLLM(BaseLLM):
             contents=input,
             # config=EmbedContentConfig(output_dimensionality=10),
         )
+        usage = None  # TODO: response에 usage_metadata가 없음
         if isinstance(input, str):
-            return response.embeddings[0].values
-        return [v.values for v in response.embeddings]
+            return Embed(response.embeddings[0].values, usage=usage)
+        return EmbedList([Embed(v.values) for v in response.embeddings], usage=usage)
 
 
 __all__ = ["GoogleLLM"]

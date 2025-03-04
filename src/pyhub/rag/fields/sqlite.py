@@ -1,4 +1,3 @@
-import json
 import sqlite3
 from typing import Optional
 
@@ -9,6 +8,7 @@ from django.core import checks
 from django.core.exceptions import ValidationError
 
 from pyhub.rag.fields.base import BaseVectorField
+from pyhub.rag.json import JSONDecodeError, json_dumps, json_loads
 
 
 class SQLiteVectorField(BaseVectorField):
@@ -82,8 +82,8 @@ class SQLiteVectorField(BaseVectorField):
         # If the value is a string, try to parse it as JSON.
         if isinstance(value, str):
             try:
-                parsed = json.loads(value)
-            except json.JSONDecodeError:
+                parsed = json_loads(value)
+            except JSONDecodeError:
                 raise ValidationError("Invalid JSON format for vector field.")
             if not isinstance(parsed, list):
                 raise ValidationError("JSON value for vector field must be a list.")
@@ -115,7 +115,7 @@ class SQLiteVectorField(BaseVectorField):
         elif isinstance(value, list):
             if self.dimensions is not None and len(value) != self.dimensions:
                 raise ValidationError(f"Expected vector with {self.dimensions} dimensions, got {len(value)}.")
-        return json.dumps(value)
+        return json_dumps(value)
 
     def value_to_string(self, obj):
         """
@@ -175,7 +175,7 @@ class SQLiteVectorWidget(forms.TextInput):
         # If the value is a list, format it as a JSON string;
         # otherwise, pass the value as-is.
         if isinstance(value, list):
-            return json.dumps(value)
+            return json_dumps(value)
         return value
 
 
@@ -194,8 +194,8 @@ class SQLiteVectorFormField(forms.CharField):
         if isinstance(value, list) or isinstance(value, np.ndarray):
             return value
         try:
-            parsed = json.loads(value)
-        except json.JSONDecodeError:
+            parsed = json_loads(value)
+        except JSONDecodeError:
             raise ValidationError("Enter a valid JSON list for the vector field.")
         if not isinstance(parsed, list):
             raise ValidationError("Enter a valid JSON list for the vector field.")
@@ -208,5 +208,5 @@ class SQLiteVectorFormField(forms.CharField):
         if isinstance(initial, np.ndarray):
             initial = initial.tolist()
         if isinstance(data, list):
-            return super().has_changed(json.dumps(initial), json.dumps(data))
+            return super().has_changed(json_dumps(initial), json_dumps(data))
         return super().has_changed(initial, data)

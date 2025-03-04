@@ -1,4 +1,3 @@
-from collections import namedtuple
 from dataclasses import dataclass
 from typing import Literal, TypeAlias, Union
 
@@ -39,7 +38,15 @@ class Message(BaseModel):
     content: str
 
 
-Usage = namedtuple("Usage", ["input", "output"])
+@dataclass
+class Usage:
+    input: int = 0
+    output: int = 0
+
+    def __add__(self, other):
+        if isinstance(other, Usage):
+            return Usage(input=self.input + other.input, output=self.output + other.output)
+        return NotImplemented
 
 
 @dataclass
@@ -49,3 +56,42 @@ class Reply:
 
     def __str__(self) -> str:
         return self.text
+
+    def __format__(self, format_spec: str) -> str:
+        return format(self.text, format_spec)
+
+
+@dataclass
+class Embed:
+    array: list[float]  # noqa
+    usage: Optional[Usage] = None
+
+    def __iter__(self):
+        return iter(self.array)
+
+    def __len__(self):
+        return len(self.array)
+
+    def __getitem__(self, index):
+        return self.array[index]
+
+    def __str__(self):
+        return str(self.array)
+
+
+@dataclass
+class EmbedList:
+    arrays: list[Embed]  # noqa
+    usage: Optional[Usage] = None
+
+    def __iter__(self):
+        return iter(self.arrays)
+
+    def __len__(self):
+        return len(self.arrays)
+
+    def __getitem__(self, index):
+        return self.arrays[index]
+
+    def __str__(self):
+        return str(self.arrays)

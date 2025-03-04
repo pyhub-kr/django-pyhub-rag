@@ -1,4 +1,4 @@
-from typing import AsyncGenerator, Generator, List, Optional, Union, cast
+from typing import AsyncGenerator, Generator, Optional, Union, cast
 
 from openai import AsyncOpenAI
 from openai import OpenAI as SyncOpenAI
@@ -7,6 +7,8 @@ from pyhub.rag.settings import rag_settings
 
 from .base import BaseLLM
 from .types import (
+    Embed,
+    EmbedList,
     LLMChatModel,
     LLMEmbeddingModel,
     Message,
@@ -18,6 +20,12 @@ from .types import (
 
 
 class OpenAILLM(BaseLLM):
+    EMBEDDING_DIMENSIONS = {
+        "text-embedding-ada-002": 1536,
+        "text-embedding-3-small": 1536,
+        "text-embedding-3-large": 3072,
+    }
+
     def __init__(
         self,
         model: OpenAIChatModel = "gpt-4o-mini",
@@ -136,9 +144,7 @@ class OpenAILLM(BaseLLM):
     ) -> Reply:
         return await super().areply(human_message, model, stream, raise_errors)
 
-    def embed(
-        self, input: Union[str, List[str]], model: Optional[LLMEmbeddingModel] = None
-    ) -> Union[List[float], List[List[float]]]:
+    def embed(self, input: Union[str, list[str]], model: Optional[LLMEmbeddingModel] = None) -> Union[Embed, EmbedList]:
         embedding_model = cast(OpenAIEmbeddingModel, model or self.embedding_model)
 
         client = SyncOpenAI(
@@ -149,13 +155,14 @@ class OpenAILLM(BaseLLM):
             input=input,
             model=embedding_model,
         )
+        usage = Usage(input=response.usage.prompt_tokens or 0, output=0)
         if isinstance(input, str):
-            return response.data[0].embedding
-        return [v.embedding for v in response.data]
+            return Embed(response.data[0].embedding, usage=usage)
+        return EmbedList([Embed(v.embedding) for v in response.data], usage=usage)
 
     async def aembed(
-        self, input: Union[str, List[str]], model: Optional[LLMEmbeddingModel] = None
-    ) -> Union[List[float], List[List[float]]]:
+        self, input: Union[str, list[str]], model: Optional[LLMEmbeddingModel] = None
+    ) -> Union[Embed, EmbedList]:
         embedding_model = cast(OpenAIEmbeddingModel, model or self.embedding_model)
 
         client = AsyncOpenAI(
@@ -166,6 +173,7 @@ class OpenAILLM(BaseLLM):
             input=input,
             model=embedding_model,
         )
+        usage = Usage(input=response.usage.prompt_tokens or 0, output=0)
         if isinstance(input, str):
-            return response.data[0].embedding
-        return [v.embedding for v in response.data]
+            return Embed(response.data[0].embedding, usage=usage)
+        return EmbedList([Embed(v.embedding) for v in response.data], usage=usage)

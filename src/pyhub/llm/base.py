@@ -1,20 +1,15 @@
 import abc
 import logging
-from typing import (
-    AsyncGenerator,
-    Generator,
-    List,
-    Optional,
-    Union,
-    cast,
-)
+from typing import AsyncGenerator, Generator, Optional, Union, cast
 
-from .types import LLMChatModel, LLMEmbeddingModel, Message, Reply
+from .types import Embed, EmbedList, LLMChatModel, LLMEmbeddingModel, Message, Reply
 
 logger = logging.getLogger(__name__)
 
 
 class BaseLLM(abc.ABC):
+    EMBEDDING_DIMENSIONS = {}
+
     def __init__(
         self,
         model: LLMChatModel = "gpt-4o-mini",
@@ -22,7 +17,7 @@ class BaseLLM(abc.ABC):
         temperature: float = 0.2,
         max_tokens: int = 1000,
         system_prompt: Optional[str] = None,
-        initial_messages: Optional[List[Message]] = None,
+        initial_messages: Optional[list[Message]] = None,
         api_key: Optional[str] = None,
     ):
         self.model = model
@@ -32,6 +27,9 @@ class BaseLLM(abc.ABC):
         self.system_prompt = system_prompt
         self.history = initial_messages or []
         self.api_key = api_key
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}(model={self.model}, embedding_model={self.embedding_model}, temperature={self.temperature}, max_tokens={self.max_tokens})"
 
     def __len__(self) -> int:
         return len(self.history)
@@ -62,7 +60,7 @@ class BaseLLM(abc.ABC):
         """Generate a streaming response asynchronously using the specific LLM provider"""
         pass
 
-    def _prepare_messages(self, human_message: str, current_messages: List[Message]) -> List[Message]:
+    def _prepare_messages(self, human_message: str, current_messages: list[Message]) -> list[Message]:
         if human_message is not None:
             current_messages.append(Message(role="user", content=human_message))
         return current_messages
@@ -191,18 +189,21 @@ class BaseLLM(abc.ABC):
     #
     # embed
     #
+    def get_embed_size(self, model: Optional[LLMEmbeddingModel] = None) -> int:
+        return self.EMBEDDING_DIMENSIONS[model or self.embedding_model]
+
     @abc.abstractmethod
     def embed(
         self,
-        input: Union[str, List[str]],
+        input: Union[str, list[str]],
         model: Optional[LLMEmbeddingModel] = None,
-    ) -> Union[List[float], List[List[float]]]:
+    ) -> Union[Embed, EmbedList]:
         pass
 
     @abc.abstractmethod
     async def aembed(
         self,
-        input: Union[str, List[str]],
+        input: Union[str, list[str]],
         model: Optional[LLMEmbeddingModel] = None,
-    ) -> Union[List[float], List[List[float]]]:
+    ) -> Union[Embed, EmbedList]:
         pass
