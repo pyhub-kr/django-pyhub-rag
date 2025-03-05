@@ -1,14 +1,17 @@
+import contextlib
+import functools
 import sqlite3
 import sys
 from enum import Enum
 from pathlib import Path
+from typing import Generator, Optional
 
 import typer
 from rich.console import Console
 
 from pyhub.llm import LLM
 from pyhub.llm.enum import EmbeddingDimensionsEnum, LLMEmbeddingModelEnum
-from pyhub.rag.json import json_dumps, json_loads
+from pyhub.rag.json import JSONDecodeError, json_dumps, json_loads
 
 try:
     import sqlite_vec
@@ -24,6 +27,12 @@ class DistanceMetric(str, Enum):
     COSINE = "cosine"
     L1 = "L1"
     L2 = "L2"
+
+
+class SQLiteVecError(Exception):
+    """Base exception class for SQLite-vec related errors"""
+
+    pass
 
 
 def load_extensions(conn: sqlite3.Connection):
@@ -59,16 +68,16 @@ def check():
 
     if is_windows and is_arm:
         console.print(
-            "[bold red]❌ ARM version of Python does not support sqlite-vec library. Please reinstall AMD64 version of Python.[/bold red]"
+            "[bold red]ARM version of Python does not support sqlite-vec library. Please reinstall AMD64 version of Python.[/bold red]"
         )
         raise typer.Exit(code=1)
 
     if not is_python_3_10_or_later:
-        console.print("[bold red]❌ Python 3.10 or later is required.[/bold red]")
+        console.print("[bold red]Python 3.10 or later is required.[/bold red]")
         raise typer.Exit(code=1)
 
     if sqlite_vec is None:
-        console.print("[bold red]❌ Please install sqlite-vec library.[/bold red]")
+        console.print("[bold red]Please install sqlite-vec library.[/bold red]")
         raise typer.Exit(code=1)
 
     with sqlite3.connect(":memory:") as db:
@@ -76,12 +85,44 @@ def check():
             load_extensions(db)
         except AttributeError:
             console.print(
-                "[bold red]❌ This Python does not support sqlite3 extension. Please refer to the guide and reinstall Python.[/bold red]"
+                "[bold red]This Python does not support sqlite3 extension. Please refer to the guide and reinstall Python.[/bold red]"
             )
             raise typer.Exit(code=1)
         else:
-            console.print("[bold green]✅ This Python supports sqlite3 extension.[/bold green]")
-            console.print("[bold green]✅ sqlite-vec extension is working properly.[/bold green]")
+            console.print("[bold green]This Python supports sqlite3 extension.[/bold green]")
+            console.print("[bold green]sqlite-vec extension is working properly.[/bold green]")
+
+
+@contextlib.contextmanager
+def get_db_cursor(db_path: Path, debug: bool = False) -> Generator[sqlite3.Cursor, None, None]:
+    """
+    Context manager that provides a SQLite cursor with sqlite-vec extension loaded.
+
+    Args:
+        db_path: Path to SQLite database
+        debug: If True, prints SQL statements being executed
+
+    Yields:
+        sqlite3.Cursor: Database cursor with sqlite-vec extension loaded
+
+    Raises:
+        SQLiteVecError: If sqlite-vec extension cannot be loaded
+    """
+    with sqlite3.connect(db_path) as conn:
+        load_extensions(conn)
+
+        if debug:
+
+            def sql_trace_callback(sql):
+                console.print(f"[dim blue]Executing: {sql}[/dim blue]")
+
+            conn.set_trace_callback(sql_trace_callback)
+
+        cursor = conn.cursor()
+        try:
+            yield cursor
+        finally:
+            cursor.close()
 
 
 @app.command()
@@ -119,11 +160,7 @@ def create_table(
     )
     """
 
-    with sqlite3.connect(db_path) as conn:
-        load_extensions(conn)
-
-        cursor = conn.cursor()
-
+    with get_db_cursor(db_path) as cursor:
         # Print the SQL query for informational purposes
         console.print("[blue]Executing SQL:[/blue]")
         console.print(f"[cyan]{sql}[/cyan]")
@@ -134,14 +171,13 @@ def create_table(
             console.print(f"[red]{e} (db_path: {db_path}[/red]")
             raise typer.Exit(code=1)
 
-        conn.commit()
         console.print(f"[bold green]Successfully created virtual table '{table_name}' in {db_path}[/bold green]")
 
 
 @app.command()
 def import_jsonl(
     db_path: Path = typer.Argument(Path("db.sqlite3"), help="sqlite db path"),
-    table_name: str = typer.Argument("documents", help="table name"),
+    table_name: str = typer.Argument(None, help="table name (optional, auto-detected if not provided)"),
     jsonl_path: Path = typer.Option(..., help="Path to the JSONL file with embeddings"),
     clear: bool = typer.Option(False, help="Clear existing data in the table before loading"),
     debug: bool = typer.Option(False, help="Print SQL statements being executed"),
@@ -161,20 +197,35 @@ def import_jsonl(
 
     Each JSONL record should contain at minimum 'page_content' and 'embedding' fields.
     The 'metadata' field is optional and will be stored as a JSON string.
+
+    If table_name is not provided, the command will automatically detect a table with an embedding column.
+    If exactly one such table is found, it will be used. If none or multiple tables are found, an error will be raised.
     """
 
-    with sqlite3.connect(db_path) as conn:
-        load_extensions(conn)
+    with get_db_cursor(db_path, debug) as cursor:
+        # Auto-detect table with embedding column if table_name is not provided
+        if table_name is None:
+            try:
+                # Find tables with embedding column
+                cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND sql LIKE '%embedding%'")
+                tables = cursor.fetchall()
 
-        # Set up SQL tracing callback to print executed SQL statements if debug is enabled
-        if debug:
+                if not tables:
+                    console.print("[red]Error: No tables with embedding column found in the database[/red]")
+                    raise typer.Exit(code=1)
 
-            def sql_trace_callback(sql):
-                console.print(f"[dim blue]Executing: {sql}[/dim blue]")
+                if len(tables) > 1:
+                    table_list = ", ".join([t[0] for t in tables])
+                    console.print(f"[red]Error: Multiple tables with embedding column found: {table_list}[/red]")
+                    console.print("[red]Please specify a table name explicitly[/red]")
+                    raise typer.Exit(code=1)
 
-            conn.set_trace_callback(sql_trace_callback)
+                table_name = tables[0][0]
+                console.print(f"[green]Auto-detected table: '{table_name}'[/green]")
 
-        cursor = conn.cursor()
+            except sqlite3.Error as e:
+                console.print(f"[red]Error detecting tables: {str(e)}[/red]")
+                raise typer.Exit(code=1)
 
         # Clear existing data if requested
         if clear:
@@ -226,7 +277,6 @@ def import_jsonl(
                     console.print(f"[yellow]Warning: Error processing record {i+1}: {str(e)}[/yellow]")
                     continue
 
-        conn.commit()
         console.print("\n[bold green]✅ Data loading completed successfully[/bold green]")
         console.print(f"[green]Inserted {inserted_count} of {total_lines} records into table '{table_name}'[/green]")
 
@@ -234,13 +284,15 @@ def import_jsonl(
 @app.command()
 def similarity_search(
     db_path: Path = typer.Argument(Path("db.sqlite3"), help="Path to the SQLite database"),
-    table_name: str = typer.Argument("documents", help="Name of the table to query"),
+    table_name: str = typer.Argument(None, help="Name of the table to query"),
     query: str = typer.Option(..., help="Text to search for similar documents"),
     embedding_model: LLMEmbeddingModelEnum = typer.Option(
         LLMEmbeddingModelEnum.TEXT_EMBEDDING_3_SMALL, help="Embedding model to use"
     ),
     limit: int = typer.Option(4, help="Maximum number of results to return"),
+    no_metadata: bool = typer.Option(False, help="Hide metadata in the results"),
     debug: bool = typer.Option(False, help="Print SQL statements being executed"),
+    verbose: bool = typer.Option(False, help="Print additional debug information"),
 ):
     """
     Perform a semantic similarity search in a SQLite vector database.
@@ -255,19 +307,88 @@ def similarity_search(
 
     The results include document ID, content, metadata, and distance score.
     """
-    with sqlite3.connect(db_path) as conn:
-        load_extensions(conn)
+    with get_db_cursor(db_path, debug=debug) as cursor:
+        # Auto-detect table if not provided
+        if table_name is None:
+            table_name = detect_embedding_table(cursor)
+            if verbose:
+                console.print(f"[green]Using auto-detected table: '{table_name}'[/green]")
 
-        # Set up SQL tracing callback to print executed SQL statements if debug is enabled
-        if debug:
+        current_dimensions = detect_embedding_dimensions(cursor, table_name)
 
-            def sql_trace_callback(sql):
-                console.print(f"[dim blue]Executing: {sql}[/dim blue]")
+        llm = LLM.create(embedding_model.value)
 
-            conn.set_trace_callback(sql_trace_callback)
+        if current_dimensions == llm.get_embed_size():
+            if verbose:
+                console.print(
+                    f"[green]Matched Embedding dimensions : {current_dimensions} dimensions. Using {llm.embedding_model} for query embedding[/green]"
+                )
+        else:
+            console.print("[bold red]Embedding dimensions mismatch![/bold red]")
+            console.print(f"Current dimensions: {current_dimensions}")
+            console.print(f"LLM dimensions: {llm.get_embed_size()}")
+            raise typer.Exit(code=1)
 
-        cursor = conn.cursor()
+        query_embedding = llm.embed(query)
 
+        sql = f"""
+            SELECT page_content, metadata, distance FROM {table_name}
+            WHERE embedding MATCH vec_f32(?)
+            ORDER BY distance
+            LIMIT {limit}
+        """
+        cursor.execute(sql, (str(query_embedding),))
+        results = cursor.fetchall()
+
+        for i, (page_content, metadata, distance) in enumerate(results):
+            if isinstance(metadata, str):
+                try:
+                    metadata = json_loads(metadata)
+                    if isinstance(metadata, dict):
+                        metadata.update({"distance": distance})
+                except JSONDecodeError:
+                    pass
+            if not no_metadata:
+                console.print(f"metadata: {metadata}\n")
+            console.print(page_content.strip())
+            if i < len(results) - 1:
+                console.print("\n----\n")
+
+
+def detect_embedding_table(cursor: sqlite3.Cursor) -> str:
+    """Detect table with embedding column"""
+
+    cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND sql LIKE '%embedding%'")
+    tables = cursor.fetchall()
+
+    if not tables:
+        raise SQLiteVecError("No tables with embedding column found in the database")
+
+    if len(tables) > 1:
+        table_list = ", ".join([t[0] for t in tables])
+        raise SQLiteVecError(
+            f"Multiple tables with embedding column found: {table_list}\n" "Please specify a table name explicitly"
+        )
+
+    return tables[0][0]
+
+
+def detect_embedding_dimensions(cursor: sqlite3.Cursor, table_name: str) -> int:
+    """
+    Detect the dimensions of embeddings in the specified table.
+
+    Args:
+        cursor: SQLite cursor
+        table_name: Name of the table containing embeddings
+
+    Returns:
+        The number of dimensions in the embeddings
+
+    Raises:
+        SQLiteVecError: If no embeddings are found or if there's an issue with the data
+        typer.Exit: If no records with embeddings are found
+    """
+    try:
         # Get a sample record to determine embedding dimensions
         cursor.execute(f"SELECT vec_to_json(embedding) FROM {table_name} LIMIT 1")
         sample_row = cursor.fetchone()
@@ -279,30 +400,7 @@ def similarity_search(
         json_string: str = sample_row[0]
         embedding: list[float] = json_loads(json_string)
         current_dimensions = len(embedding)
-        # console.print(f"Embedding dimensions: {current_dimensions}")
 
-        llm = LLM.create(embedding_model.value)
-        # console.print(f"Using {llm.embedding_model} (dimensions: {llm.get_embed_size()})")
-
-        if current_dimensions != llm.get_embed_size():
-            console.print("[bold red]Embedding dimensions mismatch![/bold red]")
-            console.print(f"Current dimensions: {current_dimensions}")
-            console.print(f"LLM dimensions: {llm.get_embed_size()}")
-            raise typer.Exit(code=1)
-
-        query_embedding = llm.embed(query)
-
-        sql = f"""
-            SELECT id, page_content, metadata, distance FROM {table_name}
-            WHERE embedding MATCH vec_f32(?)
-            ORDER BY distance
-            LIMIT {limit}
-        """
-        cursor.execute(sql, (str(query_embedding),))
-        results = cursor.fetchall()
-
-        for _id, page_content, metadata, distance in results:
-            console.print()
-            console.print(page_content)
-            console.print("metadata :", metadata)
-            console.print("----\n")
+        return current_dimensions
+    except sqlite3.Error as e:
+        raise SQLiteVecError(f"Error detecting embedding dimensions: {e}")
