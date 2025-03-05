@@ -8,6 +8,7 @@ from typing import Generator, Optional
 
 from pyhub.llm import LLM, LLMEmbeddingModelEnum
 from pyhub.llm.enum import EmbeddingDimensionsEnum
+from pyhub.llm.types import Embed
 
 try:
     import sqlite_vec
@@ -224,7 +225,7 @@ def similarity_search(
     db_path: Path,
     table_name: Optional[str],
     query: Optional[str] = None,
-    query_embedding: Optional[list[float]] = None,
+    query_embedding: Optional[Union[list[float], Embed]] = None,
     embedding_model: LLMEmbeddingModelEnum = LLMEmbeddingModelEnum.TEXT_EMBEDDING_3_SMALL,
     limit: int = 4,
 ) -> list[Document]:
