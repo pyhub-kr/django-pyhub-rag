@@ -227,6 +227,7 @@ def similarity_search(
     query: Optional[str] = None,
     query_embedding: Optional[Union[list[float], Embed]] = None,
     embedding_model: LLMEmbeddingModelEnum = LLMEmbeddingModelEnum.TEXT_EMBEDDING_3_SMALL,
+    api_key: Optional[str] = None,
     limit: int = 4,
 ) -> list[Document]:
     with get_db_cursor(db_path) as cursor:
@@ -241,7 +242,7 @@ def similarity_search(
         if query_embedding is None:
             current_dimensions = detect_embedding_dimensions(cursor, table_name)
 
-            llm = LLM.create(embedding_model.value)
+            llm = LLM.create(embedding_model.value, api_key=api_key)
             if current_dimensions == llm.get_embed_size():
                 logger.info(
                     f"Matched Embedding dimensions : {current_dimensions} dimensions. Using {llm.embedding_model} for query embedding"
