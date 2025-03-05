@@ -223,9 +223,10 @@ def import_jsonl(
 def similarity_search(
     db_path: Path,
     table_name: Optional[str],
-    query: str,
-    embedding_model: LLMEmbeddingModelEnum,
-    limit: int,
+    query: Optional[str] = None,
+    query_embedding: Optional[list[float]] = None,
+    embedding_model: LLMEmbeddingModelEnum = LLMEmbeddingModelEnum.TEXT_EMBEDDING_3_SMALL,
+    limit: int = 4,
 ) -> list[Document]:
     with get_db_cursor(db_path) as cursor:
         # Auto-detect table if not provided
@@ -233,20 +234,23 @@ def similarity_search(
             table_name = detect_embedding_table(cursor)
             logger.info(f"Using auto-detected table: '{table_name}'")
 
-        current_dimensions = detect_embedding_dimensions(cursor, table_name)
+        if query is None and query_embedding is None:
+            raise SQLiteVecError("Either query or query_embedding must be specified")
 
-        llm = LLM.create(embedding_model.value)
+        if query_embedding is None:
+            current_dimensions = detect_embedding_dimensions(cursor, table_name)
 
-        if current_dimensions == llm.get_embed_size():
-            logger.info(
-                f"Matched Embedding dimensions : {current_dimensions} dimensions. Using {llm.embedding_model} for query embedding"
-            )
-        else:
-            raise SQLiteVecError(
-                f"Embedding dimensions mismatch! (llm = {llm.embedding_model}, db = {current_dimensions})"
-            )
+            llm = LLM.create(embedding_model.value)
+            if current_dimensions == llm.get_embed_size():
+                logger.info(
+                    f"Matched Embedding dimensions : {current_dimensions} dimensions. Using {llm.embedding_model} for query embedding"
+                )
+            else:
+                raise SQLiteVecError(
+                    f"Embedding dimensions mismatch! (llm = {llm.embedding_model}, db = {current_dimensions})"
+                )
 
-        query_embedding = llm.embed(query)
+            query_embedding = llm.embed(query)
 
         sql = f"""
             SELECT page_content, metadata, distance FROM {table_name}

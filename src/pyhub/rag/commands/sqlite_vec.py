@@ -110,7 +110,12 @@ def command_create_table(
 
     with LogCapture(log_message_handler=log_message_handler, level=log_level):
         try:
-            create_virtual_table(db_path, table_name, dimensions, distance_metric)
+            create_virtual_table(
+                db_path=db_path,
+                table_name=table_name,
+                dimensions=dimensions,
+                distance_metric=distance_metric,
+            )
         except SQLiteVecError as e:
             console.print(f"[red]{e}")
             raise typer.Exit(code=1)
@@ -137,7 +142,12 @@ def command_import_jsonl(
 
     with LogCapture(log_message_handler=log_message_handler, level=log_level):
         try:
-            import_jsonl(db_path, table_name, jsonl_path, clear)
+            import_jsonl(
+                db_path=db_path,
+                table_name=table_name,
+                jsonl_path=jsonl_path,
+                clear=clear,
+            )
         except SQLiteVecError as e:
             console.print(f"[red]{e}[/red]")
             raise typer.Exit(code=1)
@@ -167,7 +177,13 @@ def command_similarity_search(
 
     with LogCapture(log_message_handler=log_message_handler, level=log_level):
         try:
-            doc_list = similarity_search(db_path, table_name, query, embedding_model, limit)
+            doc_list = similarity_search(
+                db_path=db_path,
+                table_name=table_name,
+                query=query,
+                embedding_model=embedding_model,
+                limit=limit,
+            )
 
             for i, doc in enumerate(doc_list):
                 if not no_metadata:
