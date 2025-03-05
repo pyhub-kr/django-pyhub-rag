@@ -242,7 +242,10 @@ def similarity_search(
         if query_embedding is None:
             current_dimensions = detect_embedding_dimensions(cursor, table_name)
 
-            llm = LLM.create(embedding_model.value, api_key=api_key)
+            if isinstance(embedding_model, Enum):
+                embedding_model = embedding_model.value
+
+            llm = LLM.create(embedding_model, api_key=api_key)
             if current_dimensions == llm.get_embed_size():
                 logger.info(
                     f"Matched Embedding dimensions : {current_dimensions} dimensions. Using {llm.embedding_model} for query embedding"
