@@ -4,7 +4,7 @@ import logging
 import sqlite3
 from enum import Enum
 from pathlib import Path
-from typing import Generator, Optional
+from typing import Generator, Optional, Union
 
 from pyhub.llm import LLM, LLMEmbeddingModelEnum
 from pyhub.llm.enum import EmbeddingDimensionsEnum
