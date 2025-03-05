@@ -86,10 +86,12 @@ def check():
 
 @app.command()
 def create_table(
-    db_path: Path = typer.Argument(..., help="sqlite db path"),
-    table_name: str = typer.Argument(..., help="table name"),
-    dimensions: EmbeddingDimensionsEnum = EmbeddingDimensionsEnum.D_1536,
-    distance_metric: DistanceMetric = DistanceMetric.COSINE,
+    db_path: Path = typer.Argument(Path("db.sqlite3"), help="sqlite db path"),
+    table_name: str = typer.Argument("documents", help="table name"),
+    dimensions: EmbeddingDimensionsEnum = typer.Option(
+        EmbeddingDimensionsEnum.D_1536, help="Embedding dimensions for the vector table"
+    ),
+    distance_metric: DistanceMetric = typer.Option(DistanceMetric.COSINE, help="Distance metric for similarity search"),
 ):
     """
     Create a vector table using sqlite-vec extension in SQLite database.
@@ -138,9 +140,9 @@ def create_table(
 
 @app.command()
 def import_jsonl(
-    db_path: Path = typer.Argument(..., help="sqlite db path"),
-    table_name: str = typer.Argument(..., help="table name"),
-    jsonl_path: Path = typer.Argument(..., help="Path to the JSONL file with embeddings"),
+    db_path: Path = typer.Argument(Path("db.sqlite3"), help="sqlite db path"),
+    table_name: str = typer.Argument("documents", help="table name"),
+    jsonl_path: Path = typer.Option(..., help="Path to the JSONL file with embeddings"),
     clear: bool = typer.Option(False, help="Clear existing data in the table before loading"),
     debug: bool = typer.Option(False, help="Print SQL statements being executed"),
 ):
@@ -231,10 +233,12 @@ def import_jsonl(
 
 @app.command()
 def similarity_search(
-    db_path: Path = typer.Argument(..., help="Path to the SQLite database"),
-    table_name: str = typer.Argument(..., help="Name of the table to query"),
-    embedding_model: LLMEmbeddingModelEnum = LLMEmbeddingModelEnum.TEXT_EMBEDDING_3_SMALL,
-    query: str = typer.Argument(..., help="Text to search for similar documents"),
+    db_path: Path = typer.Argument(Path("db.sqlite3"), help="Path to the SQLite database"),
+    table_name: str = typer.Argument("documents", help="Name of the table to query"),
+    query: str = typer.Option(..., help="Text to search for similar documents"),
+    embedding_model: LLMEmbeddingModelEnum = typer.Option(
+        LLMEmbeddingModelEnum.TEXT_EMBEDDING_3_SMALL, help="Embedding model to use"
+    ),
     limit: int = typer.Option(4, help="Maximum number of results to return"),
     debug: bool = typer.Option(False, help="Print SQL statements being executed"),
 ):
