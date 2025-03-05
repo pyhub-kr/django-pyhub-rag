@@ -6,17 +6,17 @@ test:
 
 format:
 	uv pip install -e ".[dev]"
-	uv run black .
-	uv run isort .
-	uv run ruff check . --fix
-	uv run djlint . --reformat
+	uv run black ./src ./tests
+	uv run isort ./src ./tests
+	uv run ruff check ./src ./tests --fix
+	uv run djlint ./src ./tests --reformat
 
 lint:
 	uv pip install -e ".[dev]"
-	uv run black . --check
-	uv run isort . --check
-	uv run ruff check .
-	uv run djlint . --check
+	uv run black ./src ./tests --check
+	uv run isort ./src ./tests --check
+	uv run ruff check ./src ./tests
+	uv run djlint ./src ./tests --check
 
 clean:
 	rm -rf dist/

@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from decimal import Decimal
 from typing import Literal, TypeAlias, Union
 
 from anthropic.types import ModelParam as AnthropicChatModel
@@ -47,6 +48,34 @@ class Usage:
         if isinstance(other, Usage):
             return Usage(input=self.input + other.input, output=self.output + other.output)
         return NotImplemented
+
+
+@dataclass
+class Price:
+    input_usd: Optional[Decimal] = None
+    output_usd: Optional[Decimal] = None
+    usd: Optional[Decimal] = None
+    krw: Optional[Decimal] = None
+    rate_usd: int = 1500
+
+    def __post_init__(self):
+        self.input_usd = self.input_usd or Decimal("0")
+        self.output_usd = self.output_usd or Decimal("0")
+
+        if not isinstance(self.input_usd, Decimal):
+            self.input_usd = Decimal(str(self.input_usd))
+        if not isinstance(self.output_usd, Decimal):
+            self.output_usd = Decimal(str(self.output_usd))
+        if self.usd is not None and not isinstance(self.usd, Decimal):
+            self.usd = Decimal(str(self.usd))
+        if self.krw is not None and not isinstance(self.krw, Decimal):
+            self.krw = Decimal(str(self.krw))
+
+        if self.usd is None:
+            self.usd = self.input_usd + self.output_usd
+
+        if self.krw is None:
+            self.krw = self.usd * Decimal(self.rate_usd)
 
 
 @dataclass

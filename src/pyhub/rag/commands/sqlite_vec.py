@@ -1,10 +1,9 @@
 import contextlib
-import functools
 import sqlite3
 import sys
 from enum import Enum
 from pathlib import Path
-from typing import Generator, Optional
+from typing import Generator
 
 import typer
 from rich.console import Console
