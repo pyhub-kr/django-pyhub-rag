@@ -7,6 +7,10 @@ from openai.types import ChatModel as OpenAIChatModel
 from pydantic import BaseModel
 from typing_extensions import Optional
 
+#
+# Embedding
+#
+
 OpenAIEmbeddingModel: TypeAlias = Literal[
     "text-embedding-ada-002",  # 1536 차원
     "text-embedding-3-small",  # 1536 차원
@@ -24,6 +28,14 @@ GoogleEmbeddingModel: TypeAlias = Literal["text-embedding-004"]  # 768 차원
 
 LLMEmbeddingModel = Union[OpenAIEmbeddingModel, UpstageEmbeddingModel, GoogleEmbeddingModel]
 
+
+#
+# Chat
+#
+
+OpenAIChatModel  # noqa
+
+AnthropicChatModel  # noqa
 
 # https://console.upstage.ai/docs/capabilities/chat
 UpstageChatModel: TypeAlias = Union[
@@ -46,6 +58,25 @@ GoogleChatModel: TypeAlias = Union[
 
 
 LLMChatModel: TypeAlias = Union[OpenAIChatModel, AnthropicChatModel, UpstageChatModel, GoogleChatModel]
+
+
+#
+# Groundedness Check
+#
+
+# https://console.upstage.ai/docs/capabilities/groundedness-check#available-models
+UpstageGroundednessCheckModel: TypeAlias = Literal["groundedness-check",]
+
+
+#
+# Types
+#
+
+
+@dataclass
+class GroundednessCheck:
+    is_grounded: Optional[bool] = None  # grounded (True), notGrounded (False), notSure (None)
+    usage: Optional["Usage"] = None
 
 
 class Message(BaseModel):
