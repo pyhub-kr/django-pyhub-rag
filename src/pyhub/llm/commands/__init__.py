@@ -36,26 +36,30 @@ def main(ctx: typer.Context):
 @app.command()
 def reply(
     embedding_model: LLMChatModelEnum = LLMChatModelEnum.GPT_4O,
-    query: str = typer.Argument(default=None, help="Text to search for similar documents"),
+    query: str = typer.Argument(..., help="Text to search for similar documents"),
+    context: str = typer.Option(None, help="Context to provide to the LLM"),
     system_prompt: str = typer.Option(None, help="System prompt to use for the LLM"),
-    system_prompt_path: typer.FileText = typer.Option(
+    system_prompt_path: str = typer.Option(
         "system_prompt.txt",
         help="Path to a file containing the system prompt",
-        exists=False,
     ),
     temperature: float = typer.Option(0.2, help="Temperature for the LLM response (0.0-2.0)"),
     max_tokens: int = typer.Option(1000, help="Maximum number of tokens in the response"),
 ):
-    # Use stdin if available and no query argument was provided
-    if query is None and not sys.stdin.isatty():
-        query = sys.stdin.read().strip()
-    elif query is None:
-        console.print("Error: No query provided. Please provide a query or pipe content.", style="red")
-        raise typer.Exit(code=1)
+    # Use stdin as context if available and no context argument was provided
+    if context is None and not sys.stdin.isatty():
+        context = sys.stdin.read().strip()
 
     # Handle system prompt options
     if system_prompt_path:
-        system_prompt = system_prompt_path.read().strip()
+        try:
+            with open(system_prompt_path, "r") as f:
+                system_prompt = f.read().strip()
+        except IOError:
+            pass
+
+    if context:
+        system_prompt = ((system_prompt or "") + "\n\n" + f"<context>{context}</context>").strip()
 
     if system_prompt:
         console.print(f"# System prompt\n\n{system_prompt}\n\n----\n\n", style="blue")
