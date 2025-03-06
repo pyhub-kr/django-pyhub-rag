@@ -5,6 +5,7 @@ from openai import OpenAI as SyncOpenAI
 
 from pyhub.rag.settings import rag_settings
 
+from ..rag.utils import get_literal_values
 from .base import BaseLLM
 from .types import (
     Embed,
@@ -15,6 +16,8 @@ from .types import (
     OpenAIChatModel,
     OpenAIEmbeddingModel,
     Reply,
+    UpstageChatModel,
+    UpstageEmbeddingModel,
     Usage,
 )
 
@@ -24,12 +27,14 @@ class OpenAILLM(BaseLLM):
         "text-embedding-ada-002": 1536,
         "text-embedding-3-small": 1536,
         "text-embedding-3-large": 3072,
+        "embedding-query": 4096,
+        "embedding-passage": 4096,
     }
 
     def __init__(
         self,
-        model: OpenAIChatModel = "gpt-4o-mini",
-        embedding_model: OpenAIEmbeddingModel = "text-embedding-3-small",
+        model: Union[OpenAIChatModel, UpstageChatModel] = "gpt-4o-mini",
+        embedding_model: Union[OpenAIEmbeddingModel, UpstageEmbeddingModel] = "text-embedding-3-small",
         temperature: float = 0.2,
         max_tokens: int = 1000,
         system_prompt: Optional[str] = None,
@@ -46,7 +51,13 @@ class OpenAILLM(BaseLLM):
             initial_messages=initial_messages,
             api_key=api_key or rag_settings.openai_api_key,
         )
-        self.base_url = base_url or rag_settings.openai_base_url
+
+        if self.model in get_literal_values(UpstageChatModel):
+            self.base_url = base_url or "https://api.upstage.ai/v1/solar"
+            if self.embedding_model in get_literal_values(OpenAIEmbeddingModel):
+                self.embedding_model = "embedding-query"
+        else:
+            self.base_url = base_url or rag_settings.openai_base_url
 
     def _prepare_openai_request(self, messages: list[Message], model: LLMChatModel) -> dict:
         history = [*messages]
@@ -61,7 +72,7 @@ class OpenAILLM(BaseLLM):
         }
 
     def _make_reply(self, messages: list[Message], model: LLMChatModel) -> Reply:
-        sync_client = SyncOpenAI(api_key=self.api_key)
+        sync_client = SyncOpenAI(api_key=self.api_key, base_url=self.base_url)
         request_params = self._prepare_openai_request(messages, model)
         response = sync_client.chat.completions.create(**request_params)
         return Reply(
@@ -73,7 +84,7 @@ class OpenAILLM(BaseLLM):
         )
 
     async def _make_reply_async(self, messages: list[Message], model: LLMChatModel) -> Reply:
-        async_client = AsyncOpenAI(api_key=self.api_key)
+        async_client = AsyncOpenAI(api_key=self.api_key, base_url=self.base_url)
         request_params = self._prepare_openai_request(messages, model)
         response = await async_client.chat.completions.create(**request_params)
         return Reply(
@@ -85,7 +96,7 @@ class OpenAILLM(BaseLLM):
         )
 
     def _make_reply_stream(self, messages: list[Message], model: LLMChatModel) -> Generator[Reply, None, None]:
-        sync_client = SyncOpenAI(api_key=self.api_key)
+        sync_client = SyncOpenAI(api_key=self.api_key, base_url=self.base_url)
         request_params = self._prepare_openai_request(messages, model)
         request_params["stream"] = True
 
@@ -107,7 +118,7 @@ class OpenAILLM(BaseLLM):
     async def _make_reply_stream_async(
         self, messages: list[Message], model: LLMChatModel
     ) -> AsyncGenerator[Reply, None]:
-        async_client = AsyncOpenAI(api_key=self.api_key)
+        async_client = AsyncOpenAI(api_key=self.api_key, base_url=self.base_url)
         request_params = self._prepare_openai_request(messages, model)
         request_params["stream"] = True
 

@@ -246,7 +246,7 @@ def similarity_search(
                 embedding_model = embedding_model.value
 
             llm = LLM.create(embedding_model, api_key=api_key)
-            if current_dimensions == llm.get_embed_size():
+            if current_dimensions == llm.embed_size:
                 logger.info(
                     f"Matched Embedding dimensions : {current_dimensions} dimensions. Using {llm.embedding_model} for query embedding"
                 )

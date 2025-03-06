@@ -192,6 +192,10 @@ class BaseLLM(abc.ABC):
     def get_embed_size(self, model: Optional[LLMEmbeddingModel] = None) -> int:
         return self.EMBEDDING_DIMENSIONS[model or self.embedding_model]
 
+    @property
+    def embed_size(self):
+        return self.get_embed_size()
+
     @abc.abstractmethod
     def embed(
         self,

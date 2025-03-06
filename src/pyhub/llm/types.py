@@ -13,11 +13,25 @@ OpenAIEmbeddingModel: TypeAlias = Literal[
     "text-embedding-3-large",  # 3072 차원
 ]
 
+# https://console.upstage.ai/docs/capabilities/embeddings
+UpstageEmbeddingModel: TypeAlias = Literal[
+    "embedding-query",  # 검색어 목적 (4096차원)
+    "embedding-passage",  # 문서의 일부, 문장 또는 긴 텍스트 목적 (4096차원)
+]
+
 # https://cloud.google.com/vertex-ai/generative-ai/docs/embeddings/get-text-embeddings?hl=ko
 GoogleEmbeddingModel: TypeAlias = Literal["text-embedding-004"]  # 768 차원
 
-LLMEmbeddingModel = Union[OpenAIEmbeddingModel, GoogleEmbeddingModel]
+LLMEmbeddingModel = Union[OpenAIEmbeddingModel, UpstageEmbeddingModel, GoogleEmbeddingModel]
 
+
+# https://console.upstage.ai/docs/capabilities/chat
+UpstageChatModel: TypeAlias = Union[
+    Literal[
+        "solar-pro",
+        "solar-mini",
+    ]
+]
 
 # https://ai.google.dev/gemini-api/docs/models/gemini?hl=ko
 GoogleChatModel: TypeAlias = Union[
@@ -31,7 +45,7 @@ GoogleChatModel: TypeAlias = Union[
 ]
 
 
-LLMChatModel: TypeAlias = Union[OpenAIChatModel, AnthropicChatModel, GoogleChatModel]
+LLMChatModel: TypeAlias = Union[OpenAIChatModel, AnthropicChatModel, UpstageChatModel, GoogleChatModel]
 
 
 class Message(BaseModel):

@@ -27,6 +27,9 @@ class LLMChatModelEnum(str, Enum):
     CLAUDE_3_5_HAIKU_LATEST = "claude-3-5-haiku-latest"
     CLAUDE_3_5_SONNET_LATEST = "claude-3-5-sonnet-latest"
     CLAUDE_3_OPUS_LATEST = "claude-3-opus-latest"
+    # solar
+    UPSTAGE_SOLAR_PRO = "solar-pro"
+    UPSTAGE_SOLAR_MINI = "solar-mini"
     # google
     GEMINI_2_0_FLASH = "gemini-2.0-flash"
     GEMINI_2_0_FLASH_LITE = "gemini-2.0-flash-lite"

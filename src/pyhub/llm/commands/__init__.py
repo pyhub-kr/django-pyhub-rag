@@ -61,8 +61,8 @@ def reply(
     if context:
         system_prompt = ((system_prompt or "") + "\n\n" + f"<context>{context}</context>").strip()
 
-    if system_prompt:
-        console.print(f"# System prompt\n\n{system_prompt}\n\n----\n\n", style="blue")
+    # if system_prompt:
+    #     console.print(f"# System prompt\n\n{system_prompt}\n\n----\n\n", style="blue")
 
     llm = LLM.create(
         embedding_model.value,

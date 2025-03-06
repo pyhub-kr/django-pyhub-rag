@@ -16,6 +16,7 @@ from .types import (
     OpenAIChatModel,
     OpenAIEmbeddingModel,
     Price,
+    UpstageChatModel,
     Usage,
 )
 
@@ -37,6 +38,9 @@ class LLM:
         LLMChatModelEnum.CLAUDE_3_7_SONNET_LATEST: ("3", "15"),
         LLMChatModelEnum.CLAUDE_3_5_HAIKU_LATEST: ("0.80", "4"),
         LLMChatModelEnum.CLAUDE_3_OPUS_LATEST: ("15", "75"),
+        # https://www.upstage.ai/pricing
+        LLMChatModelEnum.UPSTAGE_SOLAR_MINI: ("0.15", "0.15"),  # TODO: 가격 확인
+        LLMChatModelEnum.UPSTAGE_SOLAR_PRO: ("0.25", "0.15"),
         # https://ai.google.dev/gemini-api/docs/pricing?hl=ko
         LLMChatModelEnum.GEMINI_2_0_FLASH: ("0.10", "0.40"),
         LLMChatModelEnum.GEMINI_2_0_FLASH_LITE: ("0.075", "0.30"),
@@ -51,7 +55,7 @@ class LLM:
             return AnthropicLLM(model=cast(AnthropicChatModel, model), **kwargs)
         elif model in get_literal_values(GoogleChatModel):
             return GoogleLLM(model=cast(GoogleChatModel, model), **kwargs)
-        elif model in get_literal_values(OpenAIChatModel):
+        elif model in get_literal_values(OpenAIChatModel, UpstageChatModel):
             return OpenAILLM(model=cast(OpenAIChatModel, model), **kwargs)
         elif model in get_literal_values(OpenAIEmbeddingModel):
             return OpenAILLM(
