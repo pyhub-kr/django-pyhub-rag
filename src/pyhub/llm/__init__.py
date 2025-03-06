@@ -17,8 +17,10 @@ from .types import (
     OpenAIEmbeddingModel,
     Price,
     UpstageChatModel,
+    UpstageEmbeddingModel,
     Usage,
 )
+from .upstage import UpstageLLM
 
 
 class LLM:
@@ -51,15 +53,28 @@ class LLM:
 
     @classmethod
     def create(cls, model: Union[LLMChatModel, LLMEmbeddingModel], **kwargs) -> "BaseLLM":
+        #
+        # chat
+        #
         if model in get_literal_values(AnthropicChatModel):
             return AnthropicLLM(model=cast(AnthropicChatModel, model), **kwargs)
         elif model in get_literal_values(GoogleChatModel):
             return GoogleLLM(model=cast(GoogleChatModel, model), **kwargs)
-        elif model in get_literal_values(OpenAIChatModel, UpstageChatModel):
+        elif model in get_literal_values(OpenAIChatModel):
             return OpenAILLM(model=cast(OpenAIChatModel, model), **kwargs)
+        elif model in get_literal_values(UpstageChatModel):
+            return UpstageLLM(model=cast(UpstageChatModel, model), **kwargs)
+        #
+        # embedding
+        #
         elif model in get_literal_values(OpenAIEmbeddingModel):
             return OpenAILLM(
                 embedding_model=cast(OpenAIEmbeddingModel, model),
+                **kwargs,
+            )
+        elif model in get_literal_values(UpstageEmbeddingModel):
+            return UpstageLLM(
+                embedding_model=cast(UpstageEmbeddingModel, model),
                 **kwargs,
             )
         elif model in get_literal_values(GoogleEmbeddingModel):
@@ -89,4 +104,4 @@ class LLM:
         return Price(input_usd=input_usd, output_usd=output_usd)
 
 
-__all__ = ["LLM", "BaseLLM", "AnthropicLLM", "GoogleLLM", "OpenAILLM"]
+__all__ = ["LLM", "BaseLLM", "AnthropicLLM", "GoogleLLM", "OpenAILLM", "UpstageLLM"]

@@ -8,6 +8,7 @@ from pyhub.llm.types import LLMEmbeddingModel
 
 DEFAULTS = {
     "openai_base_url": "https://api.openai.com/v1",
+    "upstage_base_url": "https://api.upstage.ai/v1/solar",
     "embedding_model": "text-embedding-3-small",
     "embedding_dimensions": 1536,
     "embedding_max_tokens_limit": 8191,
@@ -19,6 +20,8 @@ class RagSettings:
         self,
         openai_api_key: Optional[str] = None,
         openai_base_url: Optional[str] = None,
+        upstage_api_key: Optional[str] = None,
+        upstage_base_url: Optional[str] = None,
         anthropic_api_key: Optional[str] = None,
         google_api_key: Optional[str] = None,
         embedding_model: Optional[LLMEmbeddingModel] = None,
@@ -28,6 +31,8 @@ class RagSettings:
         self.init_kwargs = {
             "openai_api_key": openai_api_key,
             "openai_base_url": openai_base_url,
+            "upstage_api_key": upstage_api_key,
+            "upstage_base_url": upstage_base_url,
             "anthropic_api_key": anthropic_api_key,
             "google_api_key": google_api_key,
             "embedding_model": embedding_model,
@@ -38,6 +43,8 @@ class RagSettings:
         # 생성자에서 모든 값 초기화
         self.openai_api_key = openai_api_key
         self.openai_base_url = openai_base_url
+        self.upstage_api_key = upstage_api_key
+        self.upstage_base_url = upstage_base_url
         self.anthropic_api_key = anthropic_api_key
         self.google_api_key = google_api_key
         self.embedding_model = embedding_model
@@ -54,6 +61,9 @@ class RagSettings:
         if self.openai_api_key is None:
             self.openai_api_key = self.get_proj_settings_or_environ(("RAG_OPENAI_API_KEY", "OPENAI_API_KEY"))
 
+        if self.upstage_api_key is None:
+            self.upstage_api_key = self.get_proj_settings_or_environ(("RAG_UPSTAGE_API_KEY", "UPSTAGE_API_KEY"))
+
         if self.anthropic_api_key is None:
             self.anthropic_api_key = self.get_proj_settings_or_environ(("RAG_ANTHROPIC_API_KEY", "ANTHROPIC_API_KEY"))
 
@@ -64,6 +74,12 @@ class RagSettings:
             self.openai_base_url = (
                 self.get_proj_settings_or_environ(("RAG_OPENAI_BASE_URL", "OPENAI_BASE_URL"))
                 or DEFAULTS["openai_base_url"]
+            )
+
+        if self.upstage_base_url is None:
+            self.upstage_base_url = (
+                self.get_proj_settings_or_environ(("RAG_UPSTAGE_BASE_URL", "UPSTAGE_BASE_URL"))
+                or DEFAULTS["upstage_base_url"]
             )
 
         if self.embedding_model is None:

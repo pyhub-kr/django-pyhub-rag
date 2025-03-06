@@ -3,9 +3,7 @@ from typing import AsyncGenerator, Generator, Optional, Union, cast
 from openai import AsyncOpenAI
 from openai import OpenAI as SyncOpenAI
 
-from pyhub.rag.settings import rag_settings
-
-from ..rag.utils import get_literal_values
+from ..rag.settings import rag_settings
 from .base import BaseLLM
 from .types import (
     Embed,
@@ -16,48 +14,11 @@ from .types import (
     OpenAIChatModel,
     OpenAIEmbeddingModel,
     Reply,
-    UpstageChatModel,
-    UpstageEmbeddingModel,
     Usage,
 )
 
 
-class OpenAILLM(BaseLLM):
-    EMBEDDING_DIMENSIONS = {
-        "text-embedding-ada-002": 1536,
-        "text-embedding-3-small": 1536,
-        "text-embedding-3-large": 3072,
-        "embedding-query": 4096,
-        "embedding-passage": 4096,
-    }
-
-    def __init__(
-        self,
-        model: Union[OpenAIChatModel, UpstageChatModel] = "gpt-4o-mini",
-        embedding_model: Union[OpenAIEmbeddingModel, UpstageEmbeddingModel] = "text-embedding-3-small",
-        temperature: float = 0.2,
-        max_tokens: int = 1000,
-        system_prompt: Optional[str] = None,
-        initial_messages: Optional[list[Message]] = None,
-        api_key: Optional[str] = None,
-        base_url: Optional[str] = None,
-    ):
-        super().__init__(
-            model=model,
-            embedding_model=embedding_model,
-            temperature=temperature,
-            max_tokens=max_tokens,
-            system_prompt=system_prompt,
-            initial_messages=initial_messages,
-            api_key=api_key or rag_settings.openai_api_key,
-        )
-
-        if self.model in get_literal_values(UpstageChatModel):
-            self.base_url = base_url or "https://api.upstage.ai/v1/solar"
-            if self.embedding_model in get_literal_values(OpenAIEmbeddingModel):
-                self.embedding_model = "embedding-query"
-        else:
-            self.base_url = base_url or rag_settings.openai_base_url
+class OpenAIMixin:
 
     def _prepare_openai_request(self, messages: list[Message], model: LLMChatModel) -> dict:
         history = [*messages]
@@ -188,3 +149,32 @@ class OpenAILLM(BaseLLM):
         if isinstance(input, str):
             return Embed(response.data[0].embedding, usage=usage)
         return EmbedList([Embed(v.embedding) for v in response.data], usage=usage)
+
+
+class OpenAILLM(OpenAIMixin, BaseLLM):
+    EMBEDDING_DIMENSIONS = {
+        "embedding-query": 4096,
+        "embedding-passage": 4096,
+    }
+
+    def __init__(
+        self,
+        model: OpenAIChatModel = "gpt-4o-mini",
+        embedding_model: OpenAIEmbeddingModel = "text-embedding-3-small",
+        temperature: float = 0.2,
+        max_tokens: int = 1000,
+        system_prompt: Optional[str] = None,
+        initial_messages: Optional[list[Message]] = None,
+        api_key: Optional[str] = None,
+        base_url: Optional[str] = None,
+    ):
+        super().__init__(
+            model=model,
+            embedding_model=embedding_model,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            system_prompt=system_prompt,
+            initial_messages=initial_messages,
+            api_key=api_key or rag_settings.openai_api_key,
+        )
+        self.base_url = base_url or rag_settings.openai_base_url
