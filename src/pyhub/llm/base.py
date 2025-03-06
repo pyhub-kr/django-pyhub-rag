@@ -61,11 +61,11 @@ class BaseLLM(abc.ABC):
         pass
 
     def _prepare_messages(self, human_message: str, current_messages: list[Message]) -> list[Message]:
-        if human_message is not None:
+        if human_message:
             current_messages.append(Message(role="user", content=human_message))
         return current_messages
 
-    def _update_history(self, human_message: Optional[str], ai_message: str) -> None:
+    def _update_history(self, human_message: str, ai_message: str) -> None:
         if human_message is not None:
             self.history.extend(
                 [
@@ -76,14 +76,15 @@ class BaseLLM(abc.ABC):
 
     def _reply_impl(
         self,
-        human_message: Optional[str] = None,
+        human_message: str,
         model: Optional[LLMChatModel] = None,
         *,
         raise_errors: bool = False,
         is_async: bool = False,
+        use_history: bool = True,
     ):
         """동기 또는 비동기 응답을 생성하는 내부 메서드"""
-        current_messages = [*self.history]
+        current_messages = [*self.history] if use_history else []
         current_model: LLMChatModel = cast(LLMChatModel, model or self.model)
         current_messages = self._prepare_messages(human_message, current_messages)
 
@@ -96,7 +97,8 @@ class BaseLLM(abc.ABC):
                 logger.error(f"Error occurred during API call: {str(e)}")
                 return Reply(text=f"Error occurred during API call: {str(e)}")
             else:
-                self._update_history(human_message, reply.text)
+                if use_history:
+                    self._update_history(human_message, reply.text)
                 return reply
 
         def sync_handler() -> Reply:
@@ -108,7 +110,8 @@ class BaseLLM(abc.ABC):
                 logger.error(f"Error occurred during API call: {str(e)}")
                 return Reply(text=f"Error occurred during API call: {str(e)}")
             else:
-                self._update_history(human_message, reply.text)
+                if use_history:
+                    self._update_history(human_message, reply.text)
                 return reply
 
         if is_async:
@@ -116,38 +119,17 @@ class BaseLLM(abc.ABC):
         else:
             return sync_handler()
 
-    def reply(
-        self,
-        human_message: Optional[str] = None,
-        model: Optional[LLMChatModel] = None,
-        stream: bool = False,
-        raise_errors: bool = False,
-    ) -> Union[Reply, Generator[str, None, None]]:
-        if not stream:
-            return self._reply_impl(human_message, model, raise_errors=raise_errors, is_async=False)
-        return self._stream_reply_impl(human_message, model, raise_errors=raise_errors, is_async=False)
-
-    async def areply(
-        self,
-        human_message: Optional[str] = None,
-        model: Optional[LLMChatModel] = None,
-        stream: bool = False,
-        raise_errors: bool = False,
-    ):
-        if not stream:
-            return await self._reply_impl(human_message, model, raise_errors=raise_errors, is_async=True)
-        return self._stream_reply_impl(human_message, model, raise_errors=raise_errors, is_async=True)
-
     def _stream_reply_impl(
         self,
-        human_message: Optional[str] = None,
+        human_message: str,
         model: Optional[LLMChatModel] = None,
         *,
         raise_errors: bool = False,
         is_async: bool = False,
+        use_history: bool = True,
     ):
         """스트리밍 응답을 생성하는 내부 메서드 (동기/비동기)"""
-        current_messages = [*self.history]
+        current_messages = [*self.history] if use_history else []
         current_model = cast(LLMChatModel, model or self.model)
         current_messages = self._prepare_messages(human_message, current_messages)
 
@@ -158,8 +140,9 @@ class BaseLLM(abc.ABC):
                     text_list.append(reply.text)
                     yield reply
 
-                full_text = "".join(text_list)
-                self._update_history(human_message, full_text)
+                if use_history:
+                    full_text = "".join(text_list)
+                    self._update_history(human_message, full_text)
             except Exception as e:
                 if raise_errors:
                     raise e
@@ -173,8 +156,9 @@ class BaseLLM(abc.ABC):
                     text_list.append(reply.text)
                     yield reply
 
-                full_text = "".join(text_list)
-                self._update_history(human_message, full_text)
+                if use_history:
+                    full_text = "".join(text_list)
+                    self._update_history(human_message, full_text)
             except Exception as e:
                 if raise_errors:
                     raise e
@@ -185,6 +169,38 @@ class BaseLLM(abc.ABC):
             return async_stream_handler()
         else:
             return sync_stream_handler()
+
+    def reply(
+        self,
+        human_message: str,
+        model: Optional[LLMChatModel] = None,
+        stream: bool = False,
+        raise_errors: bool = False,
+        use_history: bool = True,
+    ) -> Union[Reply, Generator[str, None, None]]:
+        if not stream:
+            return self._reply_impl(
+                human_message, model, raise_errors=raise_errors, is_async=False, use_history=use_history
+            )
+        return self._stream_reply_impl(
+            human_message, model, raise_errors=raise_errors, is_async=False, use_history=use_history
+        )
+
+    async def areply(
+        self,
+        human_message: str,
+        model: Optional[LLMChatModel] = None,
+        stream: bool = False,
+        raise_errors: bool = False,
+        use_history: bool = True,
+    ):
+        if not stream:
+            return await self._reply_impl(
+                human_message, model, raise_errors=raise_errors, is_async=True, use_history=use_history
+            )
+        return self._stream_reply_impl(
+            human_message, model, raise_errors=raise_errors, is_async=True, use_history=use_history
+        )
 
     #
     # embed

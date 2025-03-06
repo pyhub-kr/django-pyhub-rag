@@ -11,7 +11,6 @@ from .types import (
     AnthropicChatModel,
     Embed,
     EmbedList,
-    LLMEmbeddingModel,
     Message,
     Reply,
     Usage,
@@ -133,28 +132,28 @@ class AnthropicLLM(BaseLLM):
 
     def reply(
         self,
-        human_message: Optional[str] = None,
+        human_message: str,
         model: Optional[AnthropicChatModel] = None,
         stream: bool = False,
         raise_errors: bool = False,
+        use_history: bool = True,
     ) -> Reply:
-        return super().reply(human_message, model, stream, raise_errors)
+        return super().reply(human_message, model, stream, raise_errors, use_history)
 
     async def areply(
         self,
-        human_message: Optional[str] = None,
+        human_message: str,
         model: Optional[AnthropicChatModel] = None,
         stream: bool = False,
         raise_errors: bool = False,
+        use_history: bool = True,
     ) -> Reply:
-        return await super().areply(human_message, model, stream, raise_errors)
+        return await super().areply(human_message, model, stream, raise_errors, use_history)
 
-    def embed(self, input: Union[str, list[str]], model: Optional[LLMEmbeddingModel] = None) -> Union[Embed, EmbedList]:
+    def embed(self, input: Union[str, list[str]], model=None) -> Union[Embed, EmbedList]:
         raise NotImplementedError
 
-    async def aembed(
-        self, input: Union[str, list[str]], model: Optional[LLMEmbeddingModel] = None
-    ) -> Union[Embed, EmbedList]:
+    async def aembed(self, input: Union[str, list[str]], model=None) -> Union[Embed, EmbedList]:
         raise NotImplementedError
 
 

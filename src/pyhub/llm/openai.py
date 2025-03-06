@@ -9,7 +9,6 @@ from .types import (
     Embed,
     EmbedList,
     LLMChatModel,
-    LLMEmbeddingModel,
     Message,
     OpenAIChatModel,
     OpenAIEmbeddingModel,
@@ -100,23 +99,27 @@ class OpenAIMixin:
 
     def reply(
         self,
-        human_message: Optional[str] = None,
+        human_message: str,
         model: Optional[OpenAIChatModel] = None,
         stream: bool = False,
         raise_errors: bool = False,
+        use_history: bool = True,
     ) -> Reply:
-        return super().reply(human_message, model, stream, raise_errors)
+        return super().reply(human_message, model, stream, raise_errors, use_history)
 
     async def areply(
         self,
-        human_message: Optional[str] = None,
+        human_message: str,
         model: Optional[OpenAIChatModel] = None,
         stream: bool = False,
         raise_errors: bool = False,
+        use_history: bool = True,
     ) -> Reply:
-        return await super().areply(human_message, model, stream, raise_errors)
+        return await super().areply(human_message, model, stream, raise_errors, use_history)
 
-    def embed(self, input: Union[str, list[str]], model: Optional[LLMEmbeddingModel] = None) -> Union[Embed, EmbedList]:
+    def embed(
+        self, input: Union[str, list[str]], model: Optional[OpenAIEmbeddingModel] = None
+    ) -> Union[Embed, EmbedList]:
         embedding_model = cast(OpenAIEmbeddingModel, model or self.embedding_model)
 
         client = SyncOpenAI(
@@ -133,7 +136,7 @@ class OpenAIMixin:
         return EmbedList([Embed(v.embedding) for v in response.data], usage=usage)
 
     async def aembed(
-        self, input: Union[str, list[str]], model: Optional[LLMEmbeddingModel] = None
+        self, input: Union[str, list[str]], model: Optional[OpenAIEmbeddingModel] = None
     ) -> Union[Embed, EmbedList]:
         embedding_model = cast(OpenAIEmbeddingModel, model or self.embedding_model)
 
