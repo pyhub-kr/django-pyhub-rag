@@ -409,6 +409,10 @@ test = [
     { name = "pytest-django" },
     { name = "pytest-testdox" },
 ]
+web = [
+    { name = "django-shinobi" },
+    { name = "uvicorn" },
+]
 
 [package.metadata]
 requires-dist = [
@@ -418,6 +422,7 @@ requires-dist = [
     { name = "django", specifier = ">=4.0.0" },
     { name = "django-environ" },
     { name = "django-lifecycle" },
+    { name = "django-shinobi", marker = "extra == 'web'" },
     { name = "djlint", marker = "extra == 'dev'" },
     { name = "google-genai" },
     { name = "isort", marker = "extra == 'dev'" },
@@ -437,9 +442,23 @@ requires-dist = [
     { name = "tiktoken" },
     { name = "twine", marker = "extra == 'build'" },
     { name = "typer" },
+    { name = "uvicorn", marker = "extra == 'web'" },
     { name = "wheel", marker = "extra == 'build'" },
 ]
-provides-extras = ["dev", "build", "postgres", "sqlite", "test"]
+provides-extras = ["dev", "build", "postgres", "sqlite", "web", "test"]
+
+[[package]]
+name = "django-shinobi"
+version = "1.4.0a0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "django" },
+    { name = "pydantic" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/23/24/0ed56471c4fd8cbc2310dac6ba28059115ea77169c6fb6824220a13a6470/django_shinobi-1.4.0a0.tar.gz", hash = "sha256:03b1f959ae628306e5ed2ef7c2d429e53db3ee80e0d9db89dd65d4342f1ec766", size = 3706424 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/b4/ae/c23aeb02788e2dc90a7ee94e445553c11b17973150ae170d1ac7db8c3049/django_shinobi-1.4.0a0-py3-none-any.whl", hash = "sha256:cab2cab8804b8e820e75b7d4877b1511f14a9e73eb7ea267b8ab0a240c192eda", size = 2424416 },
+]
 
 [[package]]
 name = "djlint"
@@ -1696,6 +1715,20 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/aa/63/e53da845320b757bf29ef6a9062f5c669fe997973f966045cb019c3f4b66/urllib3-2.3.0.tar.gz", hash = "sha256:f8c5449b3cf0861679ce7e0503c7b44b5ec981bec0d1d3795a07f1ba96f0204d", size = 307268 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/c8/19/4ec628951a74043532ca2cf5d97b7b14863931476d117c471e8e2b1eb39f/urllib3-2.3.0-py3-none-any.whl", hash = "sha256:1cee9ad369867bfdbbb48b7dd50374c0967a0bb7710050facf0dd6911440e3df", size = 128369 },
+]
+
+[[package]]
+name = "uvicorn"
+version = "0.34.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "click" },
+    { name = "h11" },
+    { name = "typing-extensions", marker = "python_full_version < '3.11'" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/4b/4d/938bd85e5bf2edeec766267a5015ad969730bb91e31b44021dfe8b22df6c/uvicorn-0.34.0.tar.gz", hash = "sha256:404051050cd7e905de2c9a7e61790943440b3416f49cb409f965d9dcd0fa73e9", size = 76568 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/61/14/33a3a1352cfa71812a3a21e8c9bfb83f60b0011f5e36f2b1399d51928209/uvicorn-0.34.0-py3-none-any.whl", hash = "sha256:023dc038422502fa28a09c7a30bf2b6991512da7dcdb8fd35fe57cfc154126f4", size = 62315 },
 ]
 
 [[package]]

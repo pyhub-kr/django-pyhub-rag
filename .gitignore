@@ -2,7 +2,7 @@ dist
 __pycache__
 .idea
 .vscode
-*.sqlite3
+*.sqlite3*
 .DS_Store
 .venv
 .tool-versions

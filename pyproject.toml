@@ -37,6 +37,7 @@ dev = ["pre_commit", "black", "isort", "ruff", "djlint"]
 build = ["setuptools", "wheel", "build", "twine"]
 postgres = ["psycopg2-binary", "pgvector"]
 sqlite = ["sqlite-vec", "numpy"]
+web = ["django-shinobi", "uvicorn"]
 test = ["pytest", "pytest-django", "pytest-testdox", "pytest-asyncio"]
 
 [project.urls]
