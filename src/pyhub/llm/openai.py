@@ -31,7 +31,7 @@ class OpenAIMixin:
             "max_tokens": self.max_tokens,
         }
 
-    def _make_reply(self, messages: list[Message], model: LLMChatModel) -> Reply:
+    def _make_ask(self, messages: list[Message], model: LLMChatModel) -> Reply:
         sync_client = SyncOpenAI(api_key=self.api_key, base_url=self.base_url)
         request_params = self._prepare_openai_request(messages, model)
         response = sync_client.chat.completions.create(**request_params)
@@ -43,7 +43,7 @@ class OpenAIMixin:
             ),
         )
 
-    async def _make_reply_async(self, messages: list[Message], model: LLMChatModel) -> Reply:
+    async def _make_ask_async(self, messages: list[Message], model: LLMChatModel) -> Reply:
         async_client = AsyncOpenAI(api_key=self.api_key, base_url=self.base_url)
         request_params = self._prepare_openai_request(messages, model)
         response = await async_client.chat.completions.create(**request_params)
@@ -55,7 +55,7 @@ class OpenAIMixin:
             ),
         )
 
-    def _make_reply_stream(self, messages: list[Message], model: LLMChatModel) -> Generator[Reply, None, None]:
+    def _make_ask_stream(self, messages: list[Message], model: LLMChatModel) -> Generator[Reply, None, None]:
         sync_client = SyncOpenAI(api_key=self.api_key, base_url=self.base_url)
         request_params = self._prepare_openai_request(messages, model)
         request_params["stream"] = True
@@ -75,7 +75,7 @@ class OpenAIMixin:
         if usage:
             yield Reply(text="", usage=usage)
 
-    async def _make_reply_stream_async(
+    async def _make_ask_stream_async(
         self, messages: list[Message], model: LLMChatModel
     ) -> AsyncGenerator[Reply, None]:
         async_client = AsyncOpenAI(api_key=self.api_key, base_url=self.base_url)
@@ -97,7 +97,7 @@ class OpenAIMixin:
         if usage:
             yield Reply(text="", usage=usage)
 
-    def reply(
+    def ask(
         self,
         human_message: str,
         model: Optional[OpenAIChatModel] = None,
@@ -105,9 +105,9 @@ class OpenAIMixin:
         raise_errors: bool = False,
         use_history: bool = True,
     ) -> Reply:
-        return super().reply(human_message, model, stream, raise_errors, use_history)
+        return super().ask(human_message, model, stream, raise_errors, use_history)
 
-    async def areply(
+    async def aask(
         self,
         human_message: str,
         model: Optional[OpenAIChatModel] = None,
@@ -115,7 +115,7 @@ class OpenAIMixin:
         raise_errors: bool = False,
         use_history: bool = True,
     ) -> Reply:
-        return await super().areply(human_message, model, stream, raise_errors, use_history)
+        return await super().aask(human_message, model, stream, raise_errors, use_history)
 
     def embed(
         self, input: Union[str, list[str]], model: Optional[OpenAIEmbeddingModel] = None

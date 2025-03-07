@@ -36,7 +36,7 @@ class AnthropicLLM(BaseLLM):
             api_key=api_key or rag_settings.anthropic_api_key,
         )
 
-    def _make_reply(self, messages: list[Message], model: AnthropicChatModel) -> Reply:
+    def _make_ask(self, messages: list[Message], model: AnthropicChatModel) -> Reply:
         sync_client = SyncAnthropic(api_key=self.api_key)
         response = sync_client.messages.create(
             model=model,
@@ -48,7 +48,7 @@ class AnthropicLLM(BaseLLM):
         usage = Usage(input=response.usage.input_tokens, output=response.usage.output_tokens)
         return Reply(response.content[0].text, usage)
 
-    async def _make_reply_async(self, messages: list[Message], model: AnthropicChatModel) -> Reply:
+    async def _make_ask_async(self, messages: list[Message], model: AnthropicChatModel) -> Reply:
         async_client = AsyncAnthropic(api_key=self.api_key)
         response = await async_client.messages.create(
             model=model,
@@ -60,7 +60,7 @@ class AnthropicLLM(BaseLLM):
         usage = Usage(input=response.usage.input_tokens, output=response.usage.output_tokens)
         return Reply(response.content[0].text, usage)
 
-    def _make_reply_stream(self, messages: list[Message], model: AnthropicChatModel) -> Generator[Reply, None, None]:
+    def _make_ask_stream(self, messages: list[Message], model: AnthropicChatModel) -> Generator[Reply, None, None]:
 
         sync_client = SyncAnthropic(api_key=self.api_key)
         response = sync_client.messages.create(
@@ -94,7 +94,7 @@ class AnthropicLLM(BaseLLM):
 
         yield Reply(text="", usage=Usage(input_tokens, output_tokens))
 
-    async def _make_reply_stream_async(
+    async def _make_ask_stream_async(
         self, messages: list[Message], model: AnthropicChatModel
     ) -> AsyncGenerator[Reply, None]:
 
@@ -130,7 +130,7 @@ class AnthropicLLM(BaseLLM):
 
         yield Reply(text="", usage=Usage(input_tokens, output_tokens))
 
-    def reply(
+    def ask(
         self,
         human_message: str,
         model: Optional[AnthropicChatModel] = None,
@@ -138,9 +138,9 @@ class AnthropicLLM(BaseLLM):
         raise_errors: bool = False,
         use_history: bool = True,
     ) -> Reply:
-        return super().reply(human_message, model, stream, raise_errors, use_history)
+        return super().ask(human_message, model, stream, raise_errors, use_history)
 
-    async def areply(
+    async def aask(
         self,
         human_message: str,
         model: Optional[AnthropicChatModel] = None,
@@ -148,7 +148,7 @@ class AnthropicLLM(BaseLLM):
         raise_errors: bool = False,
         use_history: bool = True,
     ) -> Reply:
-        return await super().areply(human_message, model, stream, raise_errors, use_history)
+        return await super().aask(human_message, model, stream, raise_errors, use_history)
 
     def embed(self, input: Union[str, list[str]], model=None) -> Union[Embed, EmbedList]:
         raise NotImplementedError

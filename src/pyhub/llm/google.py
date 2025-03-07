@@ -42,7 +42,7 @@ class GoogleLLM(BaseLLM):
             api_key=api_key or rag_settings.google_api_key,
         )
 
-    def _make_reply(self, messages: list[Message], model: GoogleChatModel) -> Reply:
+    def _make_ask(self, messages: list[Message], model: GoogleChatModel) -> Reply:
         client = genai.Client(api_key=self.api_key)
 
         contents: list[Content] = [
@@ -68,7 +68,7 @@ class GoogleLLM(BaseLLM):
         )
         return Reply(response.text, usage)
 
-    async def _make_reply_async(self, messages: list[Message], model: GoogleChatModel) -> Reply:
+    async def _make_ask_async(self, messages: list[Message], model: GoogleChatModel) -> Reply:
         client = genai.Client(api_key=self.api_key)
 
         contents: list[Content] = [
@@ -94,7 +94,7 @@ class GoogleLLM(BaseLLM):
         )
         return Reply(response.text, usage)
 
-    def _make_reply_stream(self, messages: list[Message], model: GoogleChatModel) -> Generator[Reply, None, None]:
+    def _make_ask_stream(self, messages: list[Message], model: GoogleChatModel) -> Generator[Reply, None, None]:
         client = genai.Client(api_key=self.api_key)
 
         contents: list[Content] = [
@@ -126,7 +126,7 @@ class GoogleLLM(BaseLLM):
         usage = Usage(input=input_tokens, output=output_tokens)
         yield Reply(text="", usage=usage)
 
-    async def _make_reply_stream_async(
+    async def _make_ask_stream_async(
         self, messages: list[Message], model: GoogleChatModel
     ) -> AsyncGenerator[Reply, None]:
         client = genai.Client(api_key=self.api_key)
@@ -160,7 +160,7 @@ class GoogleLLM(BaseLLM):
         usage = Usage(input=input_tokens, output=output_tokens)
         yield Reply(text="", usage=usage)
 
-    def reply(
+    def ask(
         self,
         human_message: str,
         model: Optional[GoogleChatModel] = None,
@@ -168,9 +168,9 @@ class GoogleLLM(BaseLLM):
         raise_errors: bool = False,
         use_history: bool = True,
     ) -> Reply:
-        return super().reply(human_message, model, stream, raise_errors, use_history)
+        return super().ask(human_message, model, stream, raise_errors, use_history)
 
-    async def areply(
+    async def aask(
         self,
         human_message: str,
         model: Optional[GoogleChatModel] = None,
@@ -178,7 +178,7 @@ class GoogleLLM(BaseLLM):
         raise_errors: bool = False,
         use_history: bool = True,
     ) -> Reply:
-        return await super().areply(human_message, model, stream, raise_errors, use_history)
+        return await super().aask(human_message, model, stream, raise_errors, use_history)
 
     def embed(
         self, input: Union[str, list[str]], model: Optional[GoogleEmbeddingModel] = None

@@ -34,7 +34,7 @@ def main(ctx: typer.Context):
 
 
 @app.command()
-def reply(
+def ask(
     embedding_model: LLMChatModelEnum = LLMChatModelEnum.GPT_4O,
     query: str = typer.Argument(..., help="Text to search for similar documents"),
     context: str = typer.Option(None, help="Context to provide to the LLM"),
@@ -71,6 +71,6 @@ def reply(
         max_tokens=max_tokens,
     )
 
-    for chunk in llm.reply(query, stream=True):
+    for chunk in llm.ask(query, stream=True):
         console.print(chunk.text, end="")
     console.print()

@@ -7,44 +7,44 @@ from pyhub.llm.types import Reply
 from pyhub.rag.settings import rag_settings
 
 
-def check_reply(reply):
-    assert isinstance(reply, Reply)
-    assert "Error" not in reply.text
+def check_ask(ask):
+    assert isinstance(ask, Reply)
+    assert "Error" not in ask.text
 
 
-async def check_reply_generator(generator) -> str:
+async def check_ask_generator(generator) -> str:
     assert isinstance(generator, (Generator, AsyncGenerator))
     if isinstance(generator, AsyncGenerator):
-        reply_list = [reply async for reply in generator]
+        ask_list = [ask async for ask in generator]
     else:
-        reply_list = [reply for reply in generator]
-    assert all(isinstance(reply, Reply) for reply in reply_list)
-    assert not any("Error" in reply.text for reply in reply_list), f"Error in chunks : {reply_list}"
-    reply_text = "".join(reply.text for reply in reply_list)
-    assert len(reply_text) > 0
-    return reply_text
+        ask_list = [ask for ask in generator]
+    assert all(isinstance(ask, Reply) for ask in ask_list)
+    assert not any("Error" in ask.text for ask in ask_list), f"Error in chunks : {ask_list}"
+    ask_text = "".join(ask.text for ask in ask_list)
+    assert len(ask_text) > 0
+    return ask_text
 
 
 async def check_llm(llm: BaseLLM):
-    reply1 = llm.reply("hello. my name is tom.")
-    check_reply(reply1)
+    ask1 = llm.ask("hello. my name is tom.")
+    check_ask(ask1)
     assert len(llm) == 2
 
-    reply2 = await llm.areply("what is my name?")
-    check_reply(reply2)
-    assert "tom" in reply2.text.lower()
+    ask2 = await llm.aask("what is my name?")
+    check_ask(ask2)
+    assert "tom" in ask2.text.lower()
     assert len(llm) == 4
 
     llm.clear()
     assert len(llm) == 0
 
-    gen1 = llm.reply("hello. my name is tom.", stream=True)
-    await check_reply_generator(gen1)
+    gen1 = llm.ask("hello. my name is tom.", stream=True)
+    await check_ask_generator(gen1)
     assert len(llm) == 2
 
-    gen2 = await llm.areply("what is my name?", stream=True)
-    reply_text = await check_reply_generator(gen2)
-    assert "tom" in reply_text.lower()
+    gen2 = await llm.aask("what is my name?", stream=True)
+    ask_text = await check_ask_generator(gen2)
+    assert "tom" in ask_text.lower()
     assert len(llm) == 4
 
 

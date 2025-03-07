@@ -39,22 +39,22 @@ class BaseLLM(abc.ABC):
         self.history = []
 
     @abc.abstractmethod
-    def _make_reply(self, messages: list[Message], model: LLMChatModel) -> Reply:
+    def _make_ask(self, messages: list[Message], model: LLMChatModel) -> Reply:
         """Generate a response using the specific LLM provider"""
         pass
 
     @abc.abstractmethod
-    async def _make_reply_async(self, messages: list[Message], model: LLMChatModel) -> Reply:
+    async def _make_ask_async(self, messages: list[Message], model: LLMChatModel) -> Reply:
         """Generate a response asynchronously using the specific LLM provider"""
         pass
 
     @abc.abstractmethod
-    def _make_reply_stream(self, messages: list[Message], model: LLMChatModel) -> Generator[Reply, None, None]:
+    def _make_ask_stream(self, messages: list[Message], model: LLMChatModel) -> Generator[Reply, None, None]:
         """Generate a streaming response using the specific LLM provider"""
         pass
 
     @abc.abstractmethod
-    async def _make_reply_stream_async(
+    async def _make_ask_stream_async(
         self, messages: list[Message], model: LLMChatModel
     ) -> AsyncGenerator[Reply, None]:
         """Generate a streaming response asynchronously using the specific LLM provider"""
@@ -74,7 +74,7 @@ class BaseLLM(abc.ABC):
                 ]
             )
 
-    def _reply_impl(
+    def _ask_impl(
         self,
         human_message: str,
         model: Optional[LLMChatModel] = None,
@@ -90,7 +90,7 @@ class BaseLLM(abc.ABC):
 
         async def async_handler() -> Reply:
             try:
-                reply = await self._make_reply_async(current_messages, current_model)
+                ask = await self._make_ask_async(current_messages, current_model)
             except Exception as e:
                 if raise_errors:
                     raise e
@@ -98,12 +98,12 @@ class BaseLLM(abc.ABC):
                 return Reply(text=f"Error occurred during API call: {str(e)}")
             else:
                 if use_history:
-                    self._update_history(human_message, reply.text)
-                return reply
+                    self._update_history(human_message, ask.text)
+                return ask
 
         def sync_handler() -> Reply:
             try:
-                reply = self._make_reply(current_messages, current_model)
+                ask = self._make_ask(current_messages, current_model)
             except Exception as e:
                 if raise_errors:
                     raise e
@@ -111,15 +111,15 @@ class BaseLLM(abc.ABC):
                 return Reply(text=f"Error occurred during API call: {str(e)}")
             else:
                 if use_history:
-                    self._update_history(human_message, reply.text)
-                return reply
+                    self._update_history(human_message, ask.text)
+                return ask
 
         if is_async:
             return async_handler()
         else:
             return sync_handler()
 
-    def _stream_reply_impl(
+    def _stream_ask_impl(
         self,
         human_message: str,
         model: Optional[LLMChatModel] = None,
@@ -136,9 +136,9 @@ class BaseLLM(abc.ABC):
         async def async_stream_handler() -> AsyncGenerator[Reply, None]:
             try:
                 text_list = []
-                async for reply in self._make_reply_stream_async(current_messages, current_model):
-                    text_list.append(reply.text)
-                    yield reply
+                async for ask in self._make_ask_stream_async(current_messages, current_model):
+                    text_list.append(ask.text)
+                    yield ask
 
                 if use_history:
                     full_text = "".join(text_list)
@@ -152,9 +152,9 @@ class BaseLLM(abc.ABC):
         def sync_stream_handler() -> Generator[Reply, None, None]:
             try:
                 text_list = []
-                for reply in self._make_reply_stream(current_messages, current_model):
-                    text_list.append(reply.text)
-                    yield reply
+                for ask in self._make_ask_stream(current_messages, current_model):
+                    text_list.append(ask.text)
+                    yield ask
 
                 if use_history:
                     full_text = "".join(text_list)
@@ -170,7 +170,7 @@ class BaseLLM(abc.ABC):
         else:
             return sync_stream_handler()
 
-    def reply(
+    def ask(
         self,
         human_message: str,
         model: Optional[LLMChatModel] = None,
@@ -179,14 +179,14 @@ class BaseLLM(abc.ABC):
         use_history: bool = True,
     ) -> Union[Reply, Generator[str, None, None]]:
         if not stream:
-            return self._reply_impl(
+            return self._ask_impl(
                 human_message, model, raise_errors=raise_errors, is_async=False, use_history=use_history
             )
-        return self._stream_reply_impl(
+        return self._stream_ask_impl(
             human_message, model, raise_errors=raise_errors, is_async=False, use_history=use_history
         )
 
-    async def areply(
+    async def aask(
         self,
         human_message: str,
         model: Optional[LLMChatModel] = None,
@@ -195,10 +195,10 @@ class BaseLLM(abc.ABC):
         use_history: bool = True,
     ):
         if not stream:
-            return await self._reply_impl(
+            return await self._ask_impl(
                 human_message, model, raise_errors=raise_errors, is_async=True, use_history=use_history
             )
-        return self._stream_reply_impl(
+        return self._stream_ask_impl(
             human_message, model, raise_errors=raise_errors, is_async=True, use_history=use_history
         )
 
