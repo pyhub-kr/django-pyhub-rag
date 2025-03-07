@@ -78,6 +78,9 @@ class GroundednessCheck:
     is_grounded: Optional[bool] = None  # grounded (True), notGrounded (False), notSure (None)
     usage: Optional["Usage"] = None
 
+    def __bool__(self):
+        return self.is_grounded
+
 
 class Message(BaseModel):
     role: Literal["system", "user", "assistant", "function"]

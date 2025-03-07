@@ -1,6 +1,6 @@
 import abc
 import logging
-from typing import AsyncGenerator, Generator, Optional, Union, cast
+from typing import AsyncGenerator, AsyncIterable, Generator, Optional, Union, cast
 
 from .types import Embed, EmbedList, LLMChatModel, LLMEmbeddingModel, Message, Reply
 
@@ -54,9 +54,7 @@ class BaseLLM(abc.ABC):
         pass
 
     @abc.abstractmethod
-    async def _make_ask_stream_async(
-        self, messages: list[Message], model: LLMChatModel
-    ) -> AsyncGenerator[Reply, None]:
+    async def _make_ask_stream_async(self, messages: list[Message], model: LLMChatModel) -> AsyncGenerator[Reply, None]:
         """Generate a streaming response asynchronously using the specific LLM provider"""
         pass
 
@@ -186,7 +184,7 @@ class BaseLLM(abc.ABC):
             human_message, model, raise_errors=raise_errors, is_async=False, use_history=use_history
         )
 
-    async def aask(
+    async def ask_async(
         self,
         human_message: str,
         model: Optional[LLMChatModel] = None,
@@ -221,7 +219,7 @@ class BaseLLM(abc.ABC):
         pass
 
     @abc.abstractmethod
-    async def aembed(
+    async def embed_async(
         self,
         input: Union[str, list[str]],
         model: Optional[LLMEmbeddingModel] = None,

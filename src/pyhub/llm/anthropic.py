@@ -140,7 +140,7 @@ class AnthropicLLM(BaseLLM):
     ) -> Reply:
         return super().ask(human_message, model, stream, raise_errors, use_history)
 
-    async def aask(
+    async def ask_async(
         self,
         human_message: str,
         model: Optional[AnthropicChatModel] = None,
@@ -148,12 +148,12 @@ class AnthropicLLM(BaseLLM):
         raise_errors: bool = False,
         use_history: bool = True,
     ) -> Reply:
-        return await super().aask(human_message, model, stream, raise_errors, use_history)
+        return await super().ask_async(human_message, model, stream, raise_errors, use_history)
 
     def embed(self, input: Union[str, list[str]], model=None) -> Union[Embed, EmbedList]:
         raise NotImplementedError
 
-    async def aembed(self, input: Union[str, list[str]], model=None) -> Union[Embed, EmbedList]:
+    async def embed_async(self, input: Union[str, list[str]], model=None) -> Union[Embed, EmbedList]:
         raise NotImplementedError
 
 

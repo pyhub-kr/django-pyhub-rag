@@ -75,9 +75,7 @@ class OpenAIMixin:
         if usage:
             yield Reply(text="", usage=usage)
 
-    async def _make_ask_stream_async(
-        self, messages: list[Message], model: LLMChatModel
-    ) -> AsyncGenerator[Reply, None]:
+    async def _make_ask_stream_async(self, messages: list[Message], model: LLMChatModel) -> AsyncGenerator[Reply, None]:
         async_client = AsyncOpenAI(api_key=self.api_key, base_url=self.base_url)
         request_params = self._prepare_openai_request(messages, model)
         request_params["stream"] = True
@@ -107,7 +105,7 @@ class OpenAIMixin:
     ) -> Reply:
         return super().ask(human_message, model, stream, raise_errors, use_history)
 
-    async def aask(
+    async def ask_async(
         self,
         human_message: str,
         model: Optional[OpenAIChatModel] = None,
@@ -115,7 +113,7 @@ class OpenAIMixin:
         raise_errors: bool = False,
         use_history: bool = True,
     ) -> Reply:
-        return await super().aask(human_message, model, stream, raise_errors, use_history)
+        return await super().ask_async(human_message, model, stream, raise_errors, use_history)
 
     def embed(
         self, input: Union[str, list[str]], model: Optional[OpenAIEmbeddingModel] = None
@@ -135,7 +133,7 @@ class OpenAIMixin:
             return Embed(response.data[0].embedding, usage=usage)
         return EmbedList([Embed(v.embedding) for v in response.data], usage=usage)
 
-    async def aembed(
+    async def embed_async(
         self, input: Union[str, list[str]], model: Optional[OpenAIEmbeddingModel] = None
     ) -> Union[Embed, EmbedList]:
         embedding_model = cast(OpenAIEmbeddingModel, model or self.embedding_model)

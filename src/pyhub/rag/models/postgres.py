@@ -49,10 +49,10 @@ class PGVectorDocumentQuerySet(BaseDocumentQuerySet):
         qs = self._prepare_search_query(query_embedding)
         return qs[:k]
 
-    async def asimilarity_search(self, query: str, k: int = 4) -> List["AbstractDocument"]:
+    async def similarity_search_async(self, query: str, k: int = 4) -> List["AbstractDocument"]:
         """비동기 검색 메서드"""
         model_cls: Type[AbstractDocument] = self.model
-        query_embedding = await model_cls.aembed(query)
+        query_embedding = await model_cls.embed_async(query)
 
         qs = self._prepare_search_query(query_embedding)
         return await sync_to_async(list)(qs[:k])  # noqa

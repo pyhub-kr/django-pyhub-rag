@@ -30,7 +30,7 @@ async def check_llm(llm: BaseLLM):
     check_ask(ask1)
     assert len(llm) == 2
 
-    ask2 = await llm.aask("what is my name?")
+    ask2 = await llm.ask_async("what is my name?")
     check_ask(ask2)
     assert "tom" in ask2.text.lower()
     assert len(llm) == 4
@@ -42,7 +42,7 @@ async def check_llm(llm: BaseLLM):
     await check_ask_generator(gen1)
     assert len(llm) == 2
 
-    gen2 = await llm.aask("what is my name?", stream=True)
+    gen2 = await llm.ask_async("what is my name?", stream=True)
     ask_text = await check_ask_generator(gen2)
     assert "tom" in ask_text.lower()
     assert len(llm) == 4

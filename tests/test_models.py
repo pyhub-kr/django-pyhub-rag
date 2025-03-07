@@ -147,7 +147,7 @@ class TestDocumentModels:
             )
 
         # 유사 문서를 검색
-        results = await self.document_model.objects.asimilarity_search("test query", k=2)
+        results = await self.document_model.objects.similarity_search_async("test query", k=2)
 
         assert len(results) == 2
         assert all(isinstance(doc, self.document_model) for doc in results)

@@ -170,7 +170,7 @@ class GoogleLLM(BaseLLM):
     ) -> Reply:
         return super().ask(human_message, model, stream, raise_errors, use_history)
 
-    async def aask(
+    async def ask_async(
         self,
         human_message: str,
         model: Optional[GoogleChatModel] = None,
@@ -178,7 +178,7 @@ class GoogleLLM(BaseLLM):
         raise_errors: bool = False,
         use_history: bool = True,
     ) -> Reply:
-        return await super().aask(human_message, model, stream, raise_errors, use_history)
+        return await super().ask_async(human_message, model, stream, raise_errors, use_history)
 
     def embed(
         self, input: Union[str, list[str]], model: Optional[GoogleEmbeddingModel] = None
@@ -196,7 +196,7 @@ class GoogleLLM(BaseLLM):
             return Embed(response.embeddings[0].values, usage=usage)
         return EmbedList([Embed(v.values) for v in response.embeddings], usage=usage)
 
-    async def aembed(
+    async def embed_async(
         self, input: Union[str, list[str]], model: Optional[GoogleEmbeddingModel] = None
     ) -> Union[Embed, EmbedList]:
         embedding_model = cast(GoogleEmbeddingModel, model or self.embedding_model)

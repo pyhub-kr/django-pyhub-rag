@@ -28,8 +28,8 @@ class SQLiteVectorDocumentQuerySet(BaseDocumentQuerySet):
         qs = self._prepare_search_query(query_embedding)
         return qs[:k]
 
-    async def asimilarity_search(self, query: str, k: int = 4) -> List["AbstractDocument"]:
-        query_embedding = await self.model.aembed(query)
+    async def similarity_search_async(self, query: str, k: int = 4) -> List["AbstractDocument"]:
+        query_embedding = await self.model.embed_async(query)
 
         qs = self._prepare_search_query(query_embedding)
         return await sync_to_async(list)(qs[:k])  # noqa

@@ -82,7 +82,7 @@ class BaseVectorField(models.Field):
 
         raise NotImplementedError(f"Embedding model '{embedding_model}' is not supported yet.")
 
-    async def aembed(
+    async def embed_async(
         self,
         input: Union[str, list[str]],
         model: Optional[LLMEmbeddingModel] = None,
@@ -91,11 +91,11 @@ class BaseVectorField(models.Field):
 
         if embedding_model in get_literal_values(OpenAIEmbeddingModel):
             llm = OpenAILLM(api_key=self.openai_api_key, base_url=self.openai_base_url)
-            return await llm.aembed(input, model=embedding_model)
+            return await llm.embed_async(input, model=embedding_model)
 
         elif embedding_model in get_literal_values(GoogleEmbeddingModel):
             llm = GoogleLLM(api_key=self.google_api_key)
-            return await llm.aembed(input, model=embedding_model)
+            return await llm.embed_async(input, model=embedding_model)
 
         raise NotImplementedError(f"Embedding model '{embedding_model}' is not supported yet.")
 

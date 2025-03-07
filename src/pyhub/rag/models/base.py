@@ -62,7 +62,7 @@ class BaseDocumentQuerySet(models.QuerySet):
     def similarity_search(self, query: str, k: int = 4) -> List["AbstractDocument"]:
         raise NotImplementedError
 
-    async def asimilarity_search(self, query: str, k: int = 4) -> List["AbstractDocument"]:
+    async def similarity_search_async(self, query: str, k: int = 4) -> List["AbstractDocument"]:
         raise NotImplementedError
 
     def __repr__(self):
@@ -116,13 +116,13 @@ class AbstractDocument(LifecycleModelMixin, models.Model):
         return field.embed(input, model)
 
     @classmethod
-    async def aembed(
+    async def embed_async(
         cls,
         input: Union[str, List[str]],
         model: Optional[LLMEmbeddingModel] = None,
     ) -> Union[List[float], List[List[float]]]:
         field = cls.get_embedding_field()
-        return await field.aembed(input, model)
+        return await field.embed_async(input, model)
 
     @classmethod
     def get_token_size(cls, text: str) -> int:
