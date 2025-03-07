@@ -1,6 +1,6 @@
 import abc
 import logging
-from typing import AsyncGenerator, AsyncIterable, Generator, Optional, Union, cast
+from typing import Generator, Optional, Union, cast, AsyncGenerator
 
 from .types import Embed, EmbedList, LLMChatModel, LLMEmbeddingModel, Message, Reply
 
@@ -51,12 +51,12 @@ class BaseLLM(abc.ABC):
     @abc.abstractmethod
     def _make_ask_stream(self, messages: list[Message], model: LLMChatModel) -> Generator[Reply, None, None]:
         """Generate a streaming response using the specific LLM provider"""
-        pass
+        yield Reply(text="")
 
     @abc.abstractmethod
-    async def _make_ask_stream_async(self, messages: list[Message], model: LLMChatModel) -> AsyncGenerator[Reply, None]:
+    async def _make_ask_stream_async(self, messages: list[Message], model: LLMChatModel) -> AsyncGenerator[Reply]:
         """Generate a streaming response asynchronously using the specific LLM provider"""
-        pass
+        yield Reply(text="")
 
     def _prepare_messages(self, human_message: str, current_messages: list[Message]) -> list[Message]:
         if human_message:
@@ -77,128 +77,122 @@ class BaseLLM(abc.ABC):
         human_message: str,
         model: Optional[LLMChatModel] = None,
         *,
-        raise_errors: bool = False,
         is_async: bool = False,
+        stream: bool = False,
         use_history: bool = True,
+        raise_errors: bool = False,
     ):
-        """동기 또는 비동기 응답을 생성하는 내부 메서드"""
+        """동기 또는 비동기 응답을 생성하는 내부 메서드 (일반/스트리밍)"""
         current_messages = [*self.history] if use_history else []
         current_model: LLMChatModel = cast(LLMChatModel, model or self.model)
         current_messages = self._prepare_messages(human_message, current_messages)
 
-        async def async_handler() -> Reply:
-            try:
-                ask = await self._make_ask_async(current_messages, current_model)
-            except Exception as e:
-                if raise_errors:
-                    raise e
-                logger.error(f"Error occurred during API call: {str(e)}")
-                return Reply(text=f"Error occurred during API call: {str(e)}")
-            else:
-                if use_history:
-                    self._update_history(human_message, ask.text)
-                return ask
+        # 스트리밍 응답 처리
+        if stream:
 
-        def sync_handler() -> Reply:
-            try:
-                ask = self._make_ask(current_messages, current_model)
-            except Exception as e:
-                if raise_errors:
-                    raise e
-                logger.error(f"Error occurred during API call: {str(e)}")
-                return Reply(text=f"Error occurred during API call: {str(e)}")
-            else:
-                if use_history:
-                    self._update_history(human_message, ask.text)
-                return ask
+            async def async_stream_handler() -> AsyncGenerator[Reply, None]:
+                try:
+                    text_list = []
+                    async for ask in self._make_ask_stream_async(current_messages, current_model):
+                        text_list.append(ask.text)
+                        yield ask
 
-        if is_async:
-            return async_handler()
+                    if use_history:
+                        full_text = "".join(text_list)
+                        self._update_history(human_message, full_text)
+                except Exception as e:
+                    if raise_errors:
+                        raise e
+                    logger.error(f"Error occurred during streaming API call: {str(e)}")
+                    yield Reply(text=f"Error occurred during streaming API call: {str(e)}")
+
+            def sync_stream_handler() -> Generator[Reply, None, None]:
+                try:
+                    text_list = []
+                    for ask in self._make_ask_stream(current_messages, current_model):
+                        text_list.append(ask.text)
+                        yield ask
+
+                    if use_history:
+                        full_text = "".join(text_list)
+                        self._update_history(human_message, full_text)
+                except Exception as e:
+                    if raise_errors:
+                        raise e
+                    logger.error(f"Error occurred during streaming API call: {str(e)}")
+                    yield Reply(text=f"Error occurred during streaming API call: {str(e)}")
+
+            return async_stream_handler() if is_async else sync_stream_handler()
+
+        # 일반 응답 처리
         else:
-            return sync_handler()
 
-    def _stream_ask_impl(
-        self,
-        human_message: str,
-        model: Optional[LLMChatModel] = None,
-        *,
-        raise_errors: bool = False,
-        is_async: bool = False,
-        use_history: bool = True,
-    ):
-        """스트리밍 응답을 생성하는 내부 메서드 (동기/비동기)"""
-        current_messages = [*self.history] if use_history else []
-        current_model = cast(LLMChatModel, model or self.model)
-        current_messages = self._prepare_messages(human_message, current_messages)
+            async def async_handler() -> Reply:
+                try:
+                    ask = await self._make_ask_async(current_messages, current_model)
+                except Exception as e:
+                    if raise_errors:
+                        raise e
+                    logger.error(f"Error occurred during API call: {str(e)}")
+                    return Reply(text=f"Error occurred during API call: {str(e)}")
+                else:
+                    if use_history:
+                        self._update_history(human_message, ask.text)
+                    return ask
 
-        async def async_stream_handler() -> AsyncGenerator[Reply, None]:
-            try:
-                text_list = []
-                async for ask in self._make_ask_stream_async(current_messages, current_model):
-                    text_list.append(ask.text)
-                    yield ask
+            def sync_handler() -> Reply:
+                try:
+                    ask = self._make_ask(current_messages, current_model)
+                except Exception as e:
+                    if raise_errors:
+                        raise e
+                    logger.error(f"Error occurred during API call: {str(e)}")
+                    return Reply(text=f"Error occurred during API call: {str(e)}")
+                else:
+                    if use_history:
+                        self._update_history(human_message, ask.text)
+                    return ask
 
-                if use_history:
-                    full_text = "".join(text_list)
-                    self._update_history(human_message, full_text)
-            except Exception as e:
-                if raise_errors:
-                    raise e
-                logger.error(f"Error occurred during streaming API call: {str(e)}")
-                yield Reply(text=f"Error occurred during streaming API call: {str(e)}")
-
-        def sync_stream_handler() -> Generator[Reply, None, None]:
-            try:
-                text_list = []
-                for ask in self._make_ask_stream(current_messages, current_model):
-                    text_list.append(ask.text)
-                    yield ask
-
-                if use_history:
-                    full_text = "".join(text_list)
-                    self._update_history(human_message, full_text)
-            except Exception as e:
-                if raise_errors:
-                    raise e
-                logger.error(f"Error occurred during streaming API call: {str(e)}")
-                yield Reply(text=f"Error occurred during streaming API call: {str(e)}")
-
-        if is_async:
-            return async_stream_handler()
-        else:
-            return sync_stream_handler()
+            return async_handler() if is_async else sync_handler()
 
     def ask(
         self,
         human_message: str,
         model: Optional[LLMChatModel] = None,
+        *,
         stream: bool = False,
-        raise_errors: bool = False,
         use_history: bool = True,
-    ) -> Union[Reply, Generator[str, None, None]]:
-        if not stream:
-            return self._ask_impl(
-                human_message, model, raise_errors=raise_errors, is_async=False, use_history=use_history
-            )
-        return self._stream_ask_impl(
-            human_message, model, raise_errors=raise_errors, is_async=False, use_history=use_history
+        raise_errors: bool = False,
+    ) -> Union[Reply, Generator[Reply, None, None]]:
+        return self._ask_impl(
+            human_message,
+            model,
+            is_async=False,
+            stream=stream,
+            use_history=use_history,
+            raise_errors=raise_errors,
         )
 
     async def ask_async(
         self,
         human_message: str,
         model: Optional[LLMChatModel] = None,
+        *,
         stream: bool = False,
         raise_errors: bool = False,
         use_history: bool = True,
-    ):
-        if not stream:
-            return await self._ask_impl(
-                human_message, model, raise_errors=raise_errors, is_async=True, use_history=use_history
-            )
-        return self._stream_ask_impl(
-            human_message, model, raise_errors=raise_errors, is_async=True, use_history=use_history
+    ) -> Union[Reply, AsyncGenerator[Reply, None]]:
+        return_value = self._ask_impl(
+            human_message,
+            model,
+            is_async=True,
+            stream=stream,
+            use_history=use_history,
+            raise_errors=raise_errors,
         )
+        if stream:
+            return return_value
+        return await return_value
 
     #
     # embed
@@ -207,7 +201,7 @@ class BaseLLM(abc.ABC):
         return self.EMBEDDING_DIMENSIONS[model or self.embedding_model]
 
     @property
-    def embed_size(self):
+    def embed_size(self) -> int:
         return self.get_embed_size()
 
     @abc.abstractmethod

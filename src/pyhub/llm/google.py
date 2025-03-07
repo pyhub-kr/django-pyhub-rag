@@ -1,4 +1,4 @@
-from typing import AsyncGenerator, Generator, Optional, Union, cast
+from typing import Generator, Optional, Union, cast, AsyncGenerator
 
 from google import genai
 from google.genai.types import Content, GenerateContentConfig, Part
@@ -42,7 +42,11 @@ class GoogleLLM(BaseLLM):
             api_key=api_key or rag_settings.google_api_key,
         )
 
-    def _make_ask(self, messages: list[Message], model: GoogleChatModel) -> Reply:
+    def _make_ask(
+        self,
+        messages: list[Message],
+        model: GoogleChatModel,
+    ) -> Reply:
         client = genai.Client(api_key=self.api_key)
 
         contents: list[Content] = [
@@ -68,7 +72,11 @@ class GoogleLLM(BaseLLM):
         )
         return Reply(response.text, usage)
 
-    async def _make_ask_async(self, messages: list[Message], model: GoogleChatModel) -> Reply:
+    async def _make_ask_async(
+        self,
+        messages: list[Message],
+        model: GoogleChatModel,
+    ) -> Reply:
         client = genai.Client(api_key=self.api_key)
 
         contents: list[Content] = [
@@ -94,7 +102,11 @@ class GoogleLLM(BaseLLM):
         )
         return Reply(response.text, usage)
 
-    def _make_ask_stream(self, messages: list[Message], model: GoogleChatModel) -> Generator[Reply, None, None]:
+    def _make_ask_stream(
+        self,
+        messages: list[Message],
+        model: GoogleChatModel,
+    ) -> Generator[Reply, None, None]:
         client = genai.Client(api_key=self.api_key)
 
         contents: list[Content] = [
@@ -164,24 +176,40 @@ class GoogleLLM(BaseLLM):
         self,
         human_message: str,
         model: Optional[GoogleChatModel] = None,
+        *,
         stream: bool = False,
-        raise_errors: bool = False,
         use_history: bool = True,
+        raise_errors: bool = False,
     ) -> Reply:
-        return super().ask(human_message, model, stream, raise_errors, use_history)
+        return super().ask(
+            human_message,
+            model,
+            stream=stream,
+            use_history=use_history,
+            raise_errors=raise_errors,
+        )
 
     async def ask_async(
         self,
         human_message: str,
         model: Optional[GoogleChatModel] = None,
+        *,
         stream: bool = False,
-        raise_errors: bool = False,
         use_history: bool = True,
+        raise_errors: bool = False,
     ) -> Reply:
-        return await super().ask_async(human_message, model, stream, raise_errors, use_history)
+        return await super().ask_async(
+            human_message,
+            model,
+            stream=stream,
+            use_history=use_history,
+            raise_errors=raise_errors,
+        )
 
     def embed(
-        self, input: Union[str, list[str]], model: Optional[GoogleEmbeddingModel] = None
+        self,
+        input: Union[str, list[str]],
+        model: Optional[GoogleEmbeddingModel] = None,
     ) -> Union[Embed, EmbedList]:
         embedding_model = cast(GoogleEmbeddingModel, model or self.embedding_model)
 
@@ -197,7 +225,9 @@ class GoogleLLM(BaseLLM):
         return EmbedList([Embed(v.values) for v in response.embeddings], usage=usage)
 
     async def embed_async(
-        self, input: Union[str, list[str]], model: Optional[GoogleEmbeddingModel] = None
+        self,
+        input: Union[str, list[str]],
+        model: Optional[GoogleEmbeddingModel] = None,
     ) -> Union[Embed, EmbedList]:
         embedding_model = cast(GoogleEmbeddingModel, model or self.embedding_model)
 

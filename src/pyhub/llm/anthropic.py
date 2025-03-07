@@ -1,4 +1,4 @@
-from typing import AsyncGenerator, Generator, Optional, Union
+from typing import Generator, Optional, Union, AsyncGenerator
 
 from anthropic import NOT_GIVEN as ANTHROPIC_NOT_GIVEN
 from anthropic import Anthropic as SyncAnthropic
@@ -36,7 +36,11 @@ class AnthropicLLM(BaseLLM):
             api_key=api_key or rag_settings.anthropic_api_key,
         )
 
-    def _make_ask(self, messages: list[Message], model: AnthropicChatModel) -> Reply:
+    def _make_ask(
+        self,
+        messages: list[Message],
+        model: AnthropicChatModel,
+    ) -> Reply:
         sync_client = SyncAnthropic(api_key=self.api_key)
         response = sync_client.messages.create(
             model=model,
@@ -48,7 +52,11 @@ class AnthropicLLM(BaseLLM):
         usage = Usage(input=response.usage.input_tokens, output=response.usage.output_tokens)
         return Reply(response.content[0].text, usage)
 
-    async def _make_ask_async(self, messages: list[Message], model: AnthropicChatModel) -> Reply:
+    async def _make_ask_async(
+        self,
+        messages: list[Message],
+        model: AnthropicChatModel,
+    ) -> Reply:
         async_client = AsyncAnthropic(api_key=self.api_key)
         response = await async_client.messages.create(
             model=model,
@@ -60,7 +68,11 @@ class AnthropicLLM(BaseLLM):
         usage = Usage(input=response.usage.input_tokens, output=response.usage.output_tokens)
         return Reply(response.content[0].text, usage)
 
-    def _make_ask_stream(self, messages: list[Message], model: AnthropicChatModel) -> Generator[Reply, None, None]:
+    def _make_ask_stream(
+        self,
+        messages: list[Message],
+        model: AnthropicChatModel,
+    ) -> Generator[Reply, None, None]:
 
         sync_client = SyncAnthropic(api_key=self.api_key)
         response = sync_client.messages.create(
@@ -134,26 +146,48 @@ class AnthropicLLM(BaseLLM):
         self,
         human_message: str,
         model: Optional[AnthropicChatModel] = None,
+        *,
         stream: bool = False,
-        raise_errors: bool = False,
         use_history: bool = True,
+        raise_errors: bool = False,
     ) -> Reply:
-        return super().ask(human_message, model, stream, raise_errors, use_history)
+        return super().ask(
+            human_message,
+            model,
+            stream=stream,
+            use_history=use_history,
+            raise_errors=raise_errors,
+        )
 
     async def ask_async(
         self,
         human_message: str,
         model: Optional[AnthropicChatModel] = None,
+        *,
         stream: bool = False,
         raise_errors: bool = False,
         use_history: bool = True,
     ) -> Reply:
-        return await super().ask_async(human_message, model, stream, raise_errors, use_history)
+        return await super().ask_async(
+            human_message,
+            model,
+            stream=stream,
+            use_history=use_history,
+            raise_errors=raise_errors,
+        )
 
-    def embed(self, input: Union[str, list[str]], model=None) -> Union[Embed, EmbedList]:
+    def embed(
+        self,
+        input: Union[str, list[str]],
+        model=None,
+    ) -> Union[Embed, EmbedList]:
         raise NotImplementedError
 
-    async def embed_async(self, input: Union[str, list[str]], model=None) -> Union[Embed, EmbedList]:
+    async def embed_async(
+        self,
+        input: Union[str, list[str]],
+        model=None,
+    ) -> Union[Embed, EmbedList]:
         raise NotImplementedError
 
 

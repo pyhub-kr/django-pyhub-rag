@@ -96,4 +96,4 @@ class UpstageLLM(OpenAIMixin, BaseLLM):
             if raise_errors:
                 raise e
             logger.error(f"Error occurred during streaming API call: {str(e)}")
-            return GroundednessCheck(is_grounded=None)
+            return GroundednessCheck(is_grounded=None, usage=None)

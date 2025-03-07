@@ -1,4 +1,4 @@
-from typing import AsyncGenerator, Generator, Optional, Union, cast
+from typing import Generator, Optional, Union, cast, AsyncGenerator
 
 from openai import AsyncOpenAI
 from openai import OpenAI as SyncOpenAI
@@ -19,7 +19,11 @@ from .types import (
 
 class OpenAIMixin:
 
-    def _prepare_openai_request(self, messages: list[Message], model: LLMChatModel) -> dict:
+    def _prepare_openai_request(
+        self,
+        messages: list[Message],
+        model: LLMChatModel,
+    ) -> dict:
         history = [*messages]
         if self.system_prompt:
             history.insert(0, {"role": "system", "content": self.system_prompt})
@@ -31,7 +35,11 @@ class OpenAIMixin:
             "max_tokens": self.max_tokens,
         }
 
-    def _make_ask(self, messages: list[Message], model: LLMChatModel) -> Reply:
+    def _make_ask(
+        self,
+        messages: list[Message],
+        model: LLMChatModel,
+    ) -> Reply:
         sync_client = SyncOpenAI(api_key=self.api_key, base_url=self.base_url)
         request_params = self._prepare_openai_request(messages, model)
         response = sync_client.chat.completions.create(**request_params)
@@ -43,7 +51,11 @@ class OpenAIMixin:
             ),
         )
 
-    async def _make_ask_async(self, messages: list[Message], model: LLMChatModel) -> Reply:
+    async def _make_ask_async(
+        self,
+        messages: list[Message],
+        model: LLMChatModel,
+    ) -> Reply:
         async_client = AsyncOpenAI(api_key=self.api_key, base_url=self.base_url)
         request_params = self._prepare_openai_request(messages, model)
         response = await async_client.chat.completions.create(**request_params)
@@ -55,7 +67,11 @@ class OpenAIMixin:
             ),
         )
 
-    def _make_ask_stream(self, messages: list[Message], model: LLMChatModel) -> Generator[Reply, None, None]:
+    def _make_ask_stream(
+        self,
+        messages: list[Message],
+        model: LLMChatModel,
+    ) -> Generator[Reply, None, None]:
         sync_client = SyncOpenAI(api_key=self.api_key, base_url=self.base_url)
         request_params = self._prepare_openai_request(messages, model)
         request_params["stream"] = True
@@ -75,7 +91,11 @@ class OpenAIMixin:
         if usage:
             yield Reply(text="", usage=usage)
 
-    async def _make_ask_stream_async(self, messages: list[Message], model: LLMChatModel) -> AsyncGenerator[Reply, None]:
+    async def _make_ask_stream_async(
+        self,
+        messages: list[Message],
+        model: LLMChatModel,
+    ) -> AsyncGenerator[Reply, None]:
         async_client = AsyncOpenAI(api_key=self.api_key, base_url=self.base_url)
         request_params = self._prepare_openai_request(messages, model)
         request_params["stream"] = True
@@ -99,21 +119,35 @@ class OpenAIMixin:
         self,
         human_message: str,
         model: Optional[OpenAIChatModel] = None,
+        *,
         stream: bool = False,
-        raise_errors: bool = False,
         use_history: bool = True,
+        raise_errors: bool = False,
     ) -> Reply:
-        return super().ask(human_message, model, stream, raise_errors, use_history)
+        return super().ask(
+            human_message,
+            model,
+            stream=stream,
+            use_history=use_history,
+            raise_errors=raise_errors,
+        )
 
     async def ask_async(
         self,
         human_message: str,
         model: Optional[OpenAIChatModel] = None,
+        *,
         stream: bool = False,
-        raise_errors: bool = False,
         use_history: bool = True,
+        raise_errors: bool = False,
     ) -> Reply:
-        return await super().ask_async(human_message, model, stream, raise_errors, use_history)
+        return await super().ask_async(
+            human_message,
+            model,
+            stream=stream,
+            use_history=use_history,
+            raise_errors=raise_errors,
+        )
 
     def embed(
         self, input: Union[str, list[str]], model: Optional[OpenAIEmbeddingModel] = None
