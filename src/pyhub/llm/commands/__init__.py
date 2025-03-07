@@ -30,7 +30,7 @@ def main(ctx: typer.Context):
         """,
             style="bold blue",
         )
-        console.print("Welcome to PyHub RAG CLI!", style="green")
+        console.print("Welcome to PyHub LLM CLI!", style="green")
 
 
 @app.command()

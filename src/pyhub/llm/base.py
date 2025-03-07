@@ -1,6 +1,6 @@
 import abc
 import logging
-from typing import Generator, Optional, Union, cast, AsyncGenerator
+from typing import AsyncGenerator, Generator, Optional, Union, cast
 
 from .types import Embed, EmbedList, LLMChatModel, LLMEmbeddingModel, Message, Reply
 
