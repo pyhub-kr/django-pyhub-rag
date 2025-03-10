@@ -1,4 +1,4 @@
-from typing import AsyncGenerator, Generator, Optional, Union
+from typing import AsyncGenerator, Generator, Optional, Union, Any
 
 from anthropic import NOT_GIVEN as ANTHROPIC_NOT_GIVEN
 from anthropic import Anthropic as SyncAnthropic
@@ -24,7 +24,7 @@ class AnthropicLLM(BaseLLM):
         model: AnthropicChatModel = "claude-3-5-haiku-latest",
         temperature: float = 0.2,
         max_tokens: int = 1000,
-        system_prompt: Optional[str] = None,
+        system_prompt: Optional[Union[str, Template]] = None,
         prompt: Optional[Union[str, Template]] = None,
         output_key: str = "text",
         initial_messages: Optional[list[Message]] = None,
@@ -41,15 +41,16 @@ class AnthropicLLM(BaseLLM):
             api_key=api_key or rag_settings.anthropic_api_key,
         )
 
-    def _make_ask(
+    async def _make_ask_async(
         self,
+        input_context: dict[str, Any],
         messages: list[Message],
         model: AnthropicChatModel,
     ) -> Reply:
-        sync_client = SyncAnthropic(api_key=self.api_key)
-        response = sync_client.messages.create(
+        async_client = AsyncAnthropic(api_key=self.api_key)
+        response = await async_client.messages.create(
             model=model,
-            system=self.system_prompt or ANTHROPIC_NOT_GIVEN,
+            system=self.get_system_prompt(input_context, default=ANTHROPIC_NOT_GIVEN),
             messages=[dict(message) for message in messages],
             temperature=self.temperature,
             max_tokens=self.max_tokens,
@@ -57,15 +58,16 @@ class AnthropicLLM(BaseLLM):
         usage = Usage(input=response.usage.input_tokens, output=response.usage.output_tokens)
         return Reply(response.content[0].text, usage)
 
-    async def _make_ask_async(
+    def _make_ask(
         self,
+        input_context: dict[str, Any],
         messages: list[Message],
         model: AnthropicChatModel,
     ) -> Reply:
-        async_client = AsyncAnthropic(api_key=self.api_key)
-        response = await async_client.messages.create(
+        sync_client = SyncAnthropic(api_key=self.api_key)
+        response = sync_client.messages.create(
             model=model,
-            system=self.system_prompt or ANTHROPIC_NOT_GIVEN,
+            system=self.get_system_prompt(input_context, default=ANTHROPIC_NOT_GIVEN),
             messages=[dict(message) for message in messages],
             temperature=self.temperature,
             max_tokens=self.max_tokens,
@@ -75,6 +77,7 @@ class AnthropicLLM(BaseLLM):
 
     def _make_ask_stream(
         self,
+        input_context: dict[str, Any],
         messages: list[Message],
         model: AnthropicChatModel,
     ) -> Generator[Reply, None, None]:
@@ -82,7 +85,7 @@ class AnthropicLLM(BaseLLM):
         sync_client = SyncAnthropic(api_key=self.api_key)
         response = sync_client.messages.create(
             model=model,
-            system=self.system_prompt or ANTHROPIC_NOT_GIVEN,
+            system=self.get_system_prompt(input_context, default=ANTHROPIC_NOT_GIVEN),
             messages=[dict(message) for message in messages],
             temperature=self.temperature,
             max_tokens=self.max_tokens,
@@ -112,13 +115,13 @@ class AnthropicLLM(BaseLLM):
         yield Reply(text="", usage=Usage(input_tokens, output_tokens))
 
     async def _make_ask_stream_async(
-        self, messages: list[Message], model: AnthropicChatModel
+        self, input_context: dict[str, Any], messages: list[Message], model: AnthropicChatModel
     ) -> AsyncGenerator[Reply, None]:
 
         async_client = AsyncAnthropic(api_key=self.api_key)
         response = await async_client.messages.create(
             model=model,
-            system=self.system_prompt or ANTHROPIC_NOT_GIVEN,
+            system=self.get_system_prompt(input_context, default=ANTHROPIC_NOT_GIVEN),
             messages=[dict(message) for message in messages],
             temperature=self.temperature,
             max_tokens=self.max_tokens,
@@ -149,8 +152,9 @@ class AnthropicLLM(BaseLLM):
 
     def ask(
         self,
-        input: str,
+        input: Union[str, dict[str, Any]],
         model: Optional[AnthropicChatModel] = None,
+        context: Optional[dict[str, Any]] = None,
         *,
         stream: bool = False,
         use_history: bool = True,
@@ -158,7 +162,8 @@ class AnthropicLLM(BaseLLM):
     ) -> Reply:
         return super().ask(
             input,
-            model,
+            model=model,
+            context=context,
             stream=stream,
             use_history=use_history,
             raise_errors=raise_errors,
@@ -166,8 +171,9 @@ class AnthropicLLM(BaseLLM):
 
     async def ask_async(
         self,
-        input: str,
+        input: Union[str, dict[str, Any]],
         model: Optional[AnthropicChatModel] = None,
+        context: Optional[dict[str, Any]] = None,
         *,
         stream: bool = False,
         raise_errors: bool = False,
@@ -175,7 +181,8 @@ class AnthropicLLM(BaseLLM):
     ) -> Reply:
         return await super().ask_async(
             input,
-            model,
+            model=model,
+            context=context,
             stream=stream,
             use_history=use_history,
             raise_errors=raise_errors,

@@ -1,4 +1,4 @@
-from typing import AsyncGenerator, Generator, Optional, Union, cast
+from typing import Any, AsyncGenerator, Generator, Optional, Union, cast
 
 from django.template import Template
 from openai import AsyncOpenAI
@@ -22,27 +22,34 @@ class OpenAIMixin:
 
     def _prepare_openai_request(
         self,
+        input_context: dict[str, Any],
         messages: list[Message],
         model: LLMChatModel,
     ) -> dict:
-        history = [*messages]
-        if self.system_prompt:
-            history.insert(0, {"role": "system", "content": self.system_prompt})
+        """OpenAI API 요청에 필요한 파라미터를 준비하고 시스템 프롬프트를 처리합니다."""
+        message_history = messages.copy()
+        system_prompt = self.get_system_prompt(input_context)
+
+        if system_prompt:
+            # history에는 system prompt는 누적되지 않고, 매 요청 시마다 적용합니다.
+            system_message = Message(role="system", content=system_prompt)
+            message_history.insert(0, system_message)
 
         return {
             "model": model,
-            "messages": history,
+            "messages": message_history,
             "temperature": self.temperature,
             "max_tokens": self.max_tokens,
         }
 
     def _make_ask(
         self,
+        input_context: dict[str, Any],
         messages: list[Message],
         model: LLMChatModel,
     ) -> Reply:
         sync_client = SyncOpenAI(api_key=self.api_key, base_url=self.base_url)
-        request_params = self._prepare_openai_request(messages, model)
+        request_params = self._prepare_openai_request(input_context, messages, model)
         response = sync_client.chat.completions.create(**request_params)
         return Reply(
             text=response.choices[0].message.content,
@@ -54,11 +61,12 @@ class OpenAIMixin:
 
     async def _make_ask_async(
         self,
+        input_context: dict[str, Any],
         messages: list[Message],
         model: LLMChatModel,
     ) -> Reply:
         async_client = AsyncOpenAI(api_key=self.api_key, base_url=self.base_url)
-        request_params = self._prepare_openai_request(messages, model)
+        request_params = self._prepare_openai_request(input_context, messages, model)
         response = await async_client.chat.completions.create(**request_params)
         return Reply(
             text=response.choices[0].message.content,
@@ -70,11 +78,12 @@ class OpenAIMixin:
 
     def _make_ask_stream(
         self,
+        input_context: dict[str, Any],
         messages: list[Message],
         model: LLMChatModel,
     ) -> Generator[Reply, None, None]:
         sync_client = SyncOpenAI(api_key=self.api_key, base_url=self.base_url)
-        request_params = self._prepare_openai_request(messages, model)
+        request_params = self._prepare_openai_request(input_context, messages, model)
         request_params["stream"] = True
 
         response_stream = sync_client.chat.completions.create(**request_params)
@@ -94,11 +103,12 @@ class OpenAIMixin:
 
     async def _make_ask_stream_async(
         self,
+        input_context: dict[str, Any],
         messages: list[Message],
         model: LLMChatModel,
     ) -> AsyncGenerator[Reply, None]:
         async_client = AsyncOpenAI(api_key=self.api_key, base_url=self.base_url)
-        request_params = self._prepare_openai_request(messages, model)
+        request_params = self._prepare_openai_request(input_context, messages, model)
         request_params["stream"] = True
 
         response_stream = await async_client.chat.completions.create(**request_params)
@@ -118,16 +128,18 @@ class OpenAIMixin:
 
     def ask(
         self,
-        human_message: str,
+        input: Union[str, dict[str, Any]],
         model: Optional[OpenAIChatModel] = None,
+        context: Optional[dict[str, Any]] = None,
         *,
         stream: bool = False,
         use_history: bool = True,
         raise_errors: bool = False,
     ) -> Reply:
         return super().ask(
-            human_message,
-            model,
+            input,
+            model=model,
+            context=context,
             stream=stream,
             use_history=use_history,
             raise_errors=raise_errors,
@@ -135,16 +147,18 @@ class OpenAIMixin:
 
     async def ask_async(
         self,
-        human_message: str,
+        input: Union[str, dict[str, Any]],
         model: Optional[OpenAIChatModel] = None,
+        context: Optional[dict[str, Any]] = None,
         *,
         stream: bool = False,
         use_history: bool = True,
         raise_errors: bool = False,
     ) -> Reply:
         return await super().ask_async(
-            human_message,
-            model,
+            input,
+            model=model,
+            context=context,
             stream=stream,
             use_history=use_history,
             raise_errors=raise_errors,
@@ -199,7 +213,7 @@ class OpenAILLM(OpenAIMixin, BaseLLM):
         embedding_model: OpenAIEmbeddingModel = "text-embedding-3-small",
         temperature: float = 0.2,
         max_tokens: int = 1000,
-        system_prompt: Optional[str] = None,
+        system_prompt: Optional[Union[str, Template]] = None,
         prompt: Optional[Union[str, Template]] = None,
         output_key: str = "text",
         initial_messages: Optional[list[Message]] = None,

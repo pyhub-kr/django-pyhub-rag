@@ -1,4 +1,4 @@
-from typing import AsyncGenerator, Generator, Optional, Union, cast
+from typing import AsyncGenerator, Generator, Optional, Union, cast, Any
 
 from django.template import Template
 from google import genai
@@ -29,7 +29,7 @@ class GoogleLLM(BaseLLM):
         embedding_model: GoogleEmbeddingModel = "text-embedding-004",
         temperature: float = 0.2,
         max_tokens: int = 1000,
-        system_prompt: Optional[str] = None,
+        system_prompt: Optional[Union[str, Template]] = None,
         prompt: Optional[Union[str, Template]] = None,
         output_key: str = "text",
         initial_messages: Optional[list[Message]] = None,
@@ -49,6 +49,7 @@ class GoogleLLM(BaseLLM):
 
     def _make_ask(
         self,
+        input_context: dict[str, Any],
         messages: list[Message],
         model: GoogleChatModel,
     ) -> Reply:
@@ -66,7 +67,7 @@ class GoogleLLM(BaseLLM):
             model=model,
             contents=contents,
             config=GenerateContentConfig(
-                system_instruction=self.system_prompt,
+                system_instruction=self.get_system_prompt(input_context),
                 max_output_tokens=self.max_tokens,
                 temperature=self.temperature,
             ),
@@ -79,6 +80,7 @@ class GoogleLLM(BaseLLM):
 
     async def _make_ask_async(
         self,
+        input_context: dict[str, Any],
         messages: list[Message],
         model: GoogleChatModel,
     ) -> Reply:
@@ -96,7 +98,7 @@ class GoogleLLM(BaseLLM):
             model=model,
             contents=contents,
             config=GenerateContentConfig(
-                system_instruction=self.system_prompt,
+                system_instruction=self.get_system_prompt(input_context),
                 max_output_tokens=self.max_tokens,
                 temperature=self.temperature,
             ),
@@ -109,6 +111,7 @@ class GoogleLLM(BaseLLM):
 
     def _make_ask_stream(
         self,
+        input_context: dict[str, Any],
         messages: list[Message],
         model: GoogleChatModel,
     ) -> Generator[Reply, None, None]:
@@ -126,7 +129,7 @@ class GoogleLLM(BaseLLM):
             model=model,
             contents=contents,
             config=GenerateContentConfig(
-                system_instruction=self.system_prompt,
+                system_instruction=self.get_system_prompt(input_context),
                 max_output_tokens=self.max_tokens,
                 temperature=self.temperature,
             ),
@@ -144,7 +147,7 @@ class GoogleLLM(BaseLLM):
         yield Reply(text="", usage=usage)
 
     async def _make_ask_stream_async(
-        self, messages: list[Message], model: GoogleChatModel
+        self, input_context: dict[str, Any], messages: list[Message], model: GoogleChatModel
     ) -> AsyncGenerator[Reply, None]:
         client = genai.Client(api_key=self.api_key)
 
@@ -160,7 +163,7 @@ class GoogleLLM(BaseLLM):
             model=model,
             contents=contents,
             config=GenerateContentConfig(
-                system_instruction=self.system_prompt,
+                system_instruction=self.get_system_prompt(input_context),
                 max_output_tokens=self.max_tokens,
                 temperature=self.temperature,
             ),
@@ -179,8 +182,9 @@ class GoogleLLM(BaseLLM):
 
     def ask(
         self,
-        input: str,
+        input: Union[str, dict[str, Any]],
         model: Optional[GoogleChatModel] = None,
+        context: Optional[dict[str, Any]] = None,
         *,
         stream: bool = False,
         use_history: bool = True,
@@ -188,7 +192,8 @@ class GoogleLLM(BaseLLM):
     ) -> Reply:
         return super().ask(
             input,
-            model,
+            model=model,
+            context=context,
             stream=stream,
             use_history=use_history,
             raise_errors=raise_errors,
@@ -196,8 +201,9 @@ class GoogleLLM(BaseLLM):
 
     async def ask_async(
         self,
-        input: str,
+        input: Union[str, dict[str, Any]],
         model: Optional[GoogleChatModel] = None,
+        context: Optional[dict[str, Any]] = None,
         *,
         stream: bool = False,
         use_history: bool = True,
@@ -205,7 +211,8 @@ class GoogleLLM(BaseLLM):
     ) -> Reply:
         return await super().ask_async(
             input,
-            model,
+            model=model,
+            context=context,
             stream=stream,
             use_history=use_history,
             raise_errors=raise_errors,

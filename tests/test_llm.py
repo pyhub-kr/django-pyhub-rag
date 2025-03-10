@@ -41,6 +41,23 @@ async def check_llm(llm: BaseLLM):
     assert len(llm) == 4
 
 
+@pytest.mark.it("LLM에서 system_prompt에 Template 객체 렌더링 지원 테스트")
+@pytest.mark.asyncio
+async def test_openai_system_prompt_template():
+    # Template 객체를 system_prompt로 사용
+    llm = OpenAILLM(
+        model="gpt-4o-mini",
+        system_prompt=Template("당신은 {{ role }}입니다. {{ name }}님을 도와주세요."),
+    )
+
+    context = {"role": "친절한 비서", "name": "홍길동"}
+    system_prompt = llm.get_system_prompt(context)
+    human_prompt = llm.get_human_prompt("안녕하세요", context=context)
+
+    assert "당신은 친절한 비서입니다. 홍길동님을 도와주세요." == system_prompt
+    assert "안녕하세요" == human_prompt
+
+
 @pytest.mark.asyncio
 @pytest.mark.skipif(
     not rag_settings.openai_api_key or not rag_settings.openai_api_key.startswith("sk-"),

@@ -1,8 +1,8 @@
 import abc
 import logging
-from typing import AsyncGenerator, Generator, Optional, Union, cast, Any
+from typing import Any, AsyncGenerator, Generator, Optional, Union, cast
 
-from django.template import Template, Context
+from django.template import Context, Template
 
 from .types import (
     ChainReply,
@@ -26,7 +26,7 @@ class BaseLLM(abc.ABC):
         embedding_model: LLMEmbeddingModel = "text-embedding-3-small",
         temperature: float = 0.2,
         max_tokens: int = 1000,
-        system_prompt: Optional[str] = None,
+        system_prompt: Optional[Union[str, Template]] = None,
         prompt: Optional[Union[str, Template]] = None,
         output_key: str = "text",
         initial_messages: Optional[list[Message]] = None,
@@ -70,18 +70,32 @@ class BaseLLM(abc.ABC):
         """Clear the chat history"""
         self.history = []
 
-    def get_human_prompt(self, input: Union[str, dict[str, Any]]) -> str:
-        if isinstance(input, dict):
+    def get_system_prompt(self, input_context: dict[str, Any], default: Any = None) -> Optional[str]:
+        if not self.system_prompt:
+            if default is not None:
+                return default
+            return None
+
+        if hasattr(self.system_prompt, "render"):
+            return self.system_prompt.render(Context(input_context))
+        return self.system_prompt.format(**input_context)
+
+    def get_human_prompt(self, input: Union[str, dict[str, Any]], context: dict[str, Any]) -> str:
+        if isinstance(input, str):
+            return input.format(**context)
+        elif hasattr(input, "render"):
+            return input.render(Context(context))
+        elif isinstance(input, dict):
             if not self.prompt:
                 raise ValueError("prompt is required when human_message is a dict")
 
             # Django Template 지원 추가
             if hasattr(self.prompt, "render"):
-                human_prompt = self.prompt.render(Context(input))
+                human_prompt = self.prompt.render(Context(context))
             else:
-                human_prompt = self.prompt.format(**input)
+                human_prompt = self.prompt.format(**context)
         else:
-            human_prompt = input
+            raise ValueError(f"input must be a str or a dict, but got {type(input)}")
 
         return human_prompt
 
@@ -89,22 +103,28 @@ class BaseLLM(abc.ABC):
         return self.output_key
 
     @abc.abstractmethod
-    def _make_ask(self, messages: list[Message], model: LLMChatModel) -> Reply:
+    def _make_ask(self, input_context: dict[str, Any], messages: list[Message], model: LLMChatModel) -> Reply:
         """Generate a response using the specific LLM provider"""
         pass
 
     @abc.abstractmethod
-    async def _make_ask_async(self, messages: list[Message], model: LLMChatModel) -> Reply:
+    async def _make_ask_async(
+        self, input_context: dict[str, Any], messages: list[Message], model: LLMChatModel
+    ) -> Reply:
         """Generate a response asynchronously using the specific LLM provider"""
         pass
 
     @abc.abstractmethod
-    def _make_ask_stream(self, messages: list[Message], model: LLMChatModel) -> Generator[Reply, None, None]:
+    def _make_ask_stream(
+        self, input_context: dict[str, Any], messages: list[Message], model: LLMChatModel
+    ) -> Generator[Reply, None, None]:
         """Generate a streaming response using the specific LLM provider"""
         yield Reply(text="")
 
     @abc.abstractmethod
-    async def _make_ask_stream_async(self, messages: list[Message], model: LLMChatModel) -> AsyncGenerator[Reply]:
+    async def _make_ask_stream_async(
+        self, input_context: dict[str, Any], messages: list[Message], model: LLMChatModel
+    ) -> AsyncGenerator[Reply]:
         """Generate a streaming response asynchronously using the specific LLM provider"""
         yield Reply(text="")
 
@@ -126,6 +146,7 @@ class BaseLLM(abc.ABC):
         self,
         input: Union[str, dict[str, str]],
         model: Optional[LLMChatModel] = None,
+        context: Optional[dict[str, Any]] = None,
         *,
         is_async: bool = False,
         stream: bool = False,
@@ -136,7 +157,15 @@ class BaseLLM(abc.ABC):
         current_messages = [*self.history] if use_history else []
         current_model: LLMChatModel = cast(LLMChatModel, model or self.model)
 
-        human_prompt = self.get_human_prompt(input)
+        if isinstance(input, dict):
+            input_context = input
+        else:
+            input_context = {}
+
+        if context:
+            input_context.update(context)
+
+        human_prompt = self.get_human_prompt(input, input_context)
         current_messages = self._prepare_messages(human_prompt, current_messages)
 
         # 스트리밍 응답 처리
@@ -145,7 +174,7 @@ class BaseLLM(abc.ABC):
             async def async_stream_handler() -> AsyncGenerator[Reply, None]:
                 try:
                     text_list = []
-                    async for ask in self._make_ask_stream_async(current_messages, current_model):
+                    async for ask in self._make_ask_stream_async(input_context, current_messages, current_model):
                         text_list.append(ask.text)
                         yield ask
 
@@ -161,7 +190,7 @@ class BaseLLM(abc.ABC):
             def sync_stream_handler() -> Generator[Reply, None, None]:
                 try:
                     text_list = []
-                    for ask in self._make_ask_stream(current_messages, current_model):
+                    for ask in self._make_ask_stream(input_context, current_messages, current_model):
                         text_list.append(ask.text)
                         yield ask
 
@@ -181,7 +210,7 @@ class BaseLLM(abc.ABC):
 
             async def async_handler() -> Reply:
                 try:
-                    ask = await self._make_ask_async(current_messages, current_model)
+                    ask = await self._make_ask_async(input_context, current_messages, current_model)
                 except Exception as e:
                     if raise_errors:
                         raise e
@@ -194,7 +223,7 @@ class BaseLLM(abc.ABC):
 
             def sync_handler() -> Reply:
                 try:
-                    ask = self._make_ask(current_messages, current_model)
+                    ask = self._make_ask(input_context, current_messages, current_model)
                 except Exception as e:
                     if raise_errors:
                         raise e
@@ -217,8 +246,9 @@ class BaseLLM(abc.ABC):
 
     def ask(
         self,
-        input: Union[str, dict[str, str]],
+        input: Union[str, dict[str, Any]],
         model: Optional[LLMChatModel] = None,
+        context: Optional[dict[str, Any]] = None,
         *,
         stream: bool = False,
         use_history: bool = True,
@@ -227,6 +257,7 @@ class BaseLLM(abc.ABC):
         return self._ask_impl(
             input,
             model,
+            context,
             is_async=False,
             stream=stream,
             use_history=use_history,
@@ -235,8 +266,9 @@ class BaseLLM(abc.ABC):
 
     async def ask_async(
         self,
-        input: Union[str, dict[str, str]],
+        input: Union[str, dict[str, Any]],
         model: Optional[LLMChatModel] = None,
+        context: Optional[dict[str, Any]] = None,
         *,
         stream: bool = False,
         raise_errors: bool = False,
@@ -245,6 +277,7 @@ class BaseLLM(abc.ABC):
         return_value = self._ask_impl(
             input,
             model,
+            context,
             is_async=True,
             stream=stream,
             use_history=use_history,
@@ -293,7 +326,7 @@ class SequentialChain:
         self.llms.append(llm)
         return self
 
-    def ask(self, inputs: dict[str, str]) -> ChainReply:
+    def ask(self, inputs: dict[str, Any]) -> ChainReply:
         """체인의 각 LLM을 순차적으로 실행합니다. 이전 LLM의 출력이 다음 LLM의 입력으로 전달됩니다."""
 
         for llm in self.llms:
