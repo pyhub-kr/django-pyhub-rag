@@ -1,5 +1,6 @@
 from typing import AsyncGenerator, Generator, Optional, Union, cast
 
+from django.template import Template
 from openai import AsyncOpenAI
 from openai import OpenAI as SyncOpenAI
 
@@ -199,7 +200,7 @@ class OpenAILLM(OpenAIMixin, BaseLLM):
         temperature: float = 0.2,
         max_tokens: int = 1000,
         system_prompt: Optional[str] = None,
-        prompt: Optional[str] = None,
+        prompt: Optional[Union[str, Template]] = None,
         output_key: str = "text",
         initial_messages: Optional[list[Message]] = None,
         api_key: Optional[str] = None,

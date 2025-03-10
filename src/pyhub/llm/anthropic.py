@@ -3,6 +3,7 @@ from typing import AsyncGenerator, Generator, Optional, Union
 from anthropic import NOT_GIVEN as ANTHROPIC_NOT_GIVEN
 from anthropic import Anthropic as SyncAnthropic
 from anthropic import AsyncAnthropic
+from django.template import Template
 
 from pyhub.rag.settings import rag_settings
 
@@ -24,7 +25,7 @@ class AnthropicLLM(BaseLLM):
         temperature: float = 0.2,
         max_tokens: int = 1000,
         system_prompt: Optional[str] = None,
-        prompt: Optional[str] = None,
+        prompt: Optional[Union[str, Template]] = None,
         output_key: str = "text",
         initial_messages: Optional[list[Message]] = None,
         api_key: Optional[str] = None,
@@ -148,7 +149,7 @@ class AnthropicLLM(BaseLLM):
 
     def ask(
         self,
-        human_message: str,
+        input: str,
         model: Optional[AnthropicChatModel] = None,
         *,
         stream: bool = False,
@@ -156,7 +157,7 @@ class AnthropicLLM(BaseLLM):
         raise_errors: bool = False,
     ) -> Reply:
         return super().ask(
-            human_message,
+            input,
             model,
             stream=stream,
             use_history=use_history,
@@ -165,7 +166,7 @@ class AnthropicLLM(BaseLLM):
 
     async def ask_async(
         self,
-        human_message: str,
+        input: str,
         model: Optional[AnthropicChatModel] = None,
         *,
         stream: bool = False,
@@ -173,7 +174,7 @@ class AnthropicLLM(BaseLLM):
         use_history: bool = True,
     ) -> Reply:
         return await super().ask_async(
-            human_message,
+            input,
             model,
             stream=stream,
             use_history=use_history,

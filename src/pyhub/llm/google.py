@@ -1,5 +1,6 @@
 from typing import AsyncGenerator, Generator, Optional, Union, cast
 
+from django.template import Template
 from google import genai
 from google.genai.types import Content, GenerateContentConfig, Part
 
@@ -29,7 +30,7 @@ class GoogleLLM(BaseLLM):
         temperature: float = 0.2,
         max_tokens: int = 1000,
         system_prompt: Optional[str] = None,
-        prompt: Optional[str] = None,
+        prompt: Optional[Union[str, Template]] = None,
         output_key: str = "text",
         initial_messages: Optional[list[Message]] = None,
         api_key: Optional[str] = None,
@@ -178,7 +179,7 @@ class GoogleLLM(BaseLLM):
 
     def ask(
         self,
-        human_message: str,
+        input: str,
         model: Optional[GoogleChatModel] = None,
         *,
         stream: bool = False,
@@ -186,7 +187,7 @@ class GoogleLLM(BaseLLM):
         raise_errors: bool = False,
     ) -> Reply:
         return super().ask(
-            human_message,
+            input,
             model,
             stream=stream,
             use_history=use_history,
@@ -195,7 +196,7 @@ class GoogleLLM(BaseLLM):
 
     async def ask_async(
         self,
-        human_message: str,
+        input: str,
         model: Optional[GoogleChatModel] = None,
         *,
         stream: bool = False,
@@ -203,7 +204,7 @@ class GoogleLLM(BaseLLM):
         raise_errors: bool = False,
     ) -> Reply:
         return await super().ask_async(
-            human_message,
+            input,
             model,
             stream=stream,
             use_history=use_history,

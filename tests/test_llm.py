@@ -1,7 +1,15 @@
 import pytest
+from django.template import Template
 
-from pyhub.llm import AnthropicLLM, BaseLLM, GoogleLLM, OpenAILLM, UpstageLLM, SequentialChain
-from pyhub.llm.types import Reply, ChainReply
+from pyhub.llm import (
+    AnthropicLLM,
+    BaseLLM,
+    GoogleLLM,
+    OpenAILLM,
+    SequentialChain,
+    UpstageLLM,
+)
+from pyhub.llm.types import ChainReply, Reply
 from pyhub.rag.settings import rag_settings
 
 
@@ -70,7 +78,47 @@ async def test_google():
     await check_llm(llm)
 
 
+@pytest.mark.it("Django Template를 활용한 프롬프트 문자열 생성 테스트")
 @pytest.mark.asyncio
+@pytest.mark.skipif(
+    not rag_settings.openai_api_key or not rag_settings.openai_api_key.startswith("sk-"),
+    reason="OpenAI API key not available",
+)
+async def test_template_prompt():
+    llm_with_template = OpenAILLM(
+        model="gpt-4o-mini",
+        prompt=Template("오늘 {{ location }}의 날씨는 어떤가요?"),
+    )
+
+    # 템플릿 변수를 포함한 요청
+    reply = llm_with_template.invoke({"location": "서울"})
+    assert isinstance(reply, Reply)
+    assert reply.text
+    assert "Error" not in reply.text
+
+    # 템플릿 변수가 올바르게 대체되었는지 확인
+    messages = llm_with_template.history
+    assert len(messages) == 2  # user/assistant 메시지
+    assert "서울" in messages[-1].content
+
+    # 스트리밍 모드에서도 템플릿 작동 확인
+    stream_gen = llm_with_template.stream({"location": "부산"})
+    stream_replies = [reply for reply in stream_gen]
+    assert all(isinstance(reply, Reply) for reply in stream_replies)
+    assert "Error" not in "".join(reply.text for reply in stream_replies)
+
+    # 템플릿 변수가 올바르게 대체되었는지 확인
+    messages = llm_with_template.history
+    assert len(messages) == 4
+    assert "부산" in messages[-1].content
+
+
+@pytest.mark.it("LLM 체이닝 테스트")
+@pytest.mark.asyncio
+@pytest.mark.skipif(
+    not rag_settings.openai_api_key or not rag_settings.openai_api_key.startswith("sk-"),
+    reason="OpenAI API key not available",
+)
 async def test_sequential_chain():
     # 첫 번째 LLM: 자장가 생성
     llm_1 = OpenAILLM(
