@@ -155,6 +155,14 @@ class BaseLLM(abc.ABC):
 
             return async_handler() if is_async else sync_handler()
 
+    def invoke(self, human_message: str) -> Reply:
+        """langchain 호환 메서드: 동기적으로 LLM에 메시지를 전송하고 응답을 반환합니다."""
+        return self.ask(human_message)
+
+    def stream(self, human_message: str) -> Generator[Reply, None, None]:
+        """langchain 호환 메서드: 동기적으로 LLM에 메시지를 전송하고 응답을 스트리밍합니다."""
+        return self.ask(human_message, stream=True)
+
     def ask(
         self,
         human_message: str,
