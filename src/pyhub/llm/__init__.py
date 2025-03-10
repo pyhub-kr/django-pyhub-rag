@@ -3,7 +3,7 @@ from typing import Union, cast
 
 from ..rag.utils import get_literal_values
 from .anthropic import AnthropicLLM
-from .base import BaseLLM
+from .base import BaseLLM, SequentialChain
 from .enum import LLMChatModelEnum, LLMEmbeddingModelEnum
 from .google import GoogleLLM
 from .openai import OpenAILLM
@@ -104,4 +104,4 @@ class LLM:
         return Price(input_usd=input_usd, output_usd=output_usd)
 
 
-__all__ = ["LLM", "BaseLLM", "AnthropicLLM", "GoogleLLM", "OpenAILLM", "UpstageLLM"]
+__all__ = ["LLM", "BaseLLM", "SequentialChain", "AnthropicLLM", "GoogleLLM", "OpenAILLM", "UpstageLLM"]

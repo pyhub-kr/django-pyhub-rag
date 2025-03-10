@@ -29,6 +29,8 @@ class GoogleLLM(BaseLLM):
         temperature: float = 0.2,
         max_tokens: int = 1000,
         system_prompt: Optional[str] = None,
+        prompt: Optional[str] = None,
+        output_key: str = "text",
         initial_messages: Optional[list[Message]] = None,
         api_key: Optional[str] = None,
     ):
@@ -38,6 +40,8 @@ class GoogleLLM(BaseLLM):
             temperature=temperature,
             max_tokens=max_tokens,
             system_prompt=system_prompt,
+            prompt=prompt,
+            output_key=output_key,
             initial_messages=initial_messages,
             api_key=api_key or rag_settings.google_api_key,
         )

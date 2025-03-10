@@ -2,7 +2,7 @@ import abc
 import logging
 from typing import AsyncGenerator, Generator, Optional, Union, cast
 
-from .types import Embed, EmbedList, LLMChatModel, LLMEmbeddingModel, Message, Reply
+from .types import Embed, EmbedList, LLMChatModel, LLMEmbeddingModel, Message, Reply, ChainReply
 
 logger = logging.getLogger(__name__)
 
@@ -17,6 +17,8 @@ class BaseLLM(abc.ABC):
         temperature: float = 0.2,
         max_tokens: int = 1000,
         system_prompt: Optional[str] = None,
+        prompt: Optional[str] = None,
+        output_key: str = "text",
         initial_messages: Optional[list[Message]] = None,
         api_key: Optional[str] = None,
     ):
@@ -25,6 +27,8 @@ class BaseLLM(abc.ABC):
         self.temperature = temperature
         self.max_tokens = max_tokens
         self.system_prompt = system_prompt
+        self.prompt = prompt
+        self.output_key = output_key
         self.history = initial_messages or []
         self.api_key = api_key
 
@@ -34,9 +38,30 @@ class BaseLLM(abc.ABC):
     def __len__(self) -> int:
         return len(self.history)
 
+    def __or__(self, next_llm: Union["BaseLLM", "SequentialChain"]) -> "SequentialChain":
+        if isinstance(next_llm, BaseLLM):
+            return SequentialChain(self, next_llm)
+        elif isinstance(next_llm, SequentialChain):
+            next_llm.insert_first(self)
+            return next_llm
+        else:
+            raise TypeError(f"next_llm must be an instance of BaseLLM or SequentialChain")
+
+    def __ror__(self, prev_llm: Union["BaseLLM", "SequentialChain"]) -> "SequentialChain":
+        if isinstance(prev_llm, BaseLLM):
+            return SequentialChain(prev_llm, self)
+        elif isinstance(prev_llm, SequentialChain):
+            prev_llm.append(self)
+            return prev_llm
+        else:
+            raise TypeError(f"prev_llm must be an instance of BaseLLM or SequentialChain")
+
     def clear(self):
         """Clear the chat history"""
         self.history = []
+
+    def get_output_key(self) -> str:
+        return self.output_key
 
     @abc.abstractmethod
     def _make_ask(self, messages: list[Message], model: LLMChatModel) -> Reply:
@@ -74,7 +99,7 @@ class BaseLLM(abc.ABC):
 
     def _ask_impl(
         self,
-        human_message: str,
+        human_message: Union[str, dict[str, str]],
         model: Optional[LLMChatModel] = None,
         *,
         is_async: bool = False,
@@ -85,7 +110,15 @@ class BaseLLM(abc.ABC):
         """동기 또는 비동기 응답을 생성하는 내부 메서드 (일반/스트리밍)"""
         current_messages = [*self.history] if use_history else []
         current_model: LLMChatModel = cast(LLMChatModel, model or self.model)
-        current_messages = self._prepare_messages(human_message, current_messages)
+
+        if isinstance(human_message, dict):
+            if not self.prompt:
+                raise ValueError("prompt is required when human_message is a dict")
+            human_message_str = self.prompt.format(**human_message)
+        else:
+            human_message_str = human_message
+
+        current_messages = self._prepare_messages(human_message_str, current_messages)
 
         # 스트리밍 응답 처리
         if stream:
@@ -99,7 +132,7 @@ class BaseLLM(abc.ABC):
 
                     if use_history:
                         full_text = "".join(text_list)
-                        self._update_history(human_message, full_text)
+                        self._update_history(human_message_str, full_text)
                 except Exception as e:
                     if raise_errors:
                         raise e
@@ -115,7 +148,7 @@ class BaseLLM(abc.ABC):
 
                     if use_history:
                         full_text = "".join(text_list)
-                        self._update_history(human_message, full_text)
+                        self._update_history(human_message_str, full_text)
                 except Exception as e:
                     if raise_errors:
                         raise e
@@ -137,7 +170,7 @@ class BaseLLM(abc.ABC):
                     return Reply(text=f"Error occurred during API call: {str(e)}")
                 else:
                     if use_history:
-                        self._update_history(human_message, ask.text)
+                        self._update_history(human_message_str, ask.text)
                     return ask
 
             def sync_handler() -> Reply:
@@ -150,22 +183,22 @@ class BaseLLM(abc.ABC):
                     return Reply(text=f"Error occurred during API call: {str(e)}")
                 else:
                     if use_history:
-                        self._update_history(human_message, ask.text)
+                        self._update_history(human_message_str, ask.text)
                     return ask
 
             return async_handler() if is_async else sync_handler()
 
-    def invoke(self, human_message: str) -> Reply:
+    def invoke(self, human_message: Union[str, dict[str, str]]) -> Reply:
         """langchain 호환 메서드: 동기적으로 LLM에 메시지를 전송하고 응답을 반환합니다."""
         return self.ask(human_message)
 
-    def stream(self, human_message: str) -> Generator[Reply, None, None]:
+    def stream(self, human_message: Union[str, dict[str, str]]) -> Generator[Reply, None, None]:
         """langchain 호환 메서드: 동기적으로 LLM에 메시지를 전송하고 응답을 스트리밍합니다."""
         return self.ask(human_message, stream=True)
 
     def ask(
         self,
-        human_message: str,
+        human_message: Union[str, dict[str, str]],
         model: Optional[LLMChatModel] = None,
         *,
         stream: bool = False,
@@ -183,7 +216,7 @@ class BaseLLM(abc.ABC):
 
     async def ask_async(
         self,
-        human_message: str,
+        human_message: Union[str, dict[str, str]],
         model: Optional[LLMChatModel] = None,
         *,
         stream: bool = False,
@@ -227,3 +260,37 @@ class BaseLLM(abc.ABC):
         model: Optional[LLMEmbeddingModel] = None,
     ) -> Union[Embed, EmbedList]:
         pass
+
+
+class SequentialChain:
+    def __init__(self, *args):
+        self.llms: list[BaseLLM] = list(args)
+
+    def insert_first(self, llm) -> "SequentialChain":
+        self.llms.insert(0, llm)
+        return self
+
+    def append(self, llm) -> "SequentialChain":
+        self.llms.append(llm)
+        return self
+
+    def ask(self, inputs: dict[str, str]) -> ChainReply:
+        """체인의 각 LLM을 순차적으로 실행합니다. 이전 LLM의 출력이 다음 LLM의 입력으로 전달됩니다."""
+
+        for llm in self.llms:
+            if llm.prompt is None:
+                raise ValueError(f"prompt is required for LLM: {llm}")
+
+        known_values = inputs.copy()
+        reply_list = []
+        for llm in self.llms:
+            reply = llm.ask(known_values)
+            reply_list.append(reply)
+
+            output_key = llm.get_output_key()
+            known_values[output_key] = str(reply)
+
+        return ChainReply(
+            values=known_values,
+            reply_list=reply_list,
+        )

@@ -1,6 +1,6 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from decimal import Decimal
-from typing import Literal, TypeAlias, Union
+from typing import Any, Literal, TypeAlias, Union
 
 from anthropic.types import ModelParam as AnthropicChatModel
 from openai.types import ChatModel as OpenAIChatModel
@@ -128,7 +128,7 @@ class Price:
 
 @dataclass
 class Reply:
-    text: str
+    text: str = ""
     usage: Optional[Usage] = None
 
     def __str__(self) -> str:
@@ -136,6 +136,32 @@ class Reply:
 
     def __format__(self, format_spec: str) -> str:
         return format(self.text, format_spec)
+
+
+@dataclass
+class ChainReply:
+    values: dict[str, Any] = field(default_factory=dict)
+    reply_list: list[Reply] = field(default_factory=list)
+
+    def __len__(self) -> int:
+        return len(self.reply_list)
+
+    @property
+    def text(self) -> str:
+        try:
+            return self.reply_list[-1].text
+        except IndexError:
+            return ""
+
+    @property
+    def usage(self) -> Optional[Usage]:
+        try:
+            return self.reply_list[-1].usage
+        except IndexError:
+            return None
+
+    def __getitem__(self, key) -> Any:
+        return self.values.get(key)
 
 
 @dataclass
