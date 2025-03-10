@@ -93,7 +93,7 @@ def command_create_table(
         EmbeddingDimensionsEnum.D_1536, help="Embedding dimensions for the vector table"
     ),
     distance_metric: DistanceMetric = typer.Option(DistanceMetric.COSINE, help="Distance metric for similarity search"),
-    debug: bool = typer.Option(False, help="Print SQL statements being executed"),
+    verbose: bool = typer.Option(False, help="Print additional debug information"),
 ):
     """
     Create a vector table using sqlite-vec extension in SQLite database.
@@ -103,7 +103,7 @@ def command_create_table(
         db_path = db_path.with_suffix(".sqlite3")
         console.print(f"[yellow]No file extension provided. Using '{db_path}'[/yellow]")
 
-    if debug:
+    if verbose:
         log_level = logging.DEBUG
     else:
         log_level = logging.INFO
@@ -129,13 +129,13 @@ def command_import_jsonl(
     table_name: str = typer.Argument(None, help="table name (optional, auto-detected if not provided)"),
     jsonl_path: Path = typer.Option(..., help="Path to the JSONL file with embeddings"),
     clear: bool = typer.Option(False, help="Clear existing data in the table before loading"),
-    debug: bool = typer.Option(False, help="Print SQL statements being executed"),
+    verbose: bool = typer.Option(False, help="Print additional debug information"),
 ):
     """
     Load vector data from JSONL file into SQLite database table.
     """
 
-    if debug:
+    if verbose:
         log_level = logging.DEBUG
     else:
         log_level = logging.INFO
@@ -163,14 +163,13 @@ def command_similarity_search(
     ),
     limit: int = typer.Option(4, help="Maximum number of results to return"),
     no_metadata: bool = typer.Option(False, help="Hide metadata in the results"),
-    debug: bool = typer.Option(False, help="Print SQL statements being executed"),
     verbose: bool = typer.Option(False, help="Print additional debug information"),
 ):
     """
     Perform a semantic similarity search in a SQLite vector database.
     """
 
-    if debug:
+    if verbose:
         log_level = logging.INFO
     else:
         log_level = logging.WARNING
