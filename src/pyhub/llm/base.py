@@ -124,7 +124,7 @@ class BaseLLM(abc.ABC):
     @abc.abstractmethod
     async def _make_ask_stream_async(
         self, input_context: dict[str, Any], messages: list[Message], model: LLMChatModel
-    ) -> AsyncGenerator[Reply]:
+    ) -> AsyncGenerator[Reply, None]:
         """Generate a streaming response asynchronously using the specific LLM provider"""
         yield Reply(text="")
 
