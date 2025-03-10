@@ -69,6 +69,8 @@ ASGI_APPLICATION = "config.asgi.application"
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
+DATABASE_ROUTERS = ["pyhub.routers.Router"]
+
 DEFAULT_DATABASE = f"sqlite:///{ BASE_DIR / 'db.sqlite3'}"
 
 DATABASES = {
