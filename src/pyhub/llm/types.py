@@ -24,9 +24,12 @@ UpstageEmbeddingModel: TypeAlias = Literal[
 ]
 
 
-OllamaEmbeddingModel: TypeAlias = Literal[
-    "nomic-embed-text",  # 768 차원
-    "avr/sfr-embedding-mistral",  # 4096 차원
+OllamaEmbeddingModel: TypeAlias = Union[
+    Literal[
+        "nomic-embed-text",  # 768 차원
+        "avr/sfr-embedding-mistral",  # 4096 차원
+    ],
+    str,
 ]
 
 # https://cloud.google.com/vertex-ai/generative-ai/docs/embeddings/get-text-embeddings?hl=ko
@@ -51,7 +54,21 @@ UpstageChatModel: TypeAlias = Union[
     ]
 ]
 
-OllamaChatModel: TypeAlias = Union[Literal["mistral",]]
+OllamaChatModel: TypeAlias = Union[
+    Literal[
+        # tools, 70b : https://ollama.com/library/llama3.3
+        "llama3.3",
+        # tools, 1b, 3b : https://ollama.com/library/llama3.2
+        "llama3.2",
+        # tools, 8b, 70b, 405b : https://ollama.com/library/llama3.1
+        "llama3.1",
+        # tools, 7b : https://ollama.com/library/mistral
+        "mistral",
+        # tools, 0.5b, 1.5b, 7b, 72b : https://ollama.com/library/qwen2
+        "qwen2",
+    ],
+    str,
+]
 
 # https://ai.google.dev/gemini-api/docs/models/gemini?hl=ko
 GoogleChatModel: TypeAlias = Union[

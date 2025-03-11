@@ -29,7 +29,7 @@ class OllamaLLM(BaseLLM):
 
     def __init__(
         self,
-        model: OllamaChatModel = "mistral",
+        model: OllamaChatModel = "mistral:latest",
         embedding_model: OllamaEmbeddingModel = "nomic-embed-text",
         temperature: float = 0.2,
         # max_tokens: int = 1000,
@@ -54,6 +54,13 @@ class OllamaLLM(BaseLLM):
             api_base: Ollama API 기본 URL
             timeout: API 요청 타임아웃 (초)
         """
+
+        if ":" not in model:
+            model += ":latest"
+
+        if ":" not in embedding_model:
+            embedding_model += ":latest"
+
         super().__init__(
             model=model,
             embedding_model=embedding_model,
@@ -80,8 +87,6 @@ class OllamaLLM(BaseLLM):
             add_error(f"Unable to connect to Ollama server at {self.api_base}.")
         else:
             model_name_set = {model.model for model in response.models}
-            # tag 제외한 이름도 추가
-            model_name_set |= {name.split(":", 1)[0] for name in model_name_set}
 
             if self.model not in model_name_set:
                 add_error(

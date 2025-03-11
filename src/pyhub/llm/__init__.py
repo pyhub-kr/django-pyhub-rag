@@ -20,6 +20,8 @@ from .types import (
     UpstageChatModel,
     UpstageEmbeddingModel,
     Usage,
+    OllamaChatModel,
+    OllamaEmbeddingModel,
 )
 from .upstage import UpstageLLM
 
@@ -65,6 +67,11 @@ class LLM:
             return OpenAILLM(model=cast(OpenAIChatModel, model), **kwargs)
         elif model in get_literal_values(UpstageChatModel):
             return UpstageLLM(model=cast(UpstageChatModel, model), **kwargs)
+        elif model in get_literal_values(OllamaChatModel):
+            if "max_tokens" in kwargs:
+                del kwargs["max_tokens"]
+            return OllamaLLM(model=cast(OllamaChatModel, model), **kwargs)
+
         #
         # embedding
         #
@@ -81,6 +88,13 @@ class LLM:
         elif model in get_literal_values(GoogleEmbeddingModel):
             return GoogleLLM(
                 embedding_model=cast(GoogleEmbeddingModel, model),
+                **kwargs,
+            )
+        elif model in get_literal_values(OllamaEmbeddingModel):
+            if "max_tokens" in kwargs:
+                del kwargs["max_tokens"]
+            return OllamaLLM(
+                embedding_model=cast(OllamaEmbeddingModel, model),
                 **kwargs,
             )
         else:

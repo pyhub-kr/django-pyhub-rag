@@ -36,3 +36,9 @@ class LLMChatModelEnum(str, Enum):
     GEMINI_1_5_FLASH = "gemini-1.5-flash"
     GEMINI_1_5_FLASH_8B = "gemini-1.5-flash-8b"
     GEMINI_1_5_PRO = "gemini-1.5-pro"
+    # ollama
+    LLAMA_3_3 = "llama3.3"
+    LLAMA_3_2 = "llama3.2"
+    LLAMA_3_1 = "llama3.1"
+    MISTRAL = "mistral"
+    QWEN2 = "qwen2"
