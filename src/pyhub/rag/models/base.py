@@ -1,6 +1,6 @@
 import asyncio
 import logging
-from typing import List, Union, cast
+from typing import Union, cast
 
 import tiktoken
 from asgiref.sync import async_to_sync
@@ -8,9 +8,7 @@ from django.db import models
 from django_lifecycle import BEFORE_CREATE, BEFORE_UPDATE, LifecycleModelMixin, hook
 from typing_extensions import Optional
 
-from pyhub.llm.types import (
-    LLMEmbeddingModel,
-)
+from pyhub.llm.types import LLMEmbeddingModel
 
 from ...llm.exceptions import RateLimitError
 from .. import django_lifecycle  # noqa
@@ -23,6 +21,21 @@ logger = logging.getLogger(__name__)
 
 
 class BaseDocumentQuerySet(models.QuerySet):
+    def as_retriever(self, k: int = 4):
+        queryset = self
+
+        class QuerySetRetriever:
+            def __call__(self, input: str) -> list["AbstractDocument"]:
+                return self.invoke(input)
+
+            def invoke(self, input: str) -> list["AbstractDocument"]:
+                return list(queryset.similarity_search(input, k=k))
+
+            async def ainvoke(self, input: str) -> list["AbstractDocument"]:
+                return await queryset.similarity_search_async(input, k=k)
+
+        return QuerySetRetriever()
+
     def bulk_create(self, objs, *args, max_retry=3, interval=60, **kwargs):
         async_to_sync(self._assign_embeddings)(objs, max_retry, interval)
         return super().bulk_create(objs, *args, **kwargs)
@@ -59,10 +72,10 @@ class BaseDocumentQuerySet(models.QuerySet):
             for obj, embedding in zip(non_embedding_objs, embeddings):
                 obj.embedding = embedding
 
-    def similarity_search(self, query: str, k: int = 4) -> List["AbstractDocument"]:
+    def similarity_search(self, query: str, k: int = 4) -> list["AbstractDocument"]:
         raise NotImplementedError
 
-    async def similarity_search_async(self, query: str, k: int = 4) -> List["AbstractDocument"]:
+    async def similarity_search_async(self, query: str, k: int = 4) -> list["AbstractDocument"]:
         raise NotImplementedError
 
     def __repr__(self):
@@ -109,25 +122,25 @@ class AbstractDocument(LifecycleModelMixin, models.Model):
     @classmethod
     def embed(
         cls,
-        input: Union[str, List[str]],
+        input: Union[str, list[str]],
         model: Optional[LLMEmbeddingModel] = None,
-    ) -> Union[List[float], List[List[float]]]:
+    ) -> Union[list[float], list[list[float]]]:
         field = cls.get_embedding_field()
         return field.embed(input, model)
 
     @classmethod
     async def embed_async(
         cls,
-        input: Union[str, List[str]],
+        input: Union[str, list[str]],
         model: Optional[LLMEmbeddingModel] = None,
-    ) -> Union[List[float], List[List[float]]]:
+    ) -> Union[list[float], list[list[float]]]:
         field = cls.get_embedding_field()
         return await field.embed_async(input, model)
 
     @classmethod
     def get_token_size(cls, text: str) -> int:
         encoding: tiktoken.Encoding = tiktoken.encoding_for_model(cls.get_embedding_field().embedding_model)
-        token: List[int] = encoding.encode(text or "")
+        token: list[int] = encoding.encode(text or "")
         return len(token)
 
     class Meta:

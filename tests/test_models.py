@@ -158,3 +158,21 @@ class TestDocumentModels:
         token_size = self.document_model.get_token_size(text)
         assert isinstance(token_size, int)
         assert token_size > 0
+
+    @pytest.mark.it("as_retriever를 통해 검색 기능을 사용할 수 있는지 테스트합니다.")
+    @patch("openai.Client")
+    def test_retriever(self, mock_client):
+        self._create_mock_embedding(mock_client)
+
+        # 테스트용 문서 생성
+        for i in range(1, 5):
+            self.document_model.objects.create(
+                page_content=f"Document {i}",
+                embedding=[0.1] * self.dimensions,
+            )
+
+        # TODO: sqlite에서는 queryset 조건 + .similarity_search 쿼리에서 쿼리 오류 발생 (하지만, postgres에서는 동작 OK)
+        qs = self.document_model.objects.all()
+        retriever = qs.as_retriever(k=3)
+        doc_list = retriever.invoke("query")
+        assert len(doc_list) == 3
