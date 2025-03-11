@@ -4,3 +4,7 @@ from openai import RateLimitError as OpenAIRateLimitError
 
 class RateLimitError(AnthropicRateLimitError, OpenAIRateLimitError):
     pass
+
+
+class LLMError(Exception):
+    pass

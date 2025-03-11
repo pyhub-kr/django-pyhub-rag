@@ -28,6 +28,7 @@ dependencies = [
     "openai",
     "anthropic",
     "google-genai",
+    "ollama",
     "rich",
     "typer",
 ]

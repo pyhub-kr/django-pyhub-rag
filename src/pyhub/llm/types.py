@@ -23,10 +23,16 @@ UpstageEmbeddingModel: TypeAlias = Literal[
     "embedding-passage",  # 문서의 일부, 문장 또는 긴 텍스트 목적 (4096차원)
 ]
 
+
+OllamaEmbeddingModel: TypeAlias = Literal[
+    "nomic-embed-text",  # 768 차원
+    "avr/sfr-embedding-mistral",  # 4096 차원
+]
+
 # https://cloud.google.com/vertex-ai/generative-ai/docs/embeddings/get-text-embeddings?hl=ko
 GoogleEmbeddingModel: TypeAlias = Literal["text-embedding-004"]  # 768 차원
 
-LLMEmbeddingModel = Union[OpenAIEmbeddingModel, UpstageEmbeddingModel, GoogleEmbeddingModel]
+LLMEmbeddingModel = Union[OpenAIEmbeddingModel, UpstageEmbeddingModel, OllamaEmbeddingModel, GoogleEmbeddingModel]
 
 
 #
@@ -44,6 +50,8 @@ UpstageChatModel: TypeAlias = Union[
         "solar-mini",
     ]
 ]
+
+OllamaChatModel: TypeAlias = Union[Literal["mistral",]]
 
 # https://ai.google.dev/gemini-api/docs/models/gemini?hl=ko
 GoogleChatModel: TypeAlias = Union[

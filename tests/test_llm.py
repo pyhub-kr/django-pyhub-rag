@@ -1,10 +1,14 @@
+import os
+
 import pytest
+from django.core.exceptions import ImproperlyConfigured
 from django.template import Template
 
 from pyhub.llm import (
     AnthropicLLM,
     BaseLLM,
     GoogleLLM,
+    OllamaLLM,
     OpenAILLM,
     SequentialChain,
     UpstageLLM,
@@ -14,31 +18,36 @@ from pyhub.rag.settings import rag_settings
 
 
 async def check_llm(llm: BaseLLM):
-    ask1 = llm.ask("hello. my name is tom.")
-    assert isinstance(ask1, Reply)
-    assert "Error" not in ask1.text
-    assert len(llm) == 2
+    errors = llm.check()
+    if len(errors) > 0:
+        msg = " ".join([str(e) for e in errors])
+        pytest.skip(msg)
+    else:
+        ask1 = llm.ask("hello. my name is tom.")
+        assert isinstance(ask1, Reply)
+        assert "Error" not in ask1.text
+        assert len(llm) == 2
 
-    ask2 = await llm.ask_async("what is my name?")
-    assert isinstance(ask2, Reply)
-    assert "Error" not in ask2.text
-    assert "tom" in ask2.text.lower()
-    assert len(llm) == 4
+        ask2 = await llm.ask_async("what is my name?")
+        assert isinstance(ask2, Reply)
+        assert "Error" not in ask2.text
+        assert "tom" in ask2.text.lower()
+        assert len(llm) == 4
 
-    llm.clear()
-    assert len(llm) == 0
+        llm.clear()
+        assert len(llm) == 0
 
-    gen1 = llm.ask("hello. my name is tom.", stream=True)
-    reply_list1 = [reply for reply in gen1]
-    assert all([isinstance(reply, Reply) for reply in reply_list1])
-    assert "Error" not in "".join([reply.text for reply in reply_list1])
-    assert len(llm) == 2
+        gen1 = llm.ask("hello. my name is tom.", stream=True)
+        reply_list1 = [reply for reply in gen1]
+        assert all([isinstance(reply, Reply) for reply in reply_list1])
+        assert "Error" not in "".join([reply.text for reply in reply_list1])
+        assert len(llm) == 2
 
-    gen2 = await llm.ask_async("hello. my name is tom.", stream=True)
-    reply_list2 = [reply async for reply in gen2]
-    assert all([isinstance(reply, Reply) for reply in reply_list2])
-    assert "Error" not in "".join([reply.text for reply in reply_list2])
-    assert len(llm) == 4
+        gen2 = await llm.ask_async("hello. my name is tom.", stream=True)
+        reply_list2 = [reply async for reply in gen2]
+        assert all([isinstance(reply, Reply) for reply in reply_list2])
+        assert "Error" not in "".join([reply.text for reply in reply_list2])
+        assert len(llm) == 4
 
 
 @pytest.mark.it("LLM에서 system_prompt에 Template 객체 렌더링 지원 테스트")
@@ -85,6 +94,16 @@ async def test_upstage():
 )
 async def test_anthropic():
     llm = AnthropicLLM()
+    await check_llm(llm)
+
+
+@pytest.mark.asyncio
+async def test_ollama():
+    llm = OllamaLLM(
+        model="mistral",
+        embedding_model="nomic-embed-text",
+        api_base="http://localhost:11434",
+    )
     await check_llm(llm)
 
 

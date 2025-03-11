@@ -2,6 +2,7 @@ import abc
 import logging
 from typing import Any, AsyncGenerator, Generator, Optional, Union, cast
 
+from django.core.checks import Error
 from django.template import Context, Template
 
 from .types import (
@@ -41,6 +42,9 @@ class BaseLLM(abc.ABC):
         self.output_key = output_key
         self.history = initial_messages or []
         self.api_key = api_key
+
+    def check(self) -> list[Error]:
+        return []
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(model={self.model}, embedding_model={self.embedding_model}, temperature={self.temperature}, max_tokens={self.max_tokens})"

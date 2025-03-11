@@ -6,6 +6,7 @@ from .anthropic import AnthropicLLM
 from .base import BaseLLM, SequentialChain
 from .enum import LLMChatModelEnum, LLMEmbeddingModelEnum
 from .google import GoogleLLM
+from .ollama import OllamaLLM
 from .openai import OpenAILLM
 from .types import (
     AnthropicChatModel,
@@ -87,7 +88,10 @@ class LLM:
 
     @classmethod
     def get_price(cls, model: Union[LLMChatModel, LLMEmbeddingModel], usage: Usage) -> Price:
-        input_per_1m, output_per_1m = cls.MODEL_PRICES[model]
+        try:
+            input_per_1m, output_per_1m = cls.MODEL_PRICES[model]
+        except KeyError:
+            return Price()
 
         if input_per_1m:
             input_per_1m = Decimal(input_per_1m)
@@ -104,4 +108,4 @@ class LLM:
         return Price(input_usd=input_usd, output_usd=output_usd)
 
 
-__all__ = ["LLM", "BaseLLM", "SequentialChain", "AnthropicLLM", "GoogleLLM", "OpenAILLM", "UpstageLLM"]
+__all__ = ["LLM", "BaseLLM", "SequentialChain", "AnthropicLLM", "GoogleLLM", "OllamaLLM", "OpenAILLM", "UpstageLLM"]
