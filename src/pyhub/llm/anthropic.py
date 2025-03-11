@@ -3,6 +3,7 @@ from typing import AsyncGenerator, Generator, Optional, Union, Any
 from anthropic import NOT_GIVEN as ANTHROPIC_NOT_GIVEN
 from anthropic import Anthropic as SyncAnthropic
 from anthropic import AsyncAnthropic
+from django.core.checks import Error
 from django.template import Template
 
 from pyhub.rag.settings import rag_settings
@@ -40,6 +41,20 @@ class AnthropicLLM(BaseLLM):
             initial_messages=initial_messages,
             api_key=api_key or rag_settings.anthropic_api_key,
         )
+
+    def check(self) -> list[Error]:
+        errors = super().check()
+
+        if not self.api_key or not self.api_key.startswith("sk-ant-"):
+            errors.append(
+                Error(
+                    "Anthropic API key is not set or is invalid.",
+                    hint="Please check your Anthropic API key.",
+                    obj=self,
+                )
+            )
+
+        return errors
 
     async def _make_ask_async(
         self,

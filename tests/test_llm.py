@@ -68,30 +68,18 @@ async def test_openai_system_prompt_template():
 
 
 @pytest.mark.asyncio
-@pytest.mark.skipif(
-    not rag_settings.openai_api_key or not rag_settings.openai_api_key.startswith("sk-"),
-    reason="OpenAI API key not available",
-)
 async def test_openai():
     llm = OpenAILLM()
     await check_llm(llm)
 
 
 @pytest.mark.asyncio
-@pytest.mark.skipif(
-    not rag_settings.upstage_api_key or not rag_settings.upstage_api_key.startswith("up_"),
-    reason="Upstage API key not available",
-)
 async def test_upstage():
     llm = UpstageLLM()
     await check_llm(llm)
 
 
 @pytest.mark.asyncio
-@pytest.mark.skipif(
-    not rag_settings.anthropic_api_key or not rag_settings.anthropic_api_key.startswith("sk-ant-"),
-    reason="Anthropic API key not available",
-)
 async def test_anthropic():
     llm = AnthropicLLM()
     await check_llm(llm)
@@ -99,16 +87,11 @@ async def test_anthropic():
 
 @pytest.mark.asyncio
 async def test_ollama():
-    llm = OllamaLLM(
-        model="mistral",
-        embedding_model="nomic-embed-text",
-        api_base="http://localhost:11434",
-    )
+    llm = OllamaLLM()
     await check_llm(llm)
 
 
 @pytest.mark.asyncio
-@pytest.mark.skipif(not rag_settings.google_api_key, reason="Google API key not available")
 async def test_google():
     llm = GoogleLLM()
     await check_llm(llm)
@@ -116,45 +99,41 @@ async def test_google():
 
 @pytest.mark.it("Django Template를 활용한 프롬프트 문자열 생성 테스트")
 @pytest.mark.asyncio
-@pytest.mark.skipif(
-    not rag_settings.openai_api_key or not rag_settings.openai_api_key.startswith("sk-"),
-    reason="OpenAI API key not available",
-)
 async def test_template_prompt():
     llm_with_template = OpenAILLM(
         model="gpt-4o-mini",
         prompt=Template("오늘 {{ location }}의 날씨는 어떤가요?"),
     )
+    errors = llm_with_template.check()
+    if len(errors) > 0:
+        msg = " ".join([str(e) for e in errors])
+        pytest.skip(msg)
+    else:
+        # 템플릿 변수를 포함한 요청
+        reply = llm_with_template.invoke({"location": "서울"})
+        assert isinstance(reply, Reply)
+        assert reply.text
+        assert "Error" not in reply.text
 
-    # 템플릿 변수를 포함한 요청
-    reply = llm_with_template.invoke({"location": "서울"})
-    assert isinstance(reply, Reply)
-    assert reply.text
-    assert "Error" not in reply.text
+        # 템플릿 변수가 올바르게 대체되었는지 확인
+        messages = llm_with_template.history
+        assert len(messages) == 2  # user/assistant 메시지
+        assert "서울" in messages[-1].content
 
-    # 템플릿 변수가 올바르게 대체되었는지 확인
-    messages = llm_with_template.history
-    assert len(messages) == 2  # user/assistant 메시지
-    assert "서울" in messages[-1].content
+        # 스트리밍 모드에서도 템플릿 작동 확인
+        stream_gen = llm_with_template.stream({"location": "부산"})
+        stream_replies = [reply for reply in stream_gen]
+        assert all(isinstance(reply, Reply) for reply in stream_replies)
+        assert "Error" not in "".join(reply.text for reply in stream_replies)
 
-    # 스트리밍 모드에서도 템플릿 작동 확인
-    stream_gen = llm_with_template.stream({"location": "부산"})
-    stream_replies = [reply for reply in stream_gen]
-    assert all(isinstance(reply, Reply) for reply in stream_replies)
-    assert "Error" not in "".join(reply.text for reply in stream_replies)
-
-    # 템플릿 변수가 올바르게 대체되었는지 확인
-    messages = llm_with_template.history
-    assert len(messages) == 4
-    assert "부산" in messages[-1].content
+        # 템플릿 변수가 올바르게 대체되었는지 확인
+        messages = llm_with_template.history
+        assert len(messages) == 4
+        assert "부산" in messages[-1].content
 
 
 @pytest.mark.it("LLM 체이닝 테스트")
 @pytest.mark.asyncio
-@pytest.mark.skipif(
-    not rag_settings.openai_api_key or not rag_settings.openai_api_key.startswith("sk-"),
-    reason="OpenAI API key not available",
-)
 async def test_sequential_chain():
     # 첫 번째 LLM: 자장가 생성
     llm_1 = OpenAILLM(
@@ -180,34 +159,41 @@ async def test_sequential_chain():
         output_key="번역된_자장가",
     )
 
-    # 체인 생성 및 실행
-    chain = llm_1 | llm_2
-    reply = chain.ask(
-        {
-            "location": "대한민국",
-            "name": "영희",
-            "language": "영어",
-        }
-    )
+    errors1 = llm_1.check()
+    errors2 = llm_2.check()
+    errors = errors1 + errors2
+    if len(errors) > 0:
+        msg = " ".join([str(e) for e in errors])
+        pytest.skip(msg)
+    else:
+        # 체인 생성 및 실행
+        chain = llm_1 | llm_2
+        reply = chain.ask(
+            {
+                "location": "대한민국",
+                "name": "영희",
+                "language": "영어",
+            }
+        )
 
-    # 검증
-    assert isinstance(reply, ChainReply)
-    assert len(reply) == 2  # 두 개의 LLM 응답이 있어야 함
-    assert "자장가" in reply.values
-    assert "번역된_자장가" in reply.values
-    assert reply.text  # 마지막 응답이 비어있지 않아야 함
+        # 검증
+        assert isinstance(reply, ChainReply)
+        assert len(reply) == 2  # 두 개의 LLM 응답이 있어야 함
+        assert "자장가" in reply.values
+        assert "번역된_자장가" in reply.values
+        assert reply.text  # 마지막 응답이 비어있지 않아야 함
 
-    # 파이프 연산자 대신 직접 SequentialChain 생성
-    chain2 = SequentialChain(llm_1, llm_2)
-    reply2 = chain2.ask(
-        {
-            "location": "제주도",
-            "name": "철수",
-            "language": "프랑스어",
-        }
-    )
+        # 파이프 연산자 대신 직접 SequentialChain 생성
+        chain2 = SequentialChain(llm_1, llm_2)
+        reply2 = chain2.ask(
+            {
+                "location": "제주도",
+                "name": "철수",
+                "language": "프랑스어",
+            }
+        )
 
-    assert isinstance(reply2, ChainReply)
-    assert len(reply2) == 2
-    assert reply2.values["자장가"] != reply.values["자장가"]  # 다른 입력, 다른 출력
-    assert reply2.values["번역된_자장가"] != reply.values["번역된_자장가"]
+        assert isinstance(reply2, ChainReply)
+        assert len(reply2) == 2
+        assert reply2.values["자장가"] != reply.values["자장가"]  # 다른 입력, 다른 출력
+        assert reply2.values["번역된_자장가"] != reply.values["번역된_자장가"]

@@ -1,5 +1,6 @@
 from typing import AsyncGenerator, Generator, Optional, Union, cast, Any
 
+from django.core.checks import Error
 from django.template import Template
 from google import genai
 from google.genai.types import Content, GenerateContentConfig, Part
@@ -46,6 +47,20 @@ class GoogleLLM(BaseLLM):
             initial_messages=initial_messages,
             api_key=api_key or rag_settings.google_api_key,
         )
+
+    def check(self) -> list[Error]:
+        errors = super().check()
+
+        if not self.api_key:
+            errors.append(
+                Error(
+                    "Google API key is not set or is invalid.",
+                    hint="Please check your Google API key.",
+                    obj=self,
+                )
+            )
+
+        return errors
 
     def _make_ask(
         self,

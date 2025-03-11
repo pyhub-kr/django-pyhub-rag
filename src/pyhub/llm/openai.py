@@ -1,5 +1,6 @@
 from typing import Any, AsyncGenerator, Generator, Optional, Union, cast
 
+from django.core.checks import Error
 from django.template import Template
 from openai import AsyncOpenAI
 from openai import OpenAI as SyncOpenAI
@@ -232,3 +233,17 @@ class OpenAILLM(OpenAIMixin, BaseLLM):
             api_key=api_key or rag_settings.openai_api_key,
         )
         self.base_url = base_url or rag_settings.openai_base_url
+
+    def check(self) -> list[Error]:
+        errors = super().check()
+
+        if not self.api_key or not self.api_key.startswith("sk-"):
+            errors.append(
+                Error(
+                    "OpenAI API key is not set or is invalid.",
+                    hint="Please check your OpenAI API key.",
+                    obj=self,
+                )
+            )
+
+        return errors

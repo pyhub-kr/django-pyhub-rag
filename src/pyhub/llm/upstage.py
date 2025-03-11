@@ -1,6 +1,7 @@
 import logging
 from typing import Optional, Union
 
+from django.core.checks import Error
 from django.template import Template
 from openai import OpenAI as SyncOpenAI
 
@@ -51,6 +52,20 @@ class UpstageLLM(OpenAIMixin, BaseLLM):
         )
 
         self.base_url = base_url or rag_settings.upstage_base_url
+
+    def check(self) -> list[Error]:
+        errors = super().check()
+
+        if not self.api_key or not self.api_key.startswith("up_"):
+            errors.append(
+                Error(
+                    "Upstage API key is not set or is invalid.",
+                    hint="Please check your Upstage API key.",
+                    obj=self,
+                )
+            )
+
+        return errors
 
     def is_grounded(
         self,
