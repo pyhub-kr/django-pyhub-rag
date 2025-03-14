@@ -48,6 +48,7 @@ class UpstageDocumentParseParser:
         coordinates: bool = False,
         base64_encoding_category_list: Optional[list[ElementCategoryType]] = None,
         ignore_element_category_list: Optional[list[ElementCategoryType]] = None,
+        ignore_cache: bool = False,
         verbose: bool = False,
     ):
         """
@@ -83,6 +84,8 @@ class UpstageDocumentParseParser:
                                                         기본값은 빈 리스트입니다.
             ignore_element_category_list (list[CategoryType], optional): 제외할 요소의 카테고리.
                                                         기본값은 빈 리스트입니다.
+            ignore_cache (bool, optional): API 응답 캐시를 무시할지 여부.
+                                         기본값은 False입니다.
             verbose (bool, optional): 상세한 처리 정보를 표시할지 여부.
                                      기본값은 False입니다.
         """
@@ -98,6 +101,7 @@ class UpstageDocumentParseParser:
         self.ignore_element_category_list = ignore_element_category_list or []
         self.validators = [validate_upstage_document]
         self.errors: Optional[list[ValidationError]] = None
+        self.ignore_cache = ignore_cache
         self.verbose = verbose
 
     def is_valid(self, file: File, raise_exception: bool = False) -> bool:
@@ -355,51 +359,58 @@ class UpstageDocumentParseParser:
             "base64_encoding": f"{'[' + ",".join(f"'{el}'" for el in self.base64_encoding_category_list) + ']'}",
         }
 
-        # create hash
-        hasher = md5()
+        if self.ignore_cache:
+            cache_path = None
 
-        for file_key in sorted(files.keys()):
-            file_obj = files[file_key]
-            hasher.update(file_obj.read())
-            file_obj.seek(0)
-
-        for key, value in sorted(data.items()):
-            hasher.update(f"{key}={value}".encode("utf-8"))
-
-        md5_hash_value: str = hasher.hexdigest()
-
-        logger.debug(f"요청에 대한 MD5 해시 생성: {md5_hash_value}")
-
-        cache_path = CACHE_DIR_PATH / f"cache-response-{md5_hash_value}.json"
-        if os.path.exists(cache_path):
-            logger.debug("캐싱된 API 응답이 있습니다. Upstage API를 호출하지 않고 캐싱된 API 응답을 재활용합니다.")
-            json_string = open(cache_path, "rt").read()
-            return json.loads(json_string)
         else:
-            try:
-                async with httpx.AsyncClient() as client:
-                    response = await client.post(
-                        self.api_url,
-                        headers=headers,
-                        data=data,
-                        files=files,
-                        timeout=timeout,
-                    )
-                    if response.status_code == 200:
-                        response_obj = response.json()
+            # create hash
+            hasher = md5()
+
+            for file_key in sorted(files.keys()):
+                file_obj = files[file_key]
+                hasher.update(file_obj.read())
+                file_obj.seek(0)
+
+            for key, value in sorted(data.items()):
+                hasher.update(f"{key}={value}".encode("utf-8"))
+
+            md5_hash_value: str = hasher.hexdigest()
+
+            logger.debug(f"요청에 대한 MD5 해시 생성: {md5_hash_value}")
+
+            cache_path = CACHE_DIR_PATH / f"cache-response-{md5_hash_value}.json"
+            if os.path.exists(cache_path):
+                logger.debug("캐싱된 API 응답이 있습니다. Upstage API를 호출하지 않고 캐싱된 API 응답을 재활용합니다.")
+                json_string = open(cache_path, "rt").read()
+                return json.loads(json_string)
+
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.post(
+                    self.api_url,
+                    headers=headers,
+                    data=data,
+                    files=files,
+                    timeout=timeout,
+                )
+                if response.status_code == 200:
+                    response_obj = response.json()
+
+                    if cache_path is not None:
                         logger.debug(f"API 응답을 캐싱합니다. 캐싱된 용량 = {len(response.text)} bytes")
                         open(cache_path, "wt").write(response.text)
-                        return response_obj
-                    else:
-                        raise ValueError(f"문서 파싱 실패: {response.status_code} - {response.text}")
-            except httpx.RequestError as e:
-                raise ValueError(f"요청 전송 실패: {e}")
-            except httpx.HTTPError as e:
-                raise ValueError(f"HTTP 오류: {e}")
-            except json.JSONDecodeError as e:
-                raise ValueError(f"JSON 응답 디코딩 실패: {e}")
-            except Exception as e:
-                raise ValueError(f"오류 발생: {e}")
+
+                    return response_obj
+                else:
+                    raise ValueError(f"문서 파싱 실패: {response.status_code} - {response.text}")
+        except httpx.RequestError as e:
+            raise ValueError(f"요청 전송 실패: {e}")
+        except httpx.HTTPError as e:
+            raise ValueError(f"HTTP 오류: {e}")
+        except json.JSONDecodeError as e:
+            raise ValueError(f"JSON 응답 디코딩 실패: {e}")
+        except Exception as e:
+            raise ValueError(f"오류 발생: {e}")
 
     @staticmethod
     async def _parse_response_obj(response_obj: dict, total_pages: int) -> AsyncGenerator[Element, None]:
