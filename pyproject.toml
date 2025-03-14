@@ -42,7 +42,7 @@ sqlite = ["sqlite-vec", "numpy"]
 web = ["django-shinobi", "uvicorn"]
 parser = ["pypdf2", "PyCryptodome", "pillow", "httpx"]
 
-all = ["django-pyhub-rag[dev,build,test,postgres,sqlite,web,parser]"]
+all = ["django-pyhub-rag[postgres,sqlite,web,parser]"]
 
 [project.urls]
 Homepage = "https://github.com/pyhub-kr/django-pyhub-rag"
