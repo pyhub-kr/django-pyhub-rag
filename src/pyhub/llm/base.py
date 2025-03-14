@@ -59,7 +59,7 @@ class BaseLLM(abc.ABC):
             next_llm.insert_first(self)
             return next_llm
         else:
-            raise TypeError(f"next_llm must be an instance of BaseLLM or SequentialChain")
+            raise TypeError("next_llm must be an instance of BaseLLM or SequentialChain")
 
     def __ror__(self, prev_llm: Union["BaseLLM", "SequentialChain"]) -> "SequentialChain":
         if isinstance(prev_llm, BaseLLM):
@@ -68,7 +68,7 @@ class BaseLLM(abc.ABC):
             prev_llm.append(self)
             return prev_llm
         else:
-            raise TypeError(f"prev_llm must be an instance of BaseLLM or SequentialChain")
+            raise TypeError("prev_llm must be an instance of BaseLLM or SequentialChain")
 
     def clear(self):
         """Clear the chat history"""

@@ -1,4 +1,4 @@
-from typing import AsyncGenerator, Generator, Optional, Union, Any
+from typing import Any, AsyncGenerator, Generator, Optional, Union
 
 from anthropic import NOT_GIVEN as ANTHROPIC_NOT_GIVEN
 from anthropic import Anthropic as SyncAnthropic

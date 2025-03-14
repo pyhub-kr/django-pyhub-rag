@@ -27,19 +27,6 @@ app = typer.Typer(name="sqlite-vec", help="Commands related to SQLite-vec")
 console = Console()
 
 
-def log_message_handler(record: logging.LogRecord) -> None:
-    # 로그 레벨에 따라 다른 색상으로 메시지만 출력
-    message = record.getMessage()  # 올바른 메시지 가져오기 방법
-    if record.levelno >= logging.ERROR:
-        console.print(f"[red]{message}[/red]")
-    elif record.levelno >= logging.WARNING:
-        console.print(f"[yellow]{message}[/yellow]")
-    elif record.levelno >= logging.INFO:
-        console.print(f"[green]{message}[/green]")
-    else:  # DEBUG 및 기타 레벨
-        console.print(f"[blue]{message}[/blue]")
-
-
 @app.command()
 def check():
     """
@@ -108,7 +95,7 @@ def command_create_table(
     else:
         log_level = logging.INFO
 
-    with LogCapture(log_message_handler=log_message_handler, level=log_level):
+    with LogCapture(console=console, level=log_level):
         try:
             create_virtual_table(
                 db_path=db_path,
@@ -140,7 +127,7 @@ def command_import_jsonl(
     else:
         log_level = logging.INFO
 
-    with LogCapture(log_message_handler=log_message_handler, level=log_level):
+    with LogCapture(console=console, level=log_level):
         try:
             import_jsonl(
                 db_path=db_path,
@@ -174,7 +161,7 @@ def command_similarity_search(
     else:
         log_level = logging.WARNING
 
-    with LogCapture(log_message_handler=log_message_handler, level=log_level):
+    with LogCapture(console=console, level=log_level):
         try:
             doc_list = similarity_search(
                 db_path=db_path,

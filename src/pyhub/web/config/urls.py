@@ -1,12 +1,10 @@
 from django.apps import apps
 from django.conf import settings
 from django.contrib import admin
-from django.urls import include, path
+from django.urls import path
 from django.views.generic import TemplateView
-from ninja import NinjaAPI
-
 from map.api import router as map_router
-
+from ninja import NinjaAPI
 
 #
 # api

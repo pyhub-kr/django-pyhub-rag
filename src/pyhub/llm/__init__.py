@@ -14,14 +14,14 @@ from .types import (
     GoogleEmbeddingModel,
     LLMChatModel,
     LLMEmbeddingModel,
+    OllamaChatModel,
+    OllamaEmbeddingModel,
     OpenAIChatModel,
     OpenAIEmbeddingModel,
     Price,
     UpstageChatModel,
     UpstageEmbeddingModel,
     Usage,
-    OllamaChatModel,
-    OllamaEmbeddingModel,
 )
 from .upstage import UpstageLLM
 

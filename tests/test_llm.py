@@ -1,7 +1,4 @@
-import os
-
 import pytest
-from django.core.exceptions import ImproperlyConfigured
 from django.template import Template
 
 from pyhub.llm import (
@@ -14,7 +11,6 @@ from pyhub.llm import (
     UpstageLLM,
 )
 from pyhub.llm.types import ChainReply, Reply
-from pyhub.rag.settings import rag_settings
 
 
 async def check_llm(llm: BaseLLM):
