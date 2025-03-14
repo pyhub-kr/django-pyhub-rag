@@ -54,6 +54,7 @@ Issues = "https://github.com/pyhub-kr/django-pyhub-rag/issues"
 [project.scripts]
 "pyhub.llm" = "pyhub.llm.__main__:app"
 "pyhub.rag" = "pyhub.rag.__main__:app"
+"pyhub.parser" = "pyhub.parser.__main__:app"
 
 [build-system]
 requires = ["hatchling"]
