@@ -381,7 +381,7 @@ class UpstageDocumentParseParser:
             cache_path = CACHE_DIR_PATH / f"cache-response-{md5_hash_value}.json"
             if os.path.exists(cache_path):
                 logger.debug("캐싱된 API 응답이 있습니다. Upstage API를 호출하지 않고 캐싱된 API 응답을 재활용합니다.")
-                json_string = open(cache_path, "rt").read()
+                json_string = open(cache_path, "rt", encoding="utf-8").read()
                 return json.loads(json_string)
 
         try:
@@ -398,7 +398,7 @@ class UpstageDocumentParseParser:
 
                     if cache_path is not None:
                         logger.debug(f"API 응답을 캐싱합니다. 캐싱된 용량 = {len(response.text)} bytes")
-                        open(cache_path, "wt").write(response.text)
+                        open(cache_path, "wt", encoding="utf-8").write(response.text)
 
                     return response_obj
                 else:

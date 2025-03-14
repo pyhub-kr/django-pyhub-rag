@@ -229,7 +229,7 @@ def upstage(
                         f.write(json_dumps(document) + "\n")
 
                         if unified_output_path is not None:
-                            with unified_output_path.open("at") as uf:
+                            with unified_output_path.open("at", encoding="utf-8") as uf:
                                 if document_count > 0:
                                     uf.write("\n\n")
                                 uf.write(document.page_content)
