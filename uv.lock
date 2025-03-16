@@ -383,6 +383,18 @@ dependencies = [
 ]
 
 [package.optional-dependencies]
+all = [
+    { name = "django-shinobi" },
+    { name = "httpx" },
+    { name = "numpy" },
+    { name = "pgvector" },
+    { name = "pillow" },
+    { name = "psycopg2-binary" },
+    { name = "pycryptodome" },
+    { name = "pypdf2" },
+    { name = "sqlite-vec" },
+    { name = "uvicorn" },
+]
 build = [
     { name = "build" },
     { name = "setuptools" },
@@ -429,6 +441,7 @@ requires-dist = [
     { name = "django", specifier = ">=4.0.0" },
     { name = "django-environ" },
     { name = "django-lifecycle" },
+    { name = "django-pyhub-rag", extras = ["postgres", "sqlite", "web", "parser"], marker = "extra == 'all'" },
     { name = "django-shinobi", marker = "extra == 'web'" },
     { name = "djlint", marker = "extra == 'dev'" },
     { name = "google-genai" },
@@ -457,7 +470,7 @@ requires-dist = [
     { name = "uvicorn", marker = "extra == 'web'" },
     { name = "wheel", marker = "extra == 'build'" },
 ]
-provides-extras = ["parser", "dev", "build", "postgres", "sqlite", "web", "test"]
+provides-extras = ["dev", "build", "test", "postgres", "sqlite", "web", "parser", "all"]
 
 [[package]]
 name = "django-shinobi"
