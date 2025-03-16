@@ -310,7 +310,9 @@ class UpstageDocumentParseParser:
                         if element.category in self.ignore_element_category_list:
                             content_s = getattr(element.content, self.document_format)
                             content_preview = content_s[:100] + ("..." if len(content_s) > 100 else "")
-                            logger.debug("Ignore element category : %s, content: %s", element.category, content_preview)
+                            logger.debug(
+                                "Ignore element category : %s, content: %s", element.category, repr(content_preview)
+                            )
                         else:
                             element.page += start_page
                             yield element

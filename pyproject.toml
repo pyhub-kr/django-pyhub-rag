@@ -24,6 +24,7 @@ dependencies = [
     "django>=4.0.0",
     "django-environ",
     "django-lifecycle",
+    "django-debug-toolbar",
     "tiktoken",
     "openai",
     "anthropic",

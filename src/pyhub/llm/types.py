@@ -9,6 +9,15 @@ from openai.types import ChatModel as OpenAIChatModel
 from typing_extensions import Optional
 
 #
+# Language
+#
+
+LanguageType: TypeAlias = Union[
+    Literal["Korean", "English", "Japanese", "Chinese"],
+    str,
+]
+
+#
 # Embedding
 #
 

@@ -119,14 +119,18 @@ class GoogleLLM(BaseLLM):
             )
         )
 
+        system_prompt: Optional[str] = self.get_system_prompt(input_context)
+
+        config = GenerateContentConfig(
+            system_instruction=Content(parts=[Part(text=system_prompt)]),
+            max_output_tokens=self.max_tokens,
+            temperature=self.temperature,
+        )
+
         return dict(
             model=model,
             contents=contents,
-            config=GenerateContentConfig(
-                system_instruction=self.get_system_prompt(input_context),
-                max_output_tokens=self.max_tokens,
-                temperature=self.temperature,
-            ),
+            config=config,
         )
 
     def _make_ask(

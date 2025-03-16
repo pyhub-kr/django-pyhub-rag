@@ -1,16 +1,20 @@
 import abc
 import logging
+from inspect import signature
 from pathlib import Path
 from typing import Any, AsyncGenerator, Generator, Optional, Union, cast
 
+from asgiref.sync import async_to_sync
 from django.core.checks import Error
 from django.core.files import File
-from django.template import Context, Template
+from django.template import Context, Template, TemplateDoesNotExist
+from django.template.loader import get_template
 
 from .types import (
     ChainReply,
     Embed,
     EmbedList,
+    LanguageType,
     LLMChatModel,
     LLMEmbeddingModel,
     Message,
@@ -76,34 +80,48 @@ class BaseLLM(abc.ABC):
         """Clear the chat history"""
         self.history = []
 
+    def _process_template(self, template: Union[str, Template], context: dict[str, Any]) -> Optional[str]:
+        """템플릿 처리를 위한 공통 메서드"""
+        # Django Template 객체인 경우
+        if hasattr(template, "render"):
+            return template.render(Context(context))
+
+        # 문자열인 경우
+        elif isinstance(template, str):
+            # 파일 기반 템플릿 처리
+            if "prompts/" in template and template.endswith((".txt", ".md", ".yaml")):
+                try:
+                    template_obj = get_template(template)
+                    return template_obj.render(context)
+                except TemplateDoesNotExist:
+                    logger.debug("Template '%s' does not exist", template)
+                    return None
+            # 일반 문자열 포맷팅
+            return template.format(**context)
+
+        return None
+
     def get_system_prompt(self, input_context: dict[str, Any], default: Any = None) -> Optional[str]:
         if not self.system_prompt:
-            if default is not None:
-                return default
-            return None
+            return default
 
-        if hasattr(self.system_prompt, "render"):
-            return self.system_prompt.render(Context(input_context))
-        return self.system_prompt.format(**input_context)
+        return self._process_template(self.system_prompt, input_context)
 
     def get_human_prompt(self, input: Union[str, dict[str, Any]], context: dict[str, Any]) -> str:
-        if isinstance(input, str):
-            return input.format(**context)
-        elif hasattr(input, "render"):
-            return input.render(Context(context))
+        if isinstance(input, (str, Template)) or hasattr(input, "render"):
+            result = self._process_template(input, context)
+            if result is not None:
+                return result
+
         elif isinstance(input, dict):
             if not self.prompt:
                 raise ValueError("prompt is required when human_message is a dict")
 
-            # Django Template 지원 추가
-            if hasattr(self.prompt, "render"):
-                human_prompt = self.prompt.render(Context(context))
-            else:
-                human_prompt = self.prompt.format(**context)
-        else:
-            raise ValueError(f"input must be a str or a dict, but got {type(input)}")
+            result = self._process_template(self.prompt, context)
+            if result is not None:
+                return result
 
-        return human_prompt
+        raise ValueError(f"input must be a str, Template, or dict, but got {type(input)}")
 
     def _update_history(
         self,
@@ -381,6 +399,75 @@ class BaseLLM(abc.ABC):
         model: Optional[LLMEmbeddingModel] = None,
     ) -> Union[Embed, EmbedList]:
         pass
+
+    #
+    # describe images / tables
+    #
+
+    def describe_images(
+        self,
+        images: Union[str, Path, File, list[Union[str, Path, File]]],
+        language: LanguageType = "english",
+        temperature: Optional[float] = None,
+        max_tokens: Optional[int] = None,
+        system_prompt="prompts/describe_images/system_prompt.txt",
+        user_prompt="prompts/describe_images/user_prompt.txt",
+    ) -> Reply:
+        return async_to_sync(self.describe_images_async)(
+            images=images,
+            language=language,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            system_prompt=system_prompt,
+            user_prompt=user_prompt,
+        )
+
+    async def describe_images_async(
+        self,
+        images: Union[str, Path, File, list[Union[str, Path, File]]],
+        language: LanguageType = "english",
+        temperature: Optional[float] = None,
+        max_tokens: Optional[int] = None,
+        system_prompt="prompts/describe_images/system_prompt.txt",
+        user_prompt="prompts/describe_images/user_prompt.txt",
+    ) -> Union[Reply, list[Reply]]:
+        cls = self.__class__
+
+        sig = signature(cls.__init__)
+        if "max_tokens" in sig.parameters:  # max_tokens is not supported in ollama
+            llm = cls(
+                model=self.model,
+                temperature=self.temperature if temperature is None else temperature,
+                max_tokens=self.max_tokens if max_tokens is None else max_tokens,
+                system_prompt=system_prompt,
+            )
+        else:
+            llm = cls(
+                model=self.model,
+                temperature=self.temperature if temperature is None else temperature,
+                system_prompt=system_prompt,
+            )
+            if max_tokens is not None:
+                logger.warning("max_tokens is not supported for this LLM")
+
+        if not isinstance(images, (list, tuple)):
+            images = [images]
+
+        reply_list = []
+        for image in images:  # TODO: batch llm api 호출
+            reply = await llm.ask_async(
+                input=user_prompt,
+                files=[image],
+                context={
+                    "language": language,
+                },
+            )
+            reply_list.append(reply)
+
+        if len(reply_list) == 1:
+            return reply_list[0]
+
+        return reply_list
 
 
 class SequentialChain:
