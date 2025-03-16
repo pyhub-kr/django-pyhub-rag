@@ -1,4 +1,5 @@
 import logging
+from pathlib import Path
 from typing import Any, AsyncGenerator, Generator, Optional, Union, cast
 
 from django.core.checks import Error
@@ -198,7 +199,7 @@ class OpenAIMixin:
     def ask(
         self,
         input: Union[str, dict[str, Any]],
-        files: Optional[list[Union[str, File]]] = None,
+        files: Optional[list[Union[str, Path, File]]] = None,
         model: Optional[OpenAIChatModel] = None,
         context: Optional[dict[str, Any]] = None,
         *,
@@ -219,7 +220,7 @@ class OpenAIMixin:
     async def ask_async(
         self,
         input: Union[str, dict[str, Any]],
-        files: Optional[list[Union[str, File]]] = None,
+        files: Optional[list[Union[str, Path, File]]] = None,
         model: Optional[OpenAIChatModel] = None,
         context: Optional[dict[str, Any]] = None,
         *,

@@ -1,4 +1,5 @@
 import re
+from pathlib import Path
 from typing import Any, AsyncGenerator, Generator, Optional, Union
 
 from anthropic import NOT_GIVEN as ANTHROPIC_NOT_GIVEN
@@ -230,7 +231,7 @@ class AnthropicLLM(BaseLLM):
     def ask(
         self,
         input: Union[str, dict[str, Any]],
-        files: Optional[list[Union[str, File]]] = None,
+        files: Optional[list[Union[str, Path, File]]] = None,
         model: Optional[AnthropicChatModel] = None,
         context: Optional[dict[str, Any]] = None,
         *,
@@ -251,7 +252,7 @@ class AnthropicLLM(BaseLLM):
     async def ask_async(
         self,
         input: Union[str, dict[str, Any]],
-        files: Optional[list[Union[str, File]]] = None,
+        files: Optional[list[Union[str, Path, File]]] = None,
         model: Optional[AnthropicChatModel] = None,
         context: Optional[dict[str, Any]] = None,
         *,

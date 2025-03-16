@@ -375,8 +375,10 @@ dependencies = [
     { name = "django-environ" },
     { name = "django-lifecycle" },
     { name = "google-genai" },
+    { name = "httpx" },
     { name = "ollama" },
     { name = "openai" },
+    { name = "pillow" },
     { name = "rich" },
     { name = "tiktoken" },
     { name = "typer" },
@@ -385,10 +387,8 @@ dependencies = [
 [package.optional-dependencies]
 all = [
     { name = "django-shinobi" },
-    { name = "httpx" },
     { name = "numpy" },
     { name = "pgvector" },
-    { name = "pillow" },
     { name = "psycopg2-binary" },
     { name = "pycryptodome" },
     { name = "pypdf2" },
@@ -409,8 +409,6 @@ dev = [
     { name = "ruff" },
 ]
 parser = [
-    { name = "httpx" },
-    { name = "pillow" },
     { name = "pycryptodome" },
     { name = "pypdf2" },
 ]
@@ -445,13 +443,13 @@ requires-dist = [
     { name = "django-shinobi", marker = "extra == 'web'" },
     { name = "djlint", marker = "extra == 'dev'" },
     { name = "google-genai" },
-    { name = "httpx", marker = "extra == 'parser'" },
+    { name = "httpx" },
     { name = "isort", marker = "extra == 'dev'" },
     { name = "numpy", marker = "extra == 'sqlite'" },
     { name = "ollama" },
     { name = "openai" },
     { name = "pgvector", marker = "extra == 'postgres'" },
-    { name = "pillow", marker = "extra == 'parser'" },
+    { name = "pillow" },
     { name = "pre-commit", marker = "extra == 'dev'" },
     { name = "psycopg2-binary", marker = "extra == 'postgres'" },
     { name = "pycryptodome", marker = "extra == 'parser'" },

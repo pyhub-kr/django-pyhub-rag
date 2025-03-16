@@ -1,6 +1,7 @@
 import logging
 import re
 from base64 import b64decode
+from pathlib import Path
 from typing import Any, AsyncGenerator, Generator, Optional, Union, cast
 
 from django.core.checks import Error
@@ -211,7 +212,7 @@ class GoogleLLM(BaseLLM):
     def ask(
         self,
         input: Union[str, dict[str, Any]],
-        files: Optional[list[Union[str, File]]] = None,
+        files: Optional[list[Union[str, Path, File]]] = None,
         model: Optional[GoogleChatModel] = None,
         context: Optional[dict[str, Any]] = None,
         *,
@@ -232,7 +233,7 @@ class GoogleLLM(BaseLLM):
     async def ask_async(
         self,
         input: Union[str, dict[str, Any]],
-        files: Optional[list[Union[str, File]]] = None,
+        files: Optional[list[Union[str, Path, File]]] = None,
         model: Optional[GoogleChatModel] = None,
         context: Optional[dict[str, Any]] = None,
         *,

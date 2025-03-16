@@ -1,5 +1,6 @@
 import abc
 import logging
+from pathlib import Path
 from typing import Any, AsyncGenerator, Generator, Optional, Union, cast
 
 from django.core.checks import Error
@@ -179,7 +180,7 @@ class BaseLLM(abc.ABC):
     def _ask_impl(
         self,
         input: Union[str, dict[str, str]],
-        files: Optional[list[Union[str, File]]] = None,
+        files: Optional[list[Union[str, Path, File]]] = None,
         model: Optional[LLMChatModel] = None,
         context: Optional[dict[str, Any]] = None,
         *,
@@ -294,7 +295,7 @@ class BaseLLM(abc.ABC):
     def invoke(
         self,
         input: Union[str, dict[str, str]],
-        files: Optional[list[Union[str, File]]] = None,
+        files: Optional[list[Union[str, Path, File]]] = None,
         stream: bool = False,
     ) -> Reply:
         """langchain 호환 메서드: 동기적으로 LLM에 메시지를 전송하고 응답을 반환합니다."""
@@ -303,7 +304,7 @@ class BaseLLM(abc.ABC):
     def stream(
         self,
         input: Union[str, dict[str, str]],
-        files: Optional[list[Union[str, File]]] = None,
+        files: Optional[list[Union[str, Path, File]]] = None,
     ) -> Generator[Reply, None, None]:
         """langchain 호환 메서드: 동기적으로 LLM에 메시지를 전송하고 응답을 스트리밍합니다."""
         return self.ask(input=input, files=files, stream=True)
@@ -311,7 +312,7 @@ class BaseLLM(abc.ABC):
     def ask(
         self,
         input: Union[str, dict[str, Any]],
-        files: Optional[list[Union[str, File]]] = None,
+        files: Optional[list[Union[str, Path, File]]] = None,
         model: Optional[LLMChatModel] = None,
         context: Optional[dict[str, Any]] = None,
         *,
@@ -333,7 +334,7 @@ class BaseLLM(abc.ABC):
     async def ask_async(
         self,
         input: Union[str, dict[str, Any]],
-        files: Optional[list[Union[str, File]]] = None,
+        files: Optional[list[Union[str, Path, File]]] = None,
         model: Optional[LLMChatModel] = None,
         context: Optional[dict[str, Any]] = None,
         *,

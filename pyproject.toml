@@ -29,6 +29,8 @@ dependencies = [
     "anthropic",
     "google-genai",
     "ollama",
+    "httpx",
+    "pillow",
     "rich",
     "typer",
 ]
@@ -40,7 +42,7 @@ test = ["pytest", "pytest-django", "pytest-testdox", "pytest-asyncio"]
 postgres = ["psycopg2-binary", "pgvector"]
 sqlite = ["sqlite-vec", "numpy"]
 web = ["django-shinobi", "uvicorn"]
-parser = ["pypdf2", "PyCryptodome", "pillow", "httpx"]
+parser = ["pypdf2", "PyCryptodome"]
 
 all = ["django-pyhub-rag[postgres,sqlite,web,parser]"]
 

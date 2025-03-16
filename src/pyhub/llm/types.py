@@ -1,5 +1,6 @@
 from dataclasses import asdict, dataclass, field
 from decimal import Decimal
+from pathlib import Path
 from typing import Any, Literal, TypeAlias, Union
 
 from anthropic.types import ModelParam as AnthropicChatModel
@@ -111,7 +112,7 @@ class GroundednessCheck:
 class Message:
     role: Literal["system", "user", "assistant", "function"]
     content: str
-    files: Optional[list[Union[str, File]]] = None
+    files: Optional[list[Union[str, Path, File]]] = None
 
     def __iter__(self):
         for key, value in self.to_dict().items():

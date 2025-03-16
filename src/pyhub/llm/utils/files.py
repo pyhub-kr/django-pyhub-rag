@@ -58,9 +58,10 @@ class FileType(Enum):
 
 
 def encode_files(
-    files: Optional[list[Union[str, File]]] = None,
+    files: Optional[list[Union[str, Path, File]]] = None,
     allowed_types: Union[FileType, list[FileType]] = FileType.IMAGE,
     convert_mode: Literal["base64"] = "base64",
+    optimize_jpeg: bool = False,
     image_max_size: int = 512,
     image_quality: int = 60,
     image_resampling: PILImage.Resampling = PILImage.Resampling.LANCZOS,
@@ -70,10 +71,11 @@ def encode_files(
     Args:
         files (Optional[List[File]]): 파일 목록
         allowed_types (Union[FileType, List[FileType]]): 허용할 파일 타입
+        convert_mode (str): 인코딩 모드 ("base64" 또는 "url")
+        optimize_jpeg (bool): 이미지의 경우 JPEG 최적화 여부
         image_max_size (int): 이미지의 경우 최대 허용 픽셀 크기
         image_quality (int): 이미지의 경우 JPEG 품질 설정 (1-100)
         image_resampling (int): 이미지 리샘플링 방법
-        convert_mode (str): 인코딩 모드 ("base64" 또는 "url")
 
     Returns:
         List[str]: 인코딩된 파일 목록
@@ -90,7 +92,14 @@ def encode_files(
     django_files: list[File] = []
 
     for file in files:
-        if isinstance(file, File):
+        if isinstance(file, Path):
+            try:
+                with file.open("rb") as f:
+                    django_file = ContentFile(f.read(), name=file.name)
+                    django_files.append(django_file)
+            except IOError as e:
+                raise ValueError(f"Failed to open file {file}: {e}")
+        elif isinstance(file, File):
             django_files.append(file)
         elif isinstance(file, str):
             if file.startswith(("http://", "https://")):
@@ -162,6 +171,7 @@ def encode_files(
                     optimized_image, content_type = optimize_image(
                         file.file,
                         max_size=image_max_size,
+                        optimize_jpeg=optimize_jpeg,
                         quality=image_quality,
                         resampling=image_resampling,
                     )
@@ -197,6 +207,7 @@ def encode_files(
 def optimize_image(
     image_file: IO,
     max_size: int = 1024,
+    optimize_jpeg: bool = False,
     quality: int = 80,
     resampling: PILImage.Resampling = PILImage.Resampling.LANCZOS,
 ) -> tuple[bytes, str]:
@@ -205,20 +216,17 @@ def optimize_image(
     Args:
         image_file: 이미지 파일 객체
         max_size (int): 최대 허용 픽셀 크기 (가로/세로 중 큰 쪽 기준)
+        optimize_jpeg (bool): JPEG로 변환할지 여부
         quality (int): JPEG 품질 설정 (1-100)
         resampling (int): 리샘플링 방법
 
     Returns:
-        bytes: 최적화된 이미지의 바이트 데이터
+        tuple[bytes, str]: 최적화된 이미지의 바이트 데이터와 MIME 타입
     """
     # 이미지 열기
     img = PILImage.open(image_file)
-
-    # RGBA to RGB (PNG -> JPEG 변환 시 필요)
-    if img.mode == "RGBA":
-        bg = PILImage.new("RGB", img.size, (255, 255, 255))
-        bg.paste(img, mask=img.split()[3])
-        img = bg
+    original_format = img.format or "JPEG"
+    content_type = f"image/{original_format.lower()}"
 
     # 이미지 크기 조정
     if max(img.size) > max_size:
@@ -228,9 +236,21 @@ def optimize_image(
 
     # 최적화된 이미지를 바이트로 변환
     buffer = BytesIO()
-    img.save(buffer, format="JPEG", quality=quality, optimize=True)
 
-    return buffer.getvalue(), "image/jpeg"
+    if optimize_jpeg:
+        # JPEG로 변환 및 최적화
+        if img.mode == "RGBA":
+            bg = PILImage.new("RGB", img.size, (255, 255, 255))
+            bg.paste(img, mask=img.split()[3])
+            img = bg
+
+        img.save(buffer, format="JPEG", quality=quality, optimize=True)
+        content_type = "image/jpeg"
+    else:
+        # 원본 형식 유지
+        img.save(buffer, format=original_format, quality=quality if original_format == "JPEG" else None)
+
+    return buffer.getvalue(), content_type
 
 
 def extract_base64_files(request_dict: dict, base64_field_name_postfix: str = "__base64") -> MultiValueDict:
