@@ -137,7 +137,7 @@ class UpstageDocumentParseParser:
 
         return valid
 
-    def lazy_parse_sync(
+    def lazy_parse(
         self,
         file: File,
         batch_page_size: int,
@@ -154,7 +154,7 @@ class UpstageDocumentParseParser:
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
 
-        async_iter = self.lazy_parse(file, batch_page_size, ignore_validation=ignore_validation)
+        async_iter = self.lazy_parse_async(file, batch_page_size, ignore_validation=ignore_validation)
 
         try:
             while True:
@@ -166,7 +166,7 @@ class UpstageDocumentParseParser:
         except Exception as e:
             raise ValueError(f"동기 파싱 중 오류 발생: {e}")
 
-    async def lazy_parse(
+    async def lazy_parse_async(
         self,
         file: File,
         batch_page_size: int,

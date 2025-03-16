@@ -270,7 +270,7 @@ def upstage(
 
                 with jsonl_output_path.open("wt", encoding="utf-8") as f:
                     document_count = 0
-                    for document in parser.lazy_parse_sync(
+                    for document in parser.lazy_parse(
                         django_file,
                         batch_page_size=batch_page_size,
                         ignore_validation=True,
