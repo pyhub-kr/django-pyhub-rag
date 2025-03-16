@@ -214,4 +214,9 @@ class Element:
             },
             files=self.files,
             elements=self.elements,
+            variants={
+                DocumentFormatEnum.MARKDOWN: self.content.markdown,
+                DocumentFormatEnum.HTML: self.content.html,
+                DocumentFormatEnum.TEXT: self.content.text,
+            },
         )

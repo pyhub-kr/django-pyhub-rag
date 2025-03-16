@@ -2,7 +2,7 @@ import logging
 import os
 from pathlib import Path
 from shutil import rmtree
-from typing import Optional, cast
+from typing import List, Optional, cast
 
 import typer
 from django.core.exceptions import ValidationError
@@ -63,7 +63,22 @@ def upstage(
         "--output-dir-path",
         "-o",
         writable=True,
-        help="출력 파일 경로",
+        help="jsonl 출력 파일 경로. 각 줄은 page_content/metadata 필드로 구성됩니다.",
+    ),
+    is_create_unified_output: bool = typer.Option(
+        False,
+        "--create-unified-file",
+        "-c",
+        help="통합 파일 생성 여부",
+    ),
+    document_format: DocumentFormatEnum = typer.Option(
+        DocumentFormatEnum.MARKDOWN, "--document-format", "-d", help="생성할 문서 포맷"
+    ),
+    unified_document_format: Optional[str] = typer.Option(
+        ",".join([e.value for e in DocumentFormatEnum]),
+        "--unified-output-format",
+        "-u",
+        help="통합 출력 문서 포맷 (쉼표로 구분). 지정하지 않으면 모든 지원 포맷으로 생성됩니다.",
     ),
     document_split_strategy: DocumentSplitStrategyEnum = typer.Option(
         DocumentSplitStrategyEnum.PAGE,
@@ -72,16 +87,15 @@ def upstage(
         help="문서 분할 전략 | (1) page: 페이지 단위로 Document 생성, (2) element: Element 단위로 Document 생성, (3) none: 파일 전체를 하나의 Document로 생성",
     ),
     ocr_mode: OCRModeEnum = typer.Option(OCRModeEnum.FORCE, help="OCR 모드"),
-    document_format: DocumentFormatEnum = typer.Option(DocumentFormatEnum.MARKDOWN, help="생성할 문서 포맷"),
     base64_encodings: str = typer.Option(
         "figure,chart,table",
         help=f"Base64로 인코딩할 요소 카테고리 목록 (쉼표로 구분): {', '.join([e.value for e in CategoryEnum])}",
         callback=lambda x: validate_categories(x),
     ),
     ignore_element_category: str = typer.Option(
-        "header,footer",
+        "footer",
         "--ignore",
-        help="파싱 결과에서 제외할 요소 카테고리 목록 (쉼표로 구분). 기본값으로 header와 footer가 제외됩니다.",
+        help="파싱 결과에서 제외할 요소 카테고리 목록 (쉼표로 구분). 기본값으로 footer가 제외됩니다.",
         callback=lambda x: validate_categories(x),
     ),
     batch_page_size: int = typer.Option(
@@ -99,15 +113,14 @@ def upstage(
     max_page: int = typer.Option(0, "--max-page", "-m", min=0, help="처리할 최대 페이지 수 (0: 모든 페이지)"),
     is_verbose: bool = typer.Option(False, "--verbose", "-v", help="상세한 처리 정보 표시"),
     is_force: bool = typer.Option(False, "--force", "-f", help="확인 없이 출력 폴더 삭제 후 재생성"),
-    upstage_api_key: Optional[str] = typer.Option(
-        None, help="Upstage API Key. 지정하지 않으면 UPSTAGE_API_KEY 환경 변수 사용"
-    ),
-    is_unified_output: bool = typer.Option(False, "--unified-file", "-u", help="통합 파일 생성 여부"),
     is_ignore_cache: bool = typer.Option(
         False, "--ignore-cache", help="API 응답 캐시를 무시하고 항상 새로운 API 요청을 보냅니다. 캐시는 유지됩니다."
     ),
     is_cache_clear: bool = typer.Option(
         False, "--clear-cache", help="API 응답 캐시를 초기화합니다. 이전에 저장된 API 응답을 무시하고 새로 요청합니다."
+    ),
+    upstage_api_key: Optional[str] = typer.Option(
+        None, help="Upstage API Key. 지정하지 않으면 UPSTAGE_API_KEY 환경 변수 사용"
     ),
 ):
     if upstage_api_key is None:
@@ -120,6 +133,15 @@ def upstage(
 
     base64_encoding_category_list = cast(list[ElementCategoryType], base64_encodings)
     ignore_element_category_list = cast(list[ElementCategoryType], ignore_element_category)
+
+    # Process unified_document_format
+    unified_document_formats = []
+    if unified_document_format:
+        unified_document_formats = validate_output_formats(unified_document_format)
+
+    # If no formats specified, use document_format
+    if not unified_document_formats:
+        unified_document_formats = [document_format]
 
     # Check if output file exists and confirm overwrite if force option is not set
     if output_dir_path.exists():
@@ -144,12 +166,15 @@ def upstage(
     # create one based on input_path with .jsonl extension
     jsonl_output_path = output_dir_path / input_path.with_suffix(".jsonl")
 
-    if is_unified_output:
-        ext = DocumentFormatEnum.to_ext(document_format)
-        unified_output_path = output_dir_path / input_path.with_suffix(ext).name
-        unified_output_path.unlink(missing_ok=True)
+    if is_create_unified_output:
+        unified_document_paths = []
+        for format_enum in unified_document_formats:
+            ext = DocumentFormatEnum.to_ext(format_enum)
+            unified_output_path = output_dir_path / input_path.with_suffix(ext).name
+            unified_output_path.unlink(missing_ok=True)
+            unified_document_paths.append((format_enum, unified_output_path))
     else:
-        unified_output_path = None
+        unified_document_paths = []
 
     # Debug: Print all arguments except api_key
     if is_verbose:
@@ -166,9 +191,11 @@ def upstage(
         table.add_row("Document 분할 전략", document_split_strategy.value)
         table.add_row("OCR 모드", ocr_mode.value)
         table.add_row("생성할 Document 포맷", document_format.value)
+        if is_create_unified_output:
+            table.add_row("통합 출력 문서 포맷", ", ".join([fmt.value for fmt in unified_document_formats]))
         table.add_row("Base64 인코딩", ", ".join(base64_encoding_category_list))
         table.add_row("제외할 요소", ", ".join(ignore_element_category_list))
-        table.add_row("통합 문서 생성 여부", str(is_unified_output))
+        table.add_row("통합 문서 생성 여부", str(is_create_unified_output))
 
         # Add batch size with warning if needed
         batch_size_str = str(batch_page_size)
@@ -228,11 +255,14 @@ def upstage(
                     ):
                         f.write(json_dumps(document) + "\n")
 
-                        if unified_output_path is not None:
-                            with unified_output_path.open("at", encoding="utf-8") as uf:
-                                if document_count > 0:
-                                    uf.write("\n\n")
-                                uf.write(document.page_content)
+                        if unified_document_paths:
+                            for format_enum, output_path in unified_document_paths:
+                                variant_page_content = document.variants.get(format_enum.value)
+
+                                with output_path.open("at", encoding="utf-8") as uf:
+                                    if document_count > 0:
+                                        uf.write("\n\n")
+                                    uf.write(variant_page_content)
 
                             for name, _file in document.files.items():
                                 output_path = output_dir_path / name
@@ -244,6 +274,10 @@ def upstage(
                     console.print(
                         f"[green]성공:[/green] {jsonl_output_path} 경로에 {document_count}개의 Document를 jsonl 포맷으로 생성했습니다."
                     )
+
+                    if unified_document_paths:
+                        for _, output_path in unified_document_paths:
+                            console.print(f"[green]성공:[/green] {output_path} 경로에 통합 문서를 생성했습니다.")
         except FileNotFoundError:
             console.print(f"[bold red]오류:[/bold red] 파일을 찾을 수 없습니다: {input_path}")
             raise typer.Exit(code=1)
@@ -287,3 +321,30 @@ def validate_categories(categories_str: str) -> list[str]:
         )
 
     return valid_categories
+
+
+def validate_output_formats(formats_str: str) -> List[DocumentFormatEnum]:
+    """Validates and converts comma-separated format strings to DocumentFormatEnum list."""
+    if not formats_str:
+        return []
+
+    valid_values: str = ", ".join(e.value for e in DocumentFormatEnum)
+
+    # 인자값이 "-"로 시작하면 인자가 주어지지 않은 것으로 처리
+    if formats_str.startswith("-"):
+        raise typer.BadParameter(f"--unified-output-format (-u) 옵션 값이 누락되었습니다. 유효한 포맷 : {valid_values}")
+
+    formats = []
+    invalid_formats = []
+
+    for fmt in formats_str.split(","):
+        fmt = fmt.strip().lower()
+        try:
+            formats.append(DocumentFormatEnum(fmt))
+        except ValueError:
+            invalid_formats.append(fmt)
+
+    if invalid_formats:
+        raise typer.BadParameter(f"유효하지 않은 포맷: {', '.join(invalid_formats)}. 유효한 포맷: {valid_values}")
+
+    return formats
