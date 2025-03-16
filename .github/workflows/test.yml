@@ -57,7 +57,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          uv pip install -e ".[test,postgres,sqlite]"
+          uv pip install -e ".[test,postgres,sqlite,web,parser]"
 
       - name: Run tests on Linux
         if: runner.os != 'Windows'
