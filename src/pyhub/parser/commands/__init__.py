@@ -130,6 +130,13 @@ def upstage(
         raise typer.BadParameter(
             "--upstage-api-key 옵션이나 UPSTAGE_API_KEY 환경 변수를 통해 Upstage API Key를 설정해주세요."
         )
+    else:
+        # Validate Upstage API key format
+        if not upstage_api_key.startswith("up_"):
+            console.print(
+                f"[bold red]오류: Upstage API Key 형식이 올바르지 않습니다. Upstage API Key는 'up_'로 시작합니다.[/bold red]"
+            )
+            raise typer.Exit(code=1)
 
     base64_encoding_category_list = cast(list[ElementCategoryType], base64_encodings)
     ignore_element_category_list = cast(list[ElementCategoryType], ignore_element_category)
