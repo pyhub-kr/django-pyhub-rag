@@ -1,5 +1,6 @@
 import logging
 import os
+from importlib.metadata import version, PackageNotFoundError
 from pathlib import Path
 from shutil import rmtree
 from typing import List, Optional, cast
@@ -33,9 +34,23 @@ app = typer.Typer()
 console = Console()
 
 
+def get_version() -> str:
+    try:
+        return version("django-pyhub-rag")
+    except PackageNotFoundError:
+        return "not found"
+
+
 @app.callback(invoke_without_command=True)
-def main(ctx: typer.Context):
+def main(
+    ctx: typer.Context,
+    is_print_version: bool = typer.Option(False, "--version", "-V", help="현재 패키지 버전 출력"),
+):
     """PyHub RAG CLI tool"""
+    if is_print_version:
+        console.print(get_version())
+        raise typer.Exit()
+
     if ctx.invoked_subcommand is None:
         console.print(
             """
