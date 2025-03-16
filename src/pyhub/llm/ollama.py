@@ -117,7 +117,7 @@ class OllamaLLM(BaseLLM):
 
         if system_prompt:
             # history에는 system prompt는 누적되지 않고, 매 요청 시마다 적용합니다.
-            system_message = Message(role="system", content=system_prompt)
+            system_message = {"role": "system", "content": system_prompt}
             message_history.insert(0, system_message)
 
         # https://github.com/ollama/ollama/blob/main/docs/api.md#generate-a-completion

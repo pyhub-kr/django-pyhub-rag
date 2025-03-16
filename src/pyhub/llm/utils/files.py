@@ -4,11 +4,14 @@ import re
 from base64 import b64decode, b64encode
 from enum import Enum
 from io import BytesIO
+from pathlib import Path
 from typing import IO, Literal, Optional, Set, TypeVar, Union
 
+import httpx
 from django.core.files import File
 from django.core.files.base import ContentFile
 from django.utils.datastructures import MultiValueDict
+from httpx import HTTPStatusError
 from PIL import Image as PILImage
 
 logger = logging.getLogger(__name__)
@@ -55,9 +58,9 @@ class FileType(Enum):
 
 
 def encode_files(
-    files: Optional[list[File]] = None,
+    files: Optional[list[Union[str, File]]] = None,
     allowed_types: Union[FileType, list[FileType]] = FileType.IMAGE,
-    convert_mode: Literal["base64", "url"] = "base64",
+    convert_mode: Literal["base64"] = "base64",
     image_max_size: int = 512,
     image_quality: int = 60,
     image_resampling: PILImage.Resampling = PILImage.Resampling.LANCZOS,
@@ -84,6 +87,52 @@ def encode_files(
     if not files:
         return []
 
+    django_files: list[File] = []
+
+    for file in files:
+        if isinstance(file, File):
+            django_files.append(file)
+        elif isinstance(file, str):
+            if file.startswith(("http://", "https://")):
+                file_url: str = file
+
+                logger.debug("Downloading file from URL %s", file_url)
+
+                try:
+                    client = httpx.Client(timeout=5, follow_redirects=True)
+                    res = client.get(file_url)
+                    res.raise_for_status()
+
+                    # 파일명 추출
+                    file_name = file_url.split("?")[0].split("/")[-1]
+
+                    # 확장자가 없는 경우 Content-Type에서 추론
+                    if "." not in file_name:
+                        content_type = res.headers.get("Content-Type", "")
+                        ext = mimetypes.guess_extension(content_type)
+                        if ext:
+                            file_name += ext
+
+                    django_files.append(ContentFile(res.content, name=file_name))
+                except HTTPStatusError as e:
+                    logger.error("Error downloading file from URL %s: %s", file_url, e)
+            else:
+                file_path_str: str = file
+
+                logger.debug("Loading file from %s", file_path_str)
+
+                try:
+                    file_path = Path(file_path_str)
+                    with file_path.open("rb") as f:
+                        django_file = ContentFile(f.read(), name=file_path.name)
+                        django_files.append(django_file)
+                except IOError:
+                    raise ValueError(
+                        f"String file must be a valid file path or a URL starting with http:// or https://: {file}"
+                    )
+        else:
+            raise ValueError(f"Unsupported file type: {type(file)}")
+
     if isinstance(allowed_types, FileType):
         allowed_types = [allowed_types]
 
@@ -94,7 +143,7 @@ def encode_files(
     encoded_urls = []
 
     if convert_mode == "base64":
-        for file in files:
+        for file in django_files:
             content_type = mimetypes.guess_type(file.name)[0]
 
             if not content_type:
@@ -131,12 +180,16 @@ def encode_files(
                 logger.error(f"Error processing file {file.name}: {str(e)}")
                 continue
 
-    elif convert_mode == "url":
-        logger.info("URL 모드는 아직 구현되지 않았습니다.")
-        pass
     else:
         logger.warning(f"Unsupported encoding mode: {convert_mode}. Using base64 instead.")
-        return encode_files(files, allowed_types, image_max_size, image_quality, image_resampling, "base64")
+        return encode_files(
+            files=files,
+            allowed_types=allowed_types,
+            convert_mode=convert_mode,
+            image_max_size=image_max_size,
+            image_quality=image_quality,
+            image_resampling=image_resampling,
+        )
 
     return encoded_urls
 

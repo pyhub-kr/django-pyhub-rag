@@ -198,7 +198,7 @@ class OpenAIMixin:
     def ask(
         self,
         input: Union[str, dict[str, Any]],
-        files: Optional[list[File]] = None,
+        files: Optional[list[Union[str, File]]] = None,
         model: Optional[OpenAIChatModel] = None,
         context: Optional[dict[str, Any]] = None,
         *,
@@ -219,7 +219,7 @@ class OpenAIMixin:
     async def ask_async(
         self,
         input: Union[str, dict[str, Any]],
-        files: Optional[list[File]] = None,
+        files: Optional[list[Union[str, File]]] = None,
         model: Optional[OpenAIChatModel] = None,
         context: Optional[dict[str, Any]] = None,
         *,

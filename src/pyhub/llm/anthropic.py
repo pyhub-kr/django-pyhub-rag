@@ -230,7 +230,7 @@ class AnthropicLLM(BaseLLM):
     def ask(
         self,
         input: Union[str, dict[str, Any]],
-        files: Optional[list[File]] = None,
+        files: Optional[list[Union[str, File]]] = None,
         model: Optional[AnthropicChatModel] = None,
         context: Optional[dict[str, Any]] = None,
         *,
@@ -251,7 +251,7 @@ class AnthropicLLM(BaseLLM):
     async def ask_async(
         self,
         input: Union[str, dict[str, Any]],
-        files: Optional[list[File]] = None,
+        files: Optional[list[Union[str, File]]] = None,
         model: Optional[AnthropicChatModel] = None,
         context: Optional[dict[str, Any]] = None,
         *,

@@ -111,7 +111,7 @@ class GroundednessCheck:
 class Message:
     role: Literal["system", "user", "assistant", "function"]
     content: str
-    files: Optional[list[File]] = None
+    files: Optional[list[Union[str, File]]] = None
 
     def __iter__(self):
         for key, value in self.to_dict().items():

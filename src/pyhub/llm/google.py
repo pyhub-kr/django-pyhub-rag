@@ -211,7 +211,7 @@ class GoogleLLM(BaseLLM):
     def ask(
         self,
         input: Union[str, dict[str, Any]],
-        files: Optional[list[File]] = None,
+        files: Optional[list[Union[str, File]]] = None,
         model: Optional[GoogleChatModel] = None,
         context: Optional[dict[str, Any]] = None,
         *,
@@ -232,7 +232,7 @@ class GoogleLLM(BaseLLM):
     async def ask_async(
         self,
         input: Union[str, dict[str, Any]],
-        files: Optional[list[File]] = None,
+        files: Optional[list[Union[str, File]]] = None,
         model: Optional[GoogleChatModel] = None,
         context: Optional[dict[str, Any]] = None,
         *,
