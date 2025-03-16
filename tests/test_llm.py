@@ -1,5 +1,9 @@
+from io import BytesIO
+
 import pytest
+from django.core.files.base import ContentFile, File
 from django.template import Template
+from PIL import Image as PILImage
 
 from pyhub.llm import (
     AnthropicLLM,
@@ -19,15 +23,23 @@ async def check_llm(llm: BaseLLM):
         msg = " ".join([str(e) for e in errors])
         pytest.skip(msg)
     else:
-        ask1 = llm.ask("hello. my name is tom.")
-        assert isinstance(ask1, Reply)
-        assert "Error" not in ask1.text
+        # 이미지는 텍스트에 비해 API 비용이 비싸므로 꺼둡니다.
+        # image_file = create_white_image()
+        # image_reply = llm.ask("What is this image", files=[image_file])
+        # assert "Error" not in image_reply.text
+        # assert len(llm) == 2
+        # llm.clear()
+        # assert len(llm) == 0
+
+        reply1 = llm.ask("hello. my name is tom.")
+        assert isinstance(reply1, Reply)
+        assert "Error" not in reply1.text
         assert len(llm) == 2
 
-        ask2 = await llm.ask_async("what is my name?")
-        assert isinstance(ask2, Reply)
-        assert "Error" not in ask2.text
-        assert "tom" in ask2.text.lower()
+        reply2 = await llm.ask_async("what is my name?")
+        assert isinstance(reply2, Reply)
+        assert "Error" not in reply2.text
+        assert "tom" in reply2.text.lower()
         assert len(llm) == 4
 
         llm.clear()
@@ -193,3 +205,11 @@ async def test_sequential_chain():
         assert len(reply2) == 2
         assert reply2.values["자장가"] != reply.values["자장가"]  # 다른 입력, 다른 출력
         assert reply2.values["번역된_자장가"] != reply.values["번역된_자장가"]
+
+
+def create_white_image(width=100, height=100) -> File:
+    image = PILImage.new("RGB", (width, height), "white")
+    image_io = BytesIO()
+    image.save(image_io, format="PNG")
+    image_io.seek(0)
+    return ContentFile(image_io.read(), name="white.png")

@@ -3,6 +3,7 @@ import logging
 from typing import Any, AsyncGenerator, Generator, Optional, Union, cast
 
 from django.core.checks import Error
+from django.core.files import File
 from django.template import Context, Template
 
 from .types import (
@@ -103,52 +104,82 @@ class BaseLLM(abc.ABC):
 
         return human_prompt
 
+    def _update_history(
+        self,
+        human_message: Message,
+        ai_message: Union[str, Message],
+    ) -> None:
+        if isinstance(ai_message, str):
+            ai_message = Message(role="assistant", content=ai_message)
+
+        self.history.extend(
+            [
+                human_message,
+                ai_message,
+            ]
+        )
+
     def get_output_key(self) -> str:
         return self.output_key
 
     @abc.abstractmethod
-    def _make_ask(self, input_context: dict[str, Any], messages: list[Message], model: LLMChatModel) -> Reply:
+    def _make_request_params(
+        self,
+        input_context: dict[str, Any],
+        human_message: Message,
+        messages: list[Message],
+        model: LLMChatModel,
+    ) -> dict:
+        pass
+
+    @abc.abstractmethod
+    def _make_ask(
+        self,
+        input_context: dict[str, Any],
+        human_message: Message,
+        messages: list[Message],
+        model: LLMChatModel,
+    ) -> Reply:
         """Generate a response using the specific LLM provider"""
         pass
 
     @abc.abstractmethod
     async def _make_ask_async(
-        self, input_context: dict[str, Any], messages: list[Message], model: LLMChatModel
+        self,
+        input_context: dict[str, Any],
+        human_message: Message,
+        messages: list[Message],
+        model: LLMChatModel,
     ) -> Reply:
         """Generate a response asynchronously using the specific LLM provider"""
         pass
 
     @abc.abstractmethod
     def _make_ask_stream(
-        self, input_context: dict[str, Any], messages: list[Message], model: LLMChatModel
+        self,
+        input_context: dict[str, Any],
+        human_message: Message,
+        messages: list[Message],
+        model: LLMChatModel,
     ) -> Generator[Reply, None, None]:
         """Generate a streaming response using the specific LLM provider"""
         yield Reply(text="")
 
     @abc.abstractmethod
     async def _make_ask_stream_async(
-        self, input_context: dict[str, Any], messages: list[Message], model: LLMChatModel
+        self,
+        input_context: dict[str, Any],
+        human_message: Message,
+        messages: list[Message],
+        model: LLMChatModel,
     ) -> AsyncGenerator[Reply, None]:
         """Generate a streaming response asynchronously using the specific LLM provider"""
         yield Reply(text="")
 
-    def _prepare_messages(self, input: str, current_messages: list[Message]) -> list[Message]:
-        if input:
-            current_messages.append(Message(role="user", content=input))
-        return current_messages
-
-    def _update_history(self, human_prompt: str, ai_message: str) -> None:
-        if human_prompt is not None:
-            self.history.extend(
-                [
-                    Message(role="user", content=human_prompt),
-                    Message(role="assistant", content=ai_message),
-                ]
-            )
-
     def _ask_impl(
         self,
         input: Union[str, dict[str, str]],
+        files: Optional[list[File]] = None,
         model: Optional[LLMChatModel] = None,
         context: Optional[dict[str, Any]] = None,
         *,
@@ -170,7 +201,7 @@ class BaseLLM(abc.ABC):
             input_context.update(context)
 
         human_prompt = self.get_human_prompt(input, input_context)
-        current_messages = self._prepare_messages(human_prompt, current_messages)
+        human_message = Message(role="user", content=human_prompt, files=files)
 
         # 스트리밍 응답 처리
         if stream:
@@ -178,13 +209,18 @@ class BaseLLM(abc.ABC):
             async def async_stream_handler() -> AsyncGenerator[Reply, None]:
                 try:
                     text_list = []
-                    async for ask in self._make_ask_stream_async(input_context, current_messages, current_model):
+                    async for ask in self._make_ask_stream_async(
+                        input_context=input_context,
+                        human_message=human_message,
+                        messages=current_messages,
+                        model=current_model,
+                    ):
                         text_list.append(ask.text)
                         yield ask
 
                     if use_history:
-                        full_text = "".join(text_list)
-                        self._update_history(human_prompt, full_text)
+                        ai_text = "".join(text_list)
+                        self._update_history(human_message=human_message, ai_message=ai_text)
                 except Exception as e:
                     if raise_errors:
                         raise e
@@ -194,13 +230,18 @@ class BaseLLM(abc.ABC):
             def sync_stream_handler() -> Generator[Reply, None, None]:
                 try:
                     text_list = []
-                    for ask in self._make_ask_stream(input_context, current_messages, current_model):
+                    for ask in self._make_ask_stream(
+                        input_context=input_context,
+                        human_message=human_message,
+                        messages=current_messages,
+                        model=current_model,
+                    ):
                         text_list.append(ask.text)
                         yield ask
 
                     if use_history:
-                        full_text = "".join(text_list)
-                        self._update_history(human_prompt, full_text)
+                        ai_text = "".join(text_list)
+                        self._update_history(human_message=human_message, ai_message=ai_text)
                 except Exception as e:
                     if raise_errors:
                         raise e
@@ -214,7 +255,12 @@ class BaseLLM(abc.ABC):
 
             async def async_handler() -> Reply:
                 try:
-                    ask = await self._make_ask_async(input_context, current_messages, current_model)
+                    ask = await self._make_ask_async(
+                        input_context=input_context,
+                        human_message=human_message,
+                        messages=current_messages,
+                        model=current_model,
+                    )
                 except Exception as e:
                     if raise_errors:
                         raise e
@@ -222,12 +268,17 @@ class BaseLLM(abc.ABC):
                     return Reply(text=f"Error occurred during API call: {str(e)}")
                 else:
                     if use_history:
-                        self._update_history(human_prompt, ask.text)
+                        self._update_history(human_message=human_message, ai_message=ask.text)
                     return ask
 
             def sync_handler() -> Reply:
                 try:
-                    ask = self._make_ask(input_context, current_messages, current_model)
+                    ask = self._make_ask(
+                        input_context=input_context,
+                        human_message=human_message,
+                        messages=current_messages,
+                        model=current_model,
+                    )
                 except Exception as e:
                     if raise_errors:
                         raise e
@@ -235,22 +286,32 @@ class BaseLLM(abc.ABC):
                     return Reply(text=f"Error occurred during API call: {str(e)}")
                 else:
                     if use_history:
-                        self._update_history(human_prompt, ask.text)
+                        self._update_history(human_message=human_message, ai_message=ask.text)
                     return ask
 
             return async_handler() if is_async else sync_handler()
 
-    def invoke(self, input: Union[str, dict[str, str]], stream: bool = False) -> Reply:
+    def invoke(
+        self,
+        input: Union[str, dict[str, str]],
+        files: Optional[list[File]] = None,
+        stream: bool = False,
+    ) -> Reply:
         """langchain 호환 메서드: 동기적으로 LLM에 메시지를 전송하고 응답을 반환합니다."""
-        return self.ask(input, stream=stream)
+        return self.ask(input=input, files=files, stream=stream)
 
-    def stream(self, input: Union[str, dict[str, str]]) -> Generator[Reply, None, None]:
+    def stream(
+        self,
+        input: Union[str, dict[str, str]],
+        files: Optional[list[File]] = None,
+    ) -> Generator[Reply, None, None]:
         """langchain 호환 메서드: 동기적으로 LLM에 메시지를 전송하고 응답을 스트리밍합니다."""
-        return self.ask(input, stream=True)
+        return self.ask(input=input, files=files, stream=True)
 
     def ask(
         self,
         input: Union[str, dict[str, Any]],
+        files: Optional[list[File]] = None,
         model: Optional[LLMChatModel] = None,
         context: Optional[dict[str, Any]] = None,
         *,
@@ -259,9 +320,10 @@ class BaseLLM(abc.ABC):
         raise_errors: bool = False,
     ) -> Union[Reply, Generator[Reply, None, None]]:
         return self._ask_impl(
-            input,
-            model,
-            context,
+            input=input,
+            files=files,
+            model=model,
+            context=context,
             is_async=False,
             stream=stream,
             use_history=use_history,
@@ -271,6 +333,7 @@ class BaseLLM(abc.ABC):
     async def ask_async(
         self,
         input: Union[str, dict[str, Any]],
+        files: Optional[list[File]] = None,
         model: Optional[LLMChatModel] = None,
         context: Optional[dict[str, Any]] = None,
         *,
@@ -279,9 +342,10 @@ class BaseLLM(abc.ABC):
         use_history: bool = True,
     ) -> Union[Reply, AsyncGenerator[Reply, None]]:
         return_value = self._ask_impl(
-            input,
-            model,
-            context,
+            input=input,
+            files=files,
+            model=model,
+            context=context,
             is_async=True,
             stream=stream,
             use_history=use_history,

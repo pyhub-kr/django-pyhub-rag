@@ -1,10 +1,10 @@
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 from decimal import Decimal
 from typing import Any, Literal, TypeAlias, Union
 
 from anthropic.types import ModelParam as AnthropicChatModel
+from django.core.files import File
 from openai.types import ChatModel as OpenAIChatModel
-from pydantic import BaseModel
 from typing_extensions import Optional
 
 #
@@ -107,9 +107,20 @@ class GroundednessCheck:
         return self.is_grounded
 
 
-class Message(BaseModel):
+@dataclass
+class Message:
     role: Literal["system", "user", "assistant", "function"]
     content: str
+    files: Optional[list[File]] = None
+
+    def __iter__(self):
+        for key, value in self.to_dict().items():
+            yield key, value
+
+    def to_dict(self) -> dict:
+        d = asdict(self)
+        del d["files"]  # LLM API에서는 없는 속성이기에 제거
+        return d
 
 
 @dataclass

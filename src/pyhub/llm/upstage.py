@@ -1,5 +1,5 @@
 import logging
-from typing import Optional, Union
+from typing import Any, Optional, Union
 
 from django.core.checks import Error
 from django.template import Template
@@ -66,6 +66,22 @@ class UpstageLLM(OpenAIMixin, BaseLLM):
             )
 
         return errors
+
+    def _make_request_params(
+        self,
+        input_context: dict[str, Any],
+        human_message: Message,
+        messages: list[Message],
+        model: UpstageChatModel,
+        use_files: bool = False,
+    ) -> dict:
+        return super()._make_request_params(
+            input_context,
+            human_message,
+            messages,
+            model,  # noqa
+            use_files=False,
+        )
 
     def is_grounded(
         self,

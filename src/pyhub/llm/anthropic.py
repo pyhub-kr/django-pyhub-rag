@@ -1,9 +1,11 @@
+import re
 from typing import Any, AsyncGenerator, Generator, Optional, Union
 
 from anthropic import NOT_GIVEN as ANTHROPIC_NOT_GIVEN
 from anthropic import Anthropic as SyncAnthropic
 from anthropic import AsyncAnthropic
 from django.core.checks import Error
+from django.core.files import File
 from django.template import Template
 
 from pyhub.rag.settings import rag_settings
@@ -17,6 +19,7 @@ from .types import (
     Reply,
     Usage,
 )
+from .utils.files import FileType, encode_files
 
 
 class AnthropicLLM(BaseLLM):
@@ -56,56 +59,114 @@ class AnthropicLLM(BaseLLM):
 
         return errors
 
+    def _make_request_params(
+        self,
+        input_context: dict[str, Any],
+        human_message: Message,
+        messages: list[Message],
+        model: AnthropicChatModel,
+    ) -> dict:
+        message_history = [dict(message) for message in messages]
+
+        # https://docs.anthropic.com/en/docs/build-with-claude/vision
+        image_urls = encode_files(
+            human_message.files,
+            allowed_types=FileType.IMAGE,
+            convert_mode="base64",
+        )
+
+        image_blocks: list[dict] = []
+        if image_urls:
+            base64_url_pattern = r"^data:([^;]+);base64,(.+)"
+
+            for image_url in image_urls:
+                base64_url_match = re.match(base64_url_pattern, image_url)
+                if base64_url_match:
+                    mimetype = base64_url_match.group(1)
+                    b64_str = base64_url_match.group(2)
+                    image_blocks.append(
+                        {
+                            "type": "image",
+                            "source": {
+                                "type": "base64",
+                                "media_type": mimetype,
+                                "data": b64_str,
+                            },
+                        }
+                    )
+                else:
+                    image_blocks.append(
+                        {
+                            "type": "image",
+                            "source": {
+                                "type": "url",
+                                "url": image_url,
+                            },
+                        }
+                    )
+
+        message_history.append(
+            {
+                "role": human_message.role,
+                "content": [
+                    *image_blocks,
+                    {"type": "text", "text": human_message.content},
+                ],
+            }
+        )
+
+        return dict(
+            model=model,
+            system=self.get_system_prompt(input_context, default=ANTHROPIC_NOT_GIVEN),
+            messages=message_history,
+            temperature=self.temperature,
+            max_tokens=self.max_tokens,
+        )
+
     async def _make_ask_async(
         self,
         input_context: dict[str, Any],
+        human_message: Message,
         messages: list[Message],
         model: AnthropicChatModel,
     ) -> Reply:
         async_client = AsyncAnthropic(api_key=self.api_key)
-        response = await async_client.messages.create(
-            model=model,
-            system=self.get_system_prompt(input_context, default=ANTHROPIC_NOT_GIVEN),
-            messages=[dict(message) for message in messages],
-            temperature=self.temperature,
-            max_tokens=self.max_tokens,
+        request_params = self._make_request_params(
+            input_context=input_context, human_message=human_message, messages=messages, model=model
         )
+        response = await async_client.messages.create(**request_params)
         usage = Usage(input=response.usage.input_tokens, output=response.usage.output_tokens)
         return Reply(response.content[0].text, usage)
 
     def _make_ask(
         self,
         input_context: dict[str, Any],
+        human_message: Message,
         messages: list[Message],
         model: AnthropicChatModel,
     ) -> Reply:
         sync_client = SyncAnthropic(api_key=self.api_key)
-        response = sync_client.messages.create(
-            model=model,
-            system=self.get_system_prompt(input_context, default=ANTHROPIC_NOT_GIVEN),
-            messages=[dict(message) for message in messages],
-            temperature=self.temperature,
-            max_tokens=self.max_tokens,
+        request_params = self._make_request_params(
+            input_context=input_context, human_message=human_message, messages=messages, model=model
         )
+        response = sync_client.messages.create(**request_params)
         usage = Usage(input=response.usage.input_tokens, output=response.usage.output_tokens)
         return Reply(response.content[0].text, usage)
 
     def _make_ask_stream(
         self,
         input_context: dict[str, Any],
+        human_message: Message,
         messages: list[Message],
         model: AnthropicChatModel,
     ) -> Generator[Reply, None, None]:
 
         sync_client = SyncAnthropic(api_key=self.api_key)
-        response = sync_client.messages.create(
-            model=model,
-            system=self.get_system_prompt(input_context, default=ANTHROPIC_NOT_GIVEN),
-            messages=[dict(message) for message in messages],
-            temperature=self.temperature,
-            max_tokens=self.max_tokens,
-            stream=True,
+        request_params = self._make_request_params(
+            input_context=input_context, human_message=human_message, messages=messages, model=model
         )
+        request_params["stream"] = True
+        response = sync_client.messages.create(**request_params)
 
         input_tokens = 0
         output_tokens = 0
@@ -130,18 +191,19 @@ class AnthropicLLM(BaseLLM):
         yield Reply(text="", usage=Usage(input_tokens, output_tokens))
 
     async def _make_ask_stream_async(
-        self, input_context: dict[str, Any], messages: list[Message], model: AnthropicChatModel
+        self,
+        input_context: dict[str, Any],
+        human_message: Message,
+        messages: list[Message],
+        model: AnthropicChatModel,
     ) -> AsyncGenerator[Reply, None]:
 
         async_client = AsyncAnthropic(api_key=self.api_key)
-        response = await async_client.messages.create(
-            model=model,
-            system=self.get_system_prompt(input_context, default=ANTHROPIC_NOT_GIVEN),
-            messages=[dict(message) for message in messages],
-            temperature=self.temperature,
-            max_tokens=self.max_tokens,
-            stream=True,
+        request_params = self._make_request_params(
+            input_context=input_context, human_message=human_message, messages=messages, model=model
         )
+        request_params["stream"] = True
+        response = await async_client.messages.create(**request_params)
 
         input_tokens = 0
         output_tokens = 0
@@ -168,6 +230,7 @@ class AnthropicLLM(BaseLLM):
     def ask(
         self,
         input: Union[str, dict[str, Any]],
+        files: Optional[list[File]] = None,
         model: Optional[AnthropicChatModel] = None,
         context: Optional[dict[str, Any]] = None,
         *,
@@ -176,7 +239,8 @@ class AnthropicLLM(BaseLLM):
         raise_errors: bool = False,
     ) -> Reply:
         return super().ask(
-            input,
+            input=input,
+            files=files,
             model=model,
             context=context,
             stream=stream,
@@ -187,6 +251,7 @@ class AnthropicLLM(BaseLLM):
     async def ask_async(
         self,
         input: Union[str, dict[str, Any]],
+        files: Optional[list[File]] = None,
         model: Optional[AnthropicChatModel] = None,
         context: Optional[dict[str, Any]] = None,
         *,
@@ -195,7 +260,8 @@ class AnthropicLLM(BaseLLM):
         use_history: bool = True,
     ) -> Reply:
         return await super().ask_async(
-            input,
+            input=input,
+            files=files,
             model=model,
             context=context,
             stream=stream,

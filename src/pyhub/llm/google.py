@@ -1,6 +1,10 @@
+import logging
+import re
+from base64 import b64decode
 from typing import Any, AsyncGenerator, Generator, Optional, Union, cast
 
 from django.core.checks import Error
+from django.core.files import File
 from django.template import Template
 from google import genai
 from google.genai.types import Content, GenerateContentConfig, Part
@@ -17,6 +21,9 @@ from .types import (
     Reply,
     Usage,
 )
+from .utils.files import FileType, encode_files
+
+logger = logging.getLogger(__name__)
 
 
 class GoogleLLM(BaseLLM):
@@ -62,14 +69,13 @@ class GoogleLLM(BaseLLM):
 
         return errors
 
-    def _make_ask(
+    def _make_request_params(
         self,
         input_context: dict[str, Any],
+        human_message: Message,
         messages: list[Message],
         model: GoogleChatModel,
-    ) -> Reply:
-        client = genai.Client(api_key=self.api_key)
-
+    ) -> dict:
         contents: list[Content] = [
             Content(
                 role="user" if message.role == "user" else "model",
@@ -78,7 +84,41 @@ class GoogleLLM(BaseLLM):
             for message in messages
         ]
 
-        response = client.models.generate_content(
+        # https://docs.anthropic.com/en/docs/build-with-claude/vision
+        image_urls = encode_files(
+            human_message.files,
+            allowed_types=FileType.IMAGE,
+            convert_mode="base64",
+        )
+
+        image_parts: list[Part] = []
+        if image_urls:
+            base64_url_pattern = r"^data:([^;]+);base64,(.+)"
+
+            for image_url in image_urls:
+                base64_url_match = re.match(base64_url_pattern, image_url)
+                if base64_url_match:
+                    mimetype = base64_url_match.group(1)
+                    b64_str = base64_url_match.group(2)
+                    image_data = b64decode(b64_str)
+                    image_part = Part.from_bytes(data=image_data, mime_type=mimetype)
+                    image_parts.append(image_part)
+                else:
+                    raise ValueError(
+                        f"Invalid image data: {image_url}. Google Gemini API only supports base64 encoded images."
+                    )
+
+        contents.append(
+            Content(
+                role="user" if human_message.role == "user" else "model",
+                parts=[
+                    *image_parts,
+                    Part(text=human_message.content),
+                ],
+            )
+        )
+
+        return dict(
             model=model,
             contents=contents,
             config=GenerateContentConfig(
@@ -87,6 +127,18 @@ class GoogleLLM(BaseLLM):
                 temperature=self.temperature,
             ),
         )
+
+    def _make_ask(
+        self,
+        input_context: dict[str, Any],
+        human_message: Message,
+        messages: list[Message],
+        model: GoogleChatModel,
+    ) -> Reply:
+        client = genai.Client(api_key=self.api_key)
+
+        request_params = self._make_request_params(input_context, human_message, messages, model)
+        response = client.models.generate_content(**request_params)
         usage = Usage(
             input=response.usage_metadata.prompt_token_count or 0,
             output=response.usage_metadata.candidates_token_count or 0,
@@ -96,28 +148,14 @@ class GoogleLLM(BaseLLM):
     async def _make_ask_async(
         self,
         input_context: dict[str, Any],
+        human_message: Message,
         messages: list[Message],
         model: GoogleChatModel,
     ) -> Reply:
         client = genai.Client(api_key=self.api_key)
 
-        contents: list[Content] = [
-            Content(
-                role="user" if message.role == "user" else "model",
-                parts=[Part(text=message.content)],
-            )
-            for message in messages
-        ]
-
-        response = await client.aio.models.generate_content(
-            model=model,
-            contents=contents,
-            config=GenerateContentConfig(
-                system_instruction=self.get_system_prompt(input_context),
-                max_output_tokens=self.max_tokens,
-                temperature=self.temperature,
-            ),
-        )
+        request_params = self._make_request_params(input_context, human_message, messages, model)
+        response = await client.aio.models.generate_content(**request_params)
         usage = Usage(
             input=response.usage_metadata.prompt_token_count or 0,
             output=response.usage_metadata.candidates_token_count or 0,
@@ -127,28 +165,14 @@ class GoogleLLM(BaseLLM):
     def _make_ask_stream(
         self,
         input_context: dict[str, Any],
+        human_message: Message,
         messages: list[Message],
         model: GoogleChatModel,
     ) -> Generator[Reply, None, None]:
         client = genai.Client(api_key=self.api_key)
 
-        contents: list[Content] = [
-            Content(
-                role="user" if message.role == "user" else "model",
-                parts=[Part(text=message.content)],
-            )
-            for message in messages
-        ]
-
-        response = client.models.generate_content_stream(
-            model=model,
-            contents=contents,
-            config=GenerateContentConfig(
-                system_instruction=self.get_system_prompt(input_context),
-                max_output_tokens=self.max_tokens,
-                temperature=self.temperature,
-            ),
-        )
+        request_params = self._make_request_params(input_context, human_message, messages, model)
+        response = client.models.generate_content_stream(**request_params)
 
         input_tokens = 0
         output_tokens = 0
@@ -162,27 +186,16 @@ class GoogleLLM(BaseLLM):
         yield Reply(text="", usage=usage)
 
     async def _make_ask_stream_async(
-        self, input_context: dict[str, Any], messages: list[Message], model: GoogleChatModel
+        self,
+        input_context: dict[str, Any],
+        human_message: Message,
+        messages: list[Message],
+        model: GoogleChatModel,
     ) -> AsyncGenerator[Reply, None]:
         client = genai.Client(api_key=self.api_key)
 
-        contents: list[Content] = [
-            Content(
-                role="user" if message.role == "user" else "model",
-                parts=[Part(text=message.content)],
-            )
-            for message in messages
-        ]
-
-        response = await client.aio.models.generate_content_stream(
-            model=model,
-            contents=contents,
-            config=GenerateContentConfig(
-                system_instruction=self.get_system_prompt(input_context),
-                max_output_tokens=self.max_tokens,
-                temperature=self.temperature,
-            ),
-        )
+        request_params = self._make_request_params(input_context, human_message, messages, model)
+        response = await client.aio.models.generate_content_stream(**request_params)
 
         input_tokens = 0
         output_tokens = 0
@@ -198,6 +211,7 @@ class GoogleLLM(BaseLLM):
     def ask(
         self,
         input: Union[str, dict[str, Any]],
+        files: Optional[list[File]] = None,
         model: Optional[GoogleChatModel] = None,
         context: Optional[dict[str, Any]] = None,
         *,
@@ -206,7 +220,8 @@ class GoogleLLM(BaseLLM):
         raise_errors: bool = False,
     ) -> Reply:
         return super().ask(
-            input,
+            input=input,
+            files=files,
             model=model,
             context=context,
             stream=stream,
@@ -217,6 +232,7 @@ class GoogleLLM(BaseLLM):
     async def ask_async(
         self,
         input: Union[str, dict[str, Any]],
+        files: Optional[list[File]] = None,
         model: Optional[GoogleChatModel] = None,
         context: Optional[dict[str, Any]] = None,
         *,
@@ -225,7 +241,8 @@ class GoogleLLM(BaseLLM):
         raise_errors: bool = False,
     ) -> Reply:
         return await super().ask_async(
-            input,
+            input=input,
+            files=files,
             model=model,
             context=context,
             stream=stream,

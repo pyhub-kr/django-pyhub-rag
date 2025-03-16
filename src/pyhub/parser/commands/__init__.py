@@ -1,6 +1,6 @@
 import logging
 import os
-from importlib.metadata import version, PackageNotFoundError
+from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 from shutil import rmtree
 from typing import List, Optional, cast
@@ -149,7 +149,7 @@ def upstage(
         # Validate Upstage API key format
         if not upstage_api_key.startswith("up_"):
             console.print(
-                f"[bold red]오류: Upstage API Key 형식이 올바르지 않습니다. Upstage API Key는 'up_'로 시작합니다.[/bold red]"
+                "[bold red]오류: Upstage API Key 형식이 올바르지 않습니다. Upstage API Key는 'up_'로 시작합니다.[/bold red]"
             )
             raise typer.Exit(code=1)
 

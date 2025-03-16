@@ -1,5 +1,5 @@
 import logging
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 from enum import Enum
 from re import search, sub
 from typing import Literal, Union
@@ -81,7 +81,7 @@ class Coordinate:
     y: float
 
     def to_dict(self) -> dict:
-        return self.__dict__
+        return asdict(self)
 
 
 @dataclass
@@ -91,7 +91,7 @@ class ElementContent:
     text: str
 
     def to_dict(self) -> dict:
-        return self.__dict__
+        return asdict(self)
 
     def __add__(self, other: Union["ElementContent", str]) -> "ElementContent":
         if isinstance(other, str):
@@ -191,7 +191,7 @@ class Element:
         )
 
     def to_dict(self) -> dict:
-        return self.__dict__
+        return asdict(self)
 
     def to_document(self, document_format: DocumentFormatType = "markdown", **kwargs) -> Document:
         page_content = getattr(

@@ -1,3 +1,4 @@
+import re
 from typing import Any, AsyncGenerator, Generator, Optional, Union, cast
 
 from django.core.checks import Error
@@ -15,6 +16,7 @@ from .types import (
     OllamaEmbeddingModel,
     Reply,
 )
+from .utils.files import FileType, encode_files
 
 
 class OllamaLLM(BaseLLM):
@@ -102,20 +104,54 @@ class OllamaLLM(BaseLLM):
 
         return errors
 
-    def _prepare_ollama_request(
+    def _make_request_params(
         self,
         input_context: dict[str, Any],
+        human_message: Message,
         messages: list[Message],
         model: OllamaChatModel,
     ) -> dict:
         """Ollama API 요청에 필요한 파라미터를 준비하고 시스템 프롬프트를 처리합니다."""
-        message_history = messages.copy()
+        message_history = [dict(message) for message in messages]
         system_prompt = self.get_system_prompt(input_context)
 
         if system_prompt:
             # history에는 system prompt는 누적되지 않고, 매 요청 시마다 적용합니다.
             system_message = Message(role="system", content=system_prompt)
             message_history.insert(0, system_message)
+
+        # https://github.com/ollama/ollama/blob/main/docs/api.md#generate-a-completion
+        image_urls = encode_files(
+            human_message.files,
+            allowed_types=FileType.IMAGE,
+            convert_mode="base64",
+        )
+
+        if image_urls:
+            base64_url_pattern = r"^data:([^;]+);base64,(.+)"
+
+            b64_str_list: list[str] = []
+            for image_url in image_urls:
+                base64_url_match = re.match(base64_url_pattern, image_url)
+                if base64_url_match:
+                    # mimetype = base64_url_match.group(1)
+                    b64_str = base64_url_match.group(2)
+                    b64_str_list.append(b64_str)
+
+            message_history.append(
+                {
+                    "role": human_message.role,
+                    "content": human_message.content,
+                    "images": b64_str_list,
+                }
+            )
+        else:
+            message_history.append(
+                {
+                    "role": human_message.role,
+                    "content": human_message.content,
+                }
+            )
 
         return {
             "model": model,
@@ -129,6 +165,7 @@ class OllamaLLM(BaseLLM):
     def _make_ask(
         self,
         input_context: dict[str, Any],
+        human_message: Message,
         messages: list[Message],
         model: OllamaChatModel,
     ) -> Reply:
@@ -137,7 +174,9 @@ class OllamaLLM(BaseLLM):
         """
 
         sync_client = SyncClient(host=self.api_base)
-        request_params = self._prepare_ollama_request(input_context, messages, model)
+        request_params = self._make_request_params(
+            input_context=input_context, human_message=human_message, messages=messages, model=model
+        )
         response = sync_client.chat(**request_params)
         return Reply(
             text=response.message.content,
@@ -146,6 +185,7 @@ class OllamaLLM(BaseLLM):
     async def _make_ask_async(
         self,
         input_context: dict[str, Any],
+        human_message: Message,
         messages: list[Message],
         model: OllamaChatModel,
     ) -> Reply:
@@ -154,7 +194,9 @@ class OllamaLLM(BaseLLM):
         """
 
         async_client = AsyncClient(host=self.api_base)
-        request_params = self._prepare_ollama_request(input_context, messages, model)
+        request_params = self._make_request_params(
+            input_context=input_context, human_message=human_message, messages=messages, model=model
+        )
         response = await async_client.chat(**request_params)
         return Reply(
             text=response.message.content,
@@ -163,6 +205,7 @@ class OllamaLLM(BaseLLM):
     def _make_ask_stream(
         self,
         input_context: dict[str, Any],
+        human_message: Message,
         messages: list[Message],
         model: OllamaChatModel,
     ) -> Generator[Reply, None, None]:
@@ -171,7 +214,9 @@ class OllamaLLM(BaseLLM):
         """
 
         sync_client = SyncClient(host=self.api_base)
-        request_params = self._prepare_ollama_request(input_context, messages, model)
+        request_params = self._make_request_params(
+            input_context=input_context, human_message=human_message, messages=messages, model=model
+        )
         request_params["stream"] = True
         response = sync_client.chat(**request_params)
         for chunk in response:
@@ -180,6 +225,7 @@ class OllamaLLM(BaseLLM):
     async def _make_ask_stream_async(
         self,
         input_context: dict[str, Any],
+        human_message: Message,
         messages: list[Message],
         model: OllamaChatModel,
     ) -> AsyncGenerator[Reply, None]:
@@ -187,7 +233,9 @@ class OllamaLLM(BaseLLM):
         Ollama API를 사용하여 비동기적으로 스트리밍 응답을 생성합니다.
         """
         async_client = AsyncClient(host=self.api_base)
-        request_params = self._prepare_ollama_request(input_context, messages, model)
+        request_params = self._make_request_params(
+            input_context=input_context, human_message=human_message, messages=messages, model=model
+        )
         request_params["stream"] = True
         response = await async_client.chat(**request_params)
         async for chunk in response:

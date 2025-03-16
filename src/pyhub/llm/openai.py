@@ -1,6 +1,8 @@
+import logging
 from typing import Any, AsyncGenerator, Generator, Optional, Union, cast
 
 from django.core.checks import Error
+from django.core.files import File
 from django.template import Template
 from openai import AsyncOpenAI
 from openai import OpenAI as SyncOpenAI
@@ -10,31 +12,73 @@ from .base import BaseLLM
 from .types import (
     Embed,
     EmbedList,
-    LLMChatModel,
     Message,
     OpenAIChatModel,
     OpenAIEmbeddingModel,
     Reply,
     Usage,
 )
+from .utils.files import FileType, encode_files
+
+logger = logging.getLogger(__name__)
 
 
 class OpenAIMixin:
 
-    def _prepare_openai_request(
+    def _make_request_params(
         self,
         input_context: dict[str, Any],
+        human_message: Message,
         messages: list[Message],
-        model: LLMChatModel,
+        model: OpenAIChatModel,
+        use_files: bool = True,
     ) -> dict:
         """OpenAI API 요청에 필요한 파라미터를 준비하고 시스템 프롬프트를 처리합니다."""
-        message_history = messages.copy()
+        message_history = [dict(message) for message in messages]
         system_prompt = self.get_system_prompt(input_context)
 
         if system_prompt:
             # history에는 system prompt는 누적되지 않고, 매 요청 시마다 적용합니다.
-            system_message = Message(role="system", content=system_prompt)
+            system_message = {"role": "system", "content": system_prompt}
             message_history.insert(0, system_message)
+
+        image_blocks: list[dict] = []
+
+        if use_files:
+            # https://platform.openai.com/docs/guides/images?api-mode=chat
+            #  - up to 20MB per image
+            #  - low resolution : 512px x 512px
+            #  - high resolution : 768px (short side) x 2000px (long side)
+            image_urls = encode_files(
+                human_message.files,
+                allowed_types=FileType.IMAGE,
+                convert_mode="base64",
+            )
+
+            if image_urls:
+                for image_url in image_urls:
+                    image_blocks.append(
+                        {
+                            "type": "image_url",
+                            "image_url": {
+                                "url": image_url,
+                                # "detail": "auto",  # low, high, auto (default)
+                            },
+                        }
+                    )
+        else:
+            if human_message.files:
+                logger.warning("Files are ignored because use_files flag is set to False.")
+
+        message_history.append(
+            {
+                "role": human_message.role,
+                "content": [
+                    *image_blocks,
+                    {"type": "text", "text": human_message.content},
+                ],
+            }
+        )
 
         return {
             "model": model,
@@ -46,11 +90,17 @@ class OpenAIMixin:
     def _make_ask(
         self,
         input_context: dict[str, Any],
+        human_message: Message,
         messages: list[Message],
-        model: LLMChatModel,
+        model: OpenAIChatModel,
     ) -> Reply:
         sync_client = SyncOpenAI(api_key=self.api_key, base_url=self.base_url)
-        request_params = self._prepare_openai_request(input_context, messages, model)
+        request_params = self._make_request_params(
+            input_context=input_context,
+            human_message=human_message,
+            messages=messages,
+            model=model,
+        )
         response = sync_client.chat.completions.create(**request_params)
         return Reply(
             text=response.choices[0].message.content,
@@ -63,11 +113,17 @@ class OpenAIMixin:
     async def _make_ask_async(
         self,
         input_context: dict[str, Any],
+        human_message: Message,
         messages: list[Message],
-        model: LLMChatModel,
+        model: OpenAIChatModel,
     ) -> Reply:
         async_client = AsyncOpenAI(api_key=self.api_key, base_url=self.base_url)
-        request_params = self._prepare_openai_request(input_context, messages, model)
+        request_params = self._make_request_params(
+            input_context=input_context,
+            human_message=human_message,
+            messages=messages,
+            model=model,
+        )
         response = await async_client.chat.completions.create(**request_params)
         return Reply(
             text=response.choices[0].message.content,
@@ -80,11 +136,17 @@ class OpenAIMixin:
     def _make_ask_stream(
         self,
         input_context: dict[str, Any],
+        human_message: Message,
         messages: list[Message],
-        model: LLMChatModel,
+        model: OpenAIChatModel,
     ) -> Generator[Reply, None, None]:
         sync_client = SyncOpenAI(api_key=self.api_key, base_url=self.base_url)
-        request_params = self._prepare_openai_request(input_context, messages, model)
+        request_params = self._make_request_params(
+            input_context=input_context,
+            human_message=human_message,
+            messages=messages,
+            model=model,
+        )
         request_params["stream"] = True
 
         response_stream = sync_client.chat.completions.create(**request_params)
@@ -105,11 +167,17 @@ class OpenAIMixin:
     async def _make_ask_stream_async(
         self,
         input_context: dict[str, Any],
+        human_message: Message,
         messages: list[Message],
-        model: LLMChatModel,
+        model: OpenAIChatModel,
     ) -> AsyncGenerator[Reply, None]:
         async_client = AsyncOpenAI(api_key=self.api_key, base_url=self.base_url)
-        request_params = self._prepare_openai_request(input_context, messages, model)
+        request_params = self._make_request_params(
+            input_context=input_context,
+            human_message=human_message,
+            messages=messages,
+            model=model,
+        )
         request_params["stream"] = True
 
         response_stream = await async_client.chat.completions.create(**request_params)
@@ -130,6 +198,7 @@ class OpenAIMixin:
     def ask(
         self,
         input: Union[str, dict[str, Any]],
+        files: Optional[list[File]] = None,
         model: Optional[OpenAIChatModel] = None,
         context: Optional[dict[str, Any]] = None,
         *,
@@ -138,7 +207,8 @@ class OpenAIMixin:
         raise_errors: bool = False,
     ) -> Reply:
         return super().ask(
-            input,
+            input=input,
+            files=files,
             model=model,
             context=context,
             stream=stream,
@@ -149,6 +219,7 @@ class OpenAIMixin:
     async def ask_async(
         self,
         input: Union[str, dict[str, Any]],
+        files: Optional[list[File]] = None,
         model: Optional[OpenAIChatModel] = None,
         context: Optional[dict[str, Any]] = None,
         *,
@@ -157,7 +228,8 @@ class OpenAIMixin:
         raise_errors: bool = False,
     ) -> Reply:
         return await super().ask_async(
-            input,
+            input=input,
+            files=files,
             model=model,
             context=context,
             stream=stream,
