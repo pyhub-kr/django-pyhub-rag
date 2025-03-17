@@ -11,7 +11,7 @@ from django.core.files import File
 from rich.console import Console
 from rich.table import Table
 
-from pyhub.logger import LogCapture
+from pyhub.init import init_django
 from pyhub.parser.json import json_dumps
 from pyhub.parser.upstage import UpstageDocumentParseParser
 from pyhub.parser.upstage.settings import (
@@ -138,6 +138,12 @@ def upstage(
         None, help="Upstage API Key. 지정하지 않으면 UPSTAGE_API_KEY 환경 변수 사용"
     ),
 ):
+    if is_verbose:
+        log_level = logging.DEBUG
+    else:
+        log_level = logging.INFO
+    init_django(debug=True, log_level=log_level)
+
     if upstage_api_key is None:
         upstage_api_key = os.environ.get("UPSTAGE_API_KEY")
 
@@ -249,76 +255,68 @@ def upstage(
         verbose=is_verbose,
     )
 
-    if is_verbose:
-        log_level = logging.DEBUG
-    else:
-        log_level = logging.INFO
+    try:
+        if is_cache_clear and CACHE_DIR_PATH.exists():
+            if is_verbose:
+                console.print(f"[yellow]캐시 폴더 삭제 : {CACHE_DIR_PATH}[/yellow]")
+            rmtree(CACHE_DIR_PATH, ignore_errors=True)
 
-    with LogCapture(console=console, level=log_level):
-        try:
-            if is_cache_clear and CACHE_DIR_PATH.exists():
-                if is_verbose:
-                    console.print(f"[yellow]캐시 폴더 삭제 : {CACHE_DIR_PATH}[/yellow]")
-                rmtree(CACHE_DIR_PATH, ignore_errors=True)
+        CACHE_DIR_PATH.mkdir(exist_ok=True)
+        manage_cache_directory(CACHE_DIR_PATH, MAX_CACHE_SIZE_MB)
 
-            CACHE_DIR_PATH.mkdir(exist_ok=True)
-            manage_cache_directory(CACHE_DIR_PATH, MAX_CACHE_SIZE_MB)
+        with input_path.open("rb") as file:
+            django_file = File(file)
+            parser.is_valid(django_file, raise_exception=True)
 
-            with input_path.open("rb") as file:
-                django_file = File(file)
-                parser.is_valid(django_file, raise_exception=True)
-
-                with jsonl_output_path.open("wt", encoding="utf-8") as f:
-                    document_count = 0
-                    for document in parser.lazy_parse(
-                        django_file,
-                        batch_page_size=batch_page_size,
-                        ignore_validation=True,
-                    ):
-                        f.write(json_dumps(document) + "\n")
-
-                        if unified_document_paths:
-                            for format_enum, output_path in unified_document_paths:
-                                variant_page_content = document.variants.get(format_enum.value)
-
-                                with output_path.open("at", encoding="utf-8") as uf:
-                                    if document_count > 0:
-                                        uf.write("\n\n")
-                                    uf.write(variant_page_content)
-
-                            for name, _file in document.files.items():
-                                output_path = output_dir_path / name
-                                output_path.parent.mkdir(parents=True, exist_ok=True)
-                                output_path.open("wb").write(_file.read())
-
-                        document_count += 1
-
-                    console.print(
-                        f"[green]성공:[/green] {jsonl_output_path} 경로에 {document_count}개의 Document를 jsonl 포맷으로 생성했습니다."
-                    )
+            with jsonl_output_path.open("wt", encoding="utf-8") as f:
+                document_count = 0
+                for document in parser.lazy_parse(
+                    django_file,
+                    batch_page_size=batch_page_size,
+                    ignore_validation=True,
+                ):
+                    f.write(json_dumps(document) + "\n")
 
                     if unified_document_paths:
-                        for _, output_path in unified_document_paths:
-                            console.print(f"[green]성공:[/green] {output_path} 경로에 통합 문서를 생성했습니다.")
-        except FileNotFoundError:
-            console.print(f"[bold red]오류:[/bold red] 파일을 찾을 수 없습니다: {input_path}")
-            raise typer.Exit(code=1)
-        except PermissionError:
-            console.print(f"[bold red]오류:[/bold red] 파일 접근 권한이 거부되었습니다: {input_path}")
-            raise typer.Exit(code=1)
-        except ValidationError as e:
-            console.print("[bold red]유효성 검사 오류:[/bold red] 파일이 필요한 제약 조건을 충족하지 않습니다")
-            console.print(f"[red]세부 정보: {str(e)}[/red]")
-            raise typer.Exit(code=1)
-        except Exception as e:
-            console.print(f"[bold red]오류:[/bold red] 파일을 열거나 처리하는 데 실패했습니다: {input_path}")
-            console.print(f"[red]세부 정보: {str(e)}[/red]")
+                        for format_enum, output_path in unified_document_paths:
+                            variant_page_content = document.variants.get(format_enum.value)
 
-            import traceback
+                            with output_path.open("at", encoding="utf-8") as uf:
+                                if document_count > 0:
+                                    uf.write("\n\n")
+                                uf.write(variant_page_content)
 
-            print(traceback.format_exc())
+                        for name, _file in document.files.items():
+                            output_path = output_dir_path / name
+                            output_path.parent.mkdir(parents=True, exist_ok=True)
+                            output_path.open("wb").write(_file.read())
 
-            raise typer.Exit(code=1)
+                    document_count += 1
+
+                console.print(
+                    f"[green]성공:[/green] {jsonl_output_path} 경로에 {document_count}개의 Document를 jsonl 포맷으로 생성했습니다."
+                )
+
+                if unified_document_paths:
+                    for _, output_path in unified_document_paths:
+                        console.print(f"[green]성공:[/green] {output_path} 경로에 통합 문서를 생성했습니다.")
+    except FileNotFoundError:
+        console.print(f"[bold red]오류:[/bold red] 파일을 찾을 수 없습니다: {input_path}")
+        raise typer.Exit(code=1)
+    except PermissionError:
+        console.print(f"[bold red]오류:[/bold red] 파일 접근 권한이 거부되었습니다: {input_path}")
+        raise typer.Exit(code=1)
+    except ValidationError as e:
+        console.print("[bold red]유효성 검사 오류:[/bold red] 파일이 필요한 제약 조건을 충족하지 않습니다")
+        console.print(f"[red]세부 정보: {str(e)}[/red]")
+        raise typer.Exit(code=1)
+    except Exception as e:
+        console.print(f"[bold red]오류:[/bold red] 파일을 열거나 처리하는 데 실패했습니다: {input_path}")
+        console.print(f"[red]세부 정보: {str(e)}[/red]")
+
+        console.print_exception()
+
+        raise typer.Exit(code=1)
 
 
 def validate_categories(categories_str: str) -> list[str]:
