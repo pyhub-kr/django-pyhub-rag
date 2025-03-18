@@ -2,12 +2,13 @@ import logging
 import sqlite3
 import sys
 from pathlib import Path
+from typing import Optional
 
 import typer
 from rich.console import Console
 
+from pyhub import init
 from pyhub.llm.types import EmbeddingDimensionsEnum, LLMEmbeddingModelEnum
-from pyhub.logger import LogCapture
 from pyhub.rag.db.sqlite_vec import (
     DistanceMetric,
     SQLiteVecError,
@@ -80,7 +81,12 @@ def command_create_table(
         EmbeddingDimensionsEnum.D_1536, help="벡터 테이블의 임베딩 차원"
     ),
     distance_metric: DistanceMetric = typer.Option(DistanceMetric.COSINE, help="유사도 검색을 위한 거리 메트릭"),
-    verbose: bool = typer.Option(False, help="추가 디버그 정보 출력"),
+    env_path: Optional[Path] = typer.Option(
+        Path.home() / ".pyhub.env",
+        "--env-file",
+        help="환경 변수 파일(.env) 경로 (디폴트: ~/.pyhub.env)",
+    ),
+    is_verbose: bool = typer.Option(False, "--verbose", help="추가 디버그 정보 출력"),
 ):
     """
     SQLite 데이터베이스에 sqlite-vec 확장을 사용하여 벡터 테이블을 생성합니다.
@@ -90,24 +96,24 @@ def command_create_table(
         db_path = db_path.with_suffix(".sqlite3")
         console.print(f"[yellow]파일 확장자가 제공되지 않았습니다. '{db_path}'를 사용합니다.[/yellow]")
 
-    if verbose:
+    if is_verbose:
         log_level = logging.DEBUG
     else:
         log_level = logging.INFO
+    init(debug=True, log_level=log_level, env_path=env_path)
 
-    with LogCapture(console=console, level=log_level):
-        try:
-            create_virtual_table(
-                db_path=db_path,
-                table_name=table_name,
-                dimensions=dimensions,
-                distance_metric=distance_metric,
-            )
-        except SQLiteVecError as e:
-            console.print(f"[red]{e}")
-            raise typer.Exit(code=1)
-        else:
-            console.print(f"[bold green]'{table_name}' 가상 테이블을 {db_path}에 성공적으로 생성했습니다.[/bold green]")
+    try:
+        create_virtual_table(
+            db_path=db_path,
+            table_name=table_name,
+            dimensions=dimensions,
+            distance_metric=distance_metric,
+        )
+    except SQLiteVecError as e:
+        console.print(f"[red]{e}")
+        raise typer.Exit(code=1)
+    else:
+        console.print(f"[bold green]'{table_name}' 가상 테이블을 {db_path}에 성공적으로 생성했습니다.[/bold green]")
 
 
 @app.command(name="import-jsonl")
@@ -116,28 +122,33 @@ def command_import_jsonl(
     db_path: Path = typer.Option(Path("db.sqlite3"), "--db-path", "-d", help="SQLite DB 경로"),
     table_name: str = typer.Option(None, "--table", "-t", help="테이블 이름 (선택사항, 미지정시 자동 감지)"),
     clear: bool = typer.Option(False, "--clear", "-c", help="로딩 전 테이블의 기존 데이터 삭제"),
-    verbose: bool = typer.Option(False, help="추가 디버그 정보 출력"),
+    env_path: Optional[Path] = typer.Option(
+        Path.home() / ".pyhub.env",
+        "--env-file",
+        help="환경 변수 파일(.env) 경로 (디폴트: ~/.pyhub.env)",
+    ),
+    is_verbose: bool = typer.Option(False, "--verbose", help="추가 디버그 정보 출력"),
 ):
     """
     JSONL 파일의 벡터 데이터를 SQLite 데이터베이스 테이블로 로드합니다.
     """
 
-    if verbose:
+    if is_verbose:
         log_level = logging.DEBUG
     else:
         log_level = logging.INFO
+    init(debug=True, log_level=log_level, env_path=env_path)
 
-    with LogCapture(console=console, level=log_level):
-        try:
-            import_jsonl(
-                db_path=db_path,
-                table_name=table_name,
-                jsonl_path=jsonl_path,
-                clear=clear,
-            )
-        except SQLiteVecError as e:
-            console.print(f"[red]{e}[/red]")
-            raise typer.Exit(code=1)
+    try:
+        import_jsonl(
+            db_path=db_path,
+            table_name=table_name,
+            jsonl_path=jsonl_path,
+            clear=clear,
+        )
+    except SQLiteVecError as e:
+        console.print(f"[red]{e}[/red]")
+        raise typer.Exit(code=1)
 
 
 @app.command(name="similarity-search")
@@ -150,33 +161,38 @@ def command_similarity_search(
     ),
     limit: int = typer.Option(4, help="반환할 최대 결과 수"),
     no_metadata: bool = typer.Option(False, help="결과에서 메타데이터 숨김"),
-    verbose: bool = typer.Option(False, help="추가 디버그 정보 출력"),
+    env_path: Optional[Path] = typer.Option(
+        Path.home() / ".pyhub.env",
+        "--env-file",
+        help="환경 변수 파일(.env) 경로 (디폴트: ~/.pyhub.env)",
+    ),
+    is_verbose: bool = typer.Option(False, "--verbose", help="추가 디버그 정보 출력"),
 ):
     """
     SQLite 벡터 데이터베이스에서 의미적 유사도 검색을 수행합니다.
     """
 
-    if verbose:
+    if is_verbose:
         log_level = logging.INFO
     else:
         log_level = logging.WARNING
+    init(debug=True, log_level=log_level, env_path=env_path)
 
-    with LogCapture(console=console, level=log_level):
-        try:
-            doc_list = similarity_search(
-                db_path=db_path,
-                table_name=table_name,
-                query=query,
-                embedding_model=embedding_model,
-                limit=limit,
-            )
+    try:
+        doc_list = similarity_search(
+            db_path=db_path,
+            table_name=table_name,
+            query=query,
+            embedding_model=embedding_model,
+            limit=limit,
+        )
 
-            for i, doc in enumerate(doc_list):
-                if not no_metadata:
-                    console.print(f"metadata: {doc.metadata}\n")
-                console.print(doc.page_content.strip())
-                if i < len(doc_list) - 1:
-                    console.print("\n----\n")
-        except SQLiteVecError as e:
-            console.print(f"[red]{e}[/red]")
-            raise typer.Exit(code=1)
+        for i, doc in enumerate(doc_list):
+            if not no_metadata:
+                console.print(f"metadata: {doc.metadata}\n")
+            console.print(doc.page_content.strip())
+            if i < len(doc_list) - 1:
+                console.print("\n----\n")
+    except SQLiteVecError as e:
+        console.print(f"[red]{e}[/red]")
+        raise typer.Exit(code=1)
