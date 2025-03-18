@@ -16,8 +16,8 @@ from .base import BaseLLM
 from .types import (
     Embed,
     EmbedList,
-    GoogleChatModel,
-    GoogleEmbeddingModel,
+    GoogleChatModelType,
+    GoogleEmbeddingModelType,
     Message,
     Reply,
     Usage,
@@ -34,8 +34,8 @@ class GoogleLLM(BaseLLM):
 
     def __init__(
         self,
-        model: GoogleChatModel = "gemini-2.0-flash",
-        embedding_model: GoogleEmbeddingModel = "text-embedding-004",
+        model: GoogleChatModelType = "gemini-2.0-flash",
+        embedding_model: GoogleEmbeddingModelType = "text-embedding-004",
         temperature: float = 0.2,
         max_tokens: int = 1000,
         system_prompt: Optional[Union[str, Template]] = None,
@@ -75,7 +75,7 @@ class GoogleLLM(BaseLLM):
         input_context: dict[str, Any],
         human_message: Message,
         messages: list[Message],
-        model: GoogleChatModel,
+        model: GoogleChatModelType,
     ) -> dict:
         contents: list[Content] = [
             Content(
@@ -138,7 +138,7 @@ class GoogleLLM(BaseLLM):
         input_context: dict[str, Any],
         human_message: Message,
         messages: list[Message],
-        model: GoogleChatModel,
+        model: GoogleChatModelType,
     ) -> Reply:
         client = genai.Client(api_key=self.api_key)
 
@@ -155,7 +155,7 @@ class GoogleLLM(BaseLLM):
         input_context: dict[str, Any],
         human_message: Message,
         messages: list[Message],
-        model: GoogleChatModel,
+        model: GoogleChatModelType,
     ) -> Reply:
         client = genai.Client(api_key=self.api_key)
 
@@ -172,7 +172,7 @@ class GoogleLLM(BaseLLM):
         input_context: dict[str, Any],
         human_message: Message,
         messages: list[Message],
-        model: GoogleChatModel,
+        model: GoogleChatModelType,
     ) -> Generator[Reply, None, None]:
         client = genai.Client(api_key=self.api_key)
 
@@ -195,7 +195,7 @@ class GoogleLLM(BaseLLM):
         input_context: dict[str, Any],
         human_message: Message,
         messages: list[Message],
-        model: GoogleChatModel,
+        model: GoogleChatModelType,
     ) -> AsyncGenerator[Reply, None]:
         client = genai.Client(api_key=self.api_key)
 
@@ -217,7 +217,7 @@ class GoogleLLM(BaseLLM):
         self,
         input: Union[str, dict[str, Any]],
         files: Optional[list[Union[str, Path, File]]] = None,
-        model: Optional[GoogleChatModel] = None,
+        model: Optional[GoogleChatModelType] = None,
         context: Optional[dict[str, Any]] = None,
         *,
         stream: bool = False,
@@ -238,7 +238,7 @@ class GoogleLLM(BaseLLM):
         self,
         input: Union[str, dict[str, Any]],
         files: Optional[list[Union[str, Path, File]]] = None,
-        model: Optional[GoogleChatModel] = None,
+        model: Optional[GoogleChatModelType] = None,
         context: Optional[dict[str, Any]] = None,
         *,
         stream: bool = False,
@@ -258,9 +258,9 @@ class GoogleLLM(BaseLLM):
     def embed(
         self,
         input: Union[str, list[str]],
-        model: Optional[GoogleEmbeddingModel] = None,
+        model: Optional[GoogleEmbeddingModelType] = None,
     ) -> Union[Embed, EmbedList]:
-        embedding_model = cast(GoogleEmbeddingModel, model or self.embedding_model)
+        embedding_model = cast(GoogleEmbeddingModelType, model or self.embedding_model)
 
         client = genai.Client(api_key=self.api_key)
         response = client.models.embed_content(
@@ -276,9 +276,9 @@ class GoogleLLM(BaseLLM):
     async def embed_async(
         self,
         input: Union[str, list[str]],
-        model: Optional[GoogleEmbeddingModel] = None,
+        model: Optional[GoogleEmbeddingModelType] = None,
     ) -> Union[Embed, EmbedList]:
-        embedding_model = cast(GoogleEmbeddingModel, model or self.embedding_model)
+        embedding_model = cast(GoogleEmbeddingModelType, model or self.embedding_model)
 
         client = genai.Client(api_key=self.api_key)
         response = await client.aio.models.embed_content(

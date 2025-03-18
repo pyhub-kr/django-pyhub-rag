@@ -13,7 +13,7 @@ from pyhub.rag.settings import rag_settings
 
 from .base import BaseLLM
 from .types import (
-    AnthropicChatModel,
+    AnthropicChatModelType,
     Embed,
     EmbedList,
     Message,
@@ -26,7 +26,7 @@ from .utils.files import FileType, encode_files
 class AnthropicLLM(BaseLLM):
     def __init__(
         self,
-        model: AnthropicChatModel = "claude-3-5-haiku-latest",
+        model: AnthropicChatModelType = "claude-3-5-haiku-latest",
         temperature: float = 0.2,
         max_tokens: int = 1000,
         system_prompt: Optional[Union[str, Template]] = None,
@@ -65,7 +65,7 @@ class AnthropicLLM(BaseLLM):
         input_context: dict[str, Any],
         human_message: Message,
         messages: list[Message],
-        model: AnthropicChatModel,
+        model: AnthropicChatModelType,
     ) -> dict:
         message_history = [dict(message) for message in messages]
 
@@ -129,7 +129,7 @@ class AnthropicLLM(BaseLLM):
         input_context: dict[str, Any],
         human_message: Message,
         messages: list[Message],
-        model: AnthropicChatModel,
+        model: AnthropicChatModelType,
     ) -> Reply:
         async_client = AsyncAnthropic(api_key=self.api_key)
         request_params = self._make_request_params(
@@ -144,7 +144,7 @@ class AnthropicLLM(BaseLLM):
         input_context: dict[str, Any],
         human_message: Message,
         messages: list[Message],
-        model: AnthropicChatModel,
+        model: AnthropicChatModelType,
     ) -> Reply:
         sync_client = SyncAnthropic(api_key=self.api_key)
         request_params = self._make_request_params(
@@ -159,7 +159,7 @@ class AnthropicLLM(BaseLLM):
         input_context: dict[str, Any],
         human_message: Message,
         messages: list[Message],
-        model: AnthropicChatModel,
+        model: AnthropicChatModelType,
     ) -> Generator[Reply, None, None]:
 
         sync_client = SyncAnthropic(api_key=self.api_key)
@@ -196,7 +196,7 @@ class AnthropicLLM(BaseLLM):
         input_context: dict[str, Any],
         human_message: Message,
         messages: list[Message],
-        model: AnthropicChatModel,
+        model: AnthropicChatModelType,
     ) -> AsyncGenerator[Reply, None]:
 
         async_client = AsyncAnthropic(api_key=self.api_key)
@@ -232,7 +232,7 @@ class AnthropicLLM(BaseLLM):
         self,
         input: Union[str, dict[str, Any]],
         files: Optional[list[Union[str, Path, File]]] = None,
-        model: Optional[AnthropicChatModel] = None,
+        model: Optional[AnthropicChatModelType] = None,
         context: Optional[dict[str, Any]] = None,
         *,
         stream: bool = False,
@@ -253,7 +253,7 @@ class AnthropicLLM(BaseLLM):
         self,
         input: Union[str, dict[str, Any]],
         files: Optional[list[Union[str, Path, File]]] = None,
-        model: Optional[AnthropicChatModel] = None,
+        model: Optional[AnthropicChatModelType] = None,
         context: Optional[dict[str, Any]] = None,
         *,
         stream: bool = False,

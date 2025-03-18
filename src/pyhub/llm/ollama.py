@@ -1,3 +1,4 @@
+import logging
 import re
 from typing import Any, AsyncGenerator, Generator, Optional, Union, cast
 
@@ -7,17 +8,20 @@ from ollama import AsyncClient
 from ollama import Client as SyncClient
 from ollama import ListResponse
 
-from ..rag.settings import rag_settings
+from pyhub.rag.settings import rag_settings
+
 from .base import BaseLLM
 from .types import (
     Embed,
     EmbedList,
     Message,
-    OllamaChatModel,
-    OllamaEmbeddingModel,
+    OllamaChatModelType,
+    OllamaEmbeddingModelType,
     Reply,
 )
 from .utils.files import FileType, encode_files
+
+logger = logging.getLogger(__name__)
 
 
 class OllamaLLM(BaseLLM):
@@ -32,8 +36,8 @@ class OllamaLLM(BaseLLM):
 
     def __init__(
         self,
-        model: OllamaChatModel = "mistral",
-        embedding_model: OllamaEmbeddingModel = "nomic-embed-text",
+        model: OllamaChatModelType = "mistral",
+        embedding_model: OllamaEmbeddingModelType = "nomic-embed-text",
         temperature: float = 0.2,
         # max_tokens: int = 1000,
         system_prompt: Optional[Union[str, Template]] = None,
@@ -110,7 +114,7 @@ class OllamaLLM(BaseLLM):
         input_context: dict[str, Any],
         human_message: Message,
         messages: list[Message],
-        model: OllamaChatModel,
+        model: OllamaChatModelType,
     ) -> dict:
         """Ollama API 요청에 필요한 파라미터를 준비하고 시스템 프롬프트를 처리합니다."""
         message_history = [dict(message) for message in messages]
@@ -154,6 +158,8 @@ class OllamaLLM(BaseLLM):
                 }
             )
 
+        logger.debug("Ollama model: %s, temperature: %s", model, self.temperature)
+
         return {
             "model": model,
             "messages": message_history,
@@ -168,7 +174,7 @@ class OllamaLLM(BaseLLM):
         input_context: dict[str, Any],
         human_message: Message,
         messages: list[Message],
-        model: OllamaChatModel,
+        model: OllamaChatModelType,
     ) -> Reply:
         """
         Ollama API를 사용하여 동기적으로 응답을 생성합니다.
@@ -188,7 +194,7 @@ class OllamaLLM(BaseLLM):
         input_context: dict[str, Any],
         human_message: Message,
         messages: list[Message],
-        model: OllamaChatModel,
+        model: OllamaChatModelType,
     ) -> Reply:
         """
         Ollama API를 사용하여 비동기적으로 응답을 생성합니다.
@@ -208,7 +214,7 @@ class OllamaLLM(BaseLLM):
         input_context: dict[str, Any],
         human_message: Message,
         messages: list[Message],
-        model: OllamaChatModel,
+        model: OllamaChatModelType,
     ) -> Generator[Reply, None, None]:
         """
         Ollama API를 사용하여 동기적으로 스트리밍 응답을 생성합니다.
@@ -228,7 +234,7 @@ class OllamaLLM(BaseLLM):
         input_context: dict[str, Any],
         human_message: Message,
         messages: list[Message],
-        model: OllamaChatModel,
+        model: OllamaChatModelType,
     ) -> AsyncGenerator[Reply, None]:
         """
         Ollama API를 사용하여 비동기적으로 스트리밍 응답을 생성합니다.
@@ -245,7 +251,7 @@ class OllamaLLM(BaseLLM):
     def embed(
         self,
         input: Union[str, list[str]],
-        model: Optional[OllamaEmbeddingModel] = None,
+        model: Optional[OllamaEmbeddingModelType] = None,
     ) -> Union[Embed, EmbedList]:
         """
         Ollama API를 사용하여 텍스트를 임베딩합니다.

@@ -14,7 +14,7 @@ from rich.console import Console
 from rich.table import Table
 
 from pyhub.init import init_django
-from pyhub.llm.enum import LanguageEnum, LLMChatModelEnum, LLMVendorEnum
+from pyhub.llm.types import LanguageEnum, LLMChatModelEnum, LLMVendorEnum
 from pyhub.parser.json import json_dumps
 from pyhub.parser.upstage import UpstageDocumentParseParser
 from pyhub.parser.upstage.parser import ImageDescriptor

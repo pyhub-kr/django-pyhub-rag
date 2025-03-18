@@ -16,8 +16,8 @@ from .types import (
     ChainReply,
     Embed,
     EmbedList,
-    LLMChatModel,
-    LLMEmbeddingModel,
+    LLMChatModelType,
+    LLMEmbeddingModelType,
     Message,
     Reply,
 )
@@ -40,8 +40,8 @@ class BaseLLM(abc.ABC):
 
     def __init__(
         self,
-        model: LLMChatModel = "gpt-4o-mini",
-        embedding_model: LLMEmbeddingModel = "text-embedding-3-small",
+        model: LLMChatModelType = "gpt-4o-mini",
+        embedding_model: LLMEmbeddingModelType = "text-embedding-3-small",
         temperature: float = 0.2,
         max_tokens: int = 1000,
         system_prompt: Optional[Union[str, Template]] = None,
@@ -158,7 +158,7 @@ class BaseLLM(abc.ABC):
         input_context: dict[str, Any],
         human_message: Message,
         messages: list[Message],
-        model: LLMChatModel,
+        model: LLMChatModelType,
     ) -> dict:
         pass
 
@@ -168,7 +168,7 @@ class BaseLLM(abc.ABC):
         input_context: dict[str, Any],
         human_message: Message,
         messages: list[Message],
-        model: LLMChatModel,
+        model: LLMChatModelType,
     ) -> Reply:
         """Generate a response using the specific LLM provider"""
         pass
@@ -179,7 +179,7 @@ class BaseLLM(abc.ABC):
         input_context: dict[str, Any],
         human_message: Message,
         messages: list[Message],
-        model: LLMChatModel,
+        model: LLMChatModelType,
     ) -> Reply:
         """Generate a response asynchronously using the specific LLM provider"""
         pass
@@ -190,7 +190,7 @@ class BaseLLM(abc.ABC):
         input_context: dict[str, Any],
         human_message: Message,
         messages: list[Message],
-        model: LLMChatModel,
+        model: LLMChatModelType,
     ) -> Generator[Reply, None, None]:
         """Generate a streaming response using the specific LLM provider"""
         yield Reply(text="")
@@ -201,7 +201,7 @@ class BaseLLM(abc.ABC):
         input_context: dict[str, Any],
         human_message: Message,
         messages: list[Message],
-        model: LLMChatModel,
+        model: LLMChatModelType,
     ) -> AsyncGenerator[Reply, None]:
         """Generate a streaming response asynchronously using the specific LLM provider"""
         yield Reply(text="")
@@ -212,7 +212,7 @@ class BaseLLM(abc.ABC):
         self,
         input: Union[str, dict[str, str]],
         files: Optional[list[Union[str, Path, File]]] = None,
-        model: Optional[LLMChatModel] = None,
+        model: Optional[LLMChatModelType] = None,
         context: Optional[dict[str, Any]] = None,
         *,
         is_async: bool = False,
@@ -222,7 +222,7 @@ class BaseLLM(abc.ABC):
     ):
         """동기 또는 비동기 응답을 생성하는 내부 메서드 (일반/스트리밍)"""
         current_messages = [*self.history] if use_history else []
-        current_model: LLMChatModel = cast(LLMChatModel, model or self.model)
+        current_model: LLMChatModelType = cast(LLMChatModelType, model or self.model)
 
         if isinstance(input, dict):
             input_context = input
@@ -344,7 +344,7 @@ class BaseLLM(abc.ABC):
         self,
         input: Union[str, dict[str, Any]],
         files: Optional[list[Union[str, Path, File]]] = None,
-        model: Optional[LLMChatModel] = None,
+        model: Optional[LLMChatModelType] = None,
         context: Optional[dict[str, Any]] = None,
         *,
         stream: bool = False,
@@ -366,7 +366,7 @@ class BaseLLM(abc.ABC):
         self,
         input: Union[str, dict[str, Any]],
         files: Optional[list[Union[str, Path, File]]] = None,
-        model: Optional[LLMChatModel] = None,
+        model: Optional[LLMChatModelType] = None,
         context: Optional[dict[str, Any]] = None,
         *,
         stream: bool = False,
@@ -390,7 +390,7 @@ class BaseLLM(abc.ABC):
     #
     # embed
     #
-    def get_embed_size(self, model: Optional[LLMEmbeddingModel] = None) -> int:
+    def get_embed_size(self, model: Optional[LLMEmbeddingModelType] = None) -> int:
         return self.EMBEDDING_DIMENSIONS[model or self.embedding_model]
 
     @property
@@ -401,7 +401,7 @@ class BaseLLM(abc.ABC):
     def embed(
         self,
         input: Union[str, list[str]],
-        model: Optional[LLMEmbeddingModel] = None,
+        model: Optional[LLMEmbeddingModelType] = None,
     ) -> Union[Embed, EmbedList]:
         pass
 
@@ -409,7 +409,7 @@ class BaseLLM(abc.ABC):
     async def embed_async(
         self,
         input: Union[str, list[str]],
-        model: Optional[LLMEmbeddingModel] = None,
+        model: Optional[LLMEmbeddingModelType] = None,
     ) -> Union[Embed, EmbedList]:
         pass
 

@@ -8,7 +8,7 @@ from django.db import models
 from django_lifecycle import BEFORE_CREATE, BEFORE_UPDATE, LifecycleModelMixin, hook
 from typing_extensions import Optional
 
-from pyhub.llm.types import LLMEmbeddingModel
+from pyhub.llm.types import LLMEmbeddingModelType
 
 from ...llm.exceptions import RateLimitError
 from .. import django_lifecycle  # noqa
@@ -123,7 +123,7 @@ class AbstractDocument(LifecycleModelMixin, models.Model):
     def embed(
         cls,
         input: Union[str, list[str]],
-        model: Optional[LLMEmbeddingModel] = None,
+        model: Optional[LLMEmbeddingModelType] = None,
     ) -> Union[list[float], list[list[float]]]:
         field = cls.get_embedding_field()
         return field.embed(input, model)
@@ -132,7 +132,7 @@ class AbstractDocument(LifecycleModelMixin, models.Model):
     async def embed_async(
         cls,
         input: Union[str, list[str]],
-        model: Optional[LLMEmbeddingModel] = None,
+        model: Optional[LLMEmbeddingModelType] = None,
     ) -> Union[list[float], list[list[float]]]:
         field = cls.get_embedding_field()
         return await field.embed_async(input, model)

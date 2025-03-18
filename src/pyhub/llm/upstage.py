@@ -11,8 +11,8 @@ from .openai import OpenAIMixin
 from .types import (
     GroundednessCheck,
     Message,
-    UpstageChatModel,
-    UpstageEmbeddingModel,
+    UpstageChatModelType,
+    UpstageEmbeddingModelType,
     UpstageGroundednessCheckModel,
     Usage,
 )
@@ -28,8 +28,8 @@ class UpstageLLM(OpenAIMixin, BaseLLM):
 
     def __init__(
         self,
-        model: UpstageChatModel = "solar-mini",
-        embedding_model: UpstageEmbeddingModel = "embedding-query",
+        model: UpstageChatModelType = "solar-mini",
+        embedding_model: UpstageEmbeddingModelType = "embedding-query",
         temperature: float = 0.2,
         max_tokens: int = 1000,
         system_prompt: Optional[str] = None,
@@ -72,7 +72,7 @@ class UpstageLLM(OpenAIMixin, BaseLLM):
         input_context: dict[str, Any],
         human_message: Message,
         messages: list[Message],
-        model: UpstageChatModel,
+        model: UpstageChatModelType,
         use_files: bool = False,
     ) -> dict:
         return super()._make_request_params(

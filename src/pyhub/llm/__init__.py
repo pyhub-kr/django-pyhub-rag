@@ -4,24 +4,24 @@ from typing import Union, cast
 from ..rag.utils import get_literal_values
 from .anthropic import AnthropicLLM
 from .base import BaseLLM, SequentialChain
-from .enum import LLMChatModelEnum, LLMEmbeddingModelEnum
 from .google import GoogleLLM
 from .ollama import OllamaLLM
 from .openai import OpenAILLM
 from .types import (
-    AnthropicChatModel,
-    GoogleChatModel,
-    GoogleEmbeddingModel,
-    LLMChatModel,
-    LLMEmbeddingModel,
-    OllamaChatModel,
-    OllamaEmbeddingModel,
-    OpenAIChatModel,
-    OpenAIEmbeddingModel,
+    AnthropicChatModelType,
+    GoogleChatModelType,
+    GoogleEmbeddingModelType,
+    LLMChatModelType,
+    LLMEmbeddingModelType,
+    OllamaChatModelType,
+    OllamaEmbeddingModelType,
+    OpenAIChatModelType,
+    OpenAIEmbeddingModelType,
     Price,
-    UpstageChatModel,
-    UpstageEmbeddingModel,
+    UpstageChatModelType,
+    UpstageEmbeddingModelType,
     Usage,
+    LLMChatModelEnum, LLMEmbeddingModelEnum,
 )
 from .upstage import UpstageLLM
 
@@ -55,53 +55,53 @@ class LLM:
     }
 
     @classmethod
-    def create(cls, model: Union[LLMChatModel, LLMEmbeddingModel], **kwargs) -> "BaseLLM":
+    def create(cls, model: Union[LLMChatModelType, LLMEmbeddingModelType], **kwargs) -> "BaseLLM":
         #
         # chat
         #
-        if model in get_literal_values(AnthropicChatModel):
-            return AnthropicLLM(model=cast(AnthropicChatModel, model), **kwargs)
-        elif model in get_literal_values(GoogleChatModel):
-            return GoogleLLM(model=cast(GoogleChatModel, model), **kwargs)
-        elif model in get_literal_values(OpenAIChatModel):
-            return OpenAILLM(model=cast(OpenAIChatModel, model), **kwargs)
-        elif model in get_literal_values(UpstageChatModel):
-            return UpstageLLM(model=cast(UpstageChatModel, model), **kwargs)
-        elif model in get_literal_values(OllamaChatModel):
+        if model in get_literal_values(AnthropicChatModelType):
+            return AnthropicLLM(model=cast(AnthropicChatModelType, model), **kwargs)
+        elif model in get_literal_values(GoogleChatModelType):
+            return GoogleLLM(model=cast(GoogleChatModelType, model), **kwargs)
+        elif model in get_literal_values(OpenAIChatModelType):
+            return OpenAILLM(model=cast(OpenAIChatModelType, model), **kwargs)
+        elif model in get_literal_values(UpstageChatModelType):
+            return UpstageLLM(model=cast(UpstageChatModelType, model), **kwargs)
+        elif model in get_literal_values(OllamaChatModelType):
             if "max_tokens" in kwargs:
                 del kwargs["max_tokens"]
-            return OllamaLLM(model=cast(OllamaChatModel, model), **kwargs)
+            return OllamaLLM(model=cast(OllamaChatModelType, model), **kwargs)
 
         #
         # embedding
         #
-        elif model in get_literal_values(OpenAIEmbeddingModel):
+        elif model in get_literal_values(OpenAIEmbeddingModelType):
             return OpenAILLM(
-                embedding_model=cast(OpenAIEmbeddingModel, model),
+                embedding_model=cast(OpenAIEmbeddingModelType, model),
                 **kwargs,
             )
-        elif model in get_literal_values(UpstageEmbeddingModel):
+        elif model in get_literal_values(UpstageEmbeddingModelType):
             return UpstageLLM(
-                embedding_model=cast(UpstageEmbeddingModel, model),
+                embedding_model=cast(UpstageEmbeddingModelType, model),
                 **kwargs,
             )
-        elif model in get_literal_values(GoogleEmbeddingModel):
+        elif model in get_literal_values(GoogleEmbeddingModelType):
             return GoogleLLM(
-                embedding_model=cast(GoogleEmbeddingModel, model),
+                embedding_model=cast(GoogleEmbeddingModelType, model),
                 **kwargs,
             )
-        elif model in get_literal_values(OllamaEmbeddingModel):
+        elif model in get_literal_values(OllamaEmbeddingModelType):
             if "max_tokens" in kwargs:
                 del kwargs["max_tokens"]
             return OllamaLLM(
-                embedding_model=cast(OllamaEmbeddingModel, model),
+                embedding_model=cast(OllamaEmbeddingModelType, model),
                 **kwargs,
             )
         else:
             raise ValueError(f"Invalid model name: {model}")
 
     @classmethod
-    def get_price(cls, model: Union[LLMChatModel, LLMEmbeddingModel], usage: Usage) -> Price:
+    def get_price(cls, model: Union[LLMChatModelType, LLMEmbeddingModelType], usage: Usage) -> Price:
         try:
             input_per_1m, output_per_1m = cls.MODEL_PRICES[model]
         except KeyError:

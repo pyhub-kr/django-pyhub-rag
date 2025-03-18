@@ -2,7 +2,7 @@ from typing import Optional
 
 from pgvector.django import HalfVectorField, VectorField
 
-from pyhub.llm.types import LLMEmbeddingModel
+from pyhub.llm.types import LLMEmbeddingModelType
 from pyhub.rag.fields.base import BaseVectorField
 
 
@@ -13,7 +13,7 @@ class PGVectorField(BaseVectorField):
         openai_api_key: Optional[str] = None,
         openai_base_url: Optional[str] = None,
         google_api_key: Optional[str] = None,
-        embedding_model: Optional[LLMEmbeddingModel] = None,
+        embedding_model: Optional[LLMEmbeddingModelType] = None,
         embedding_max_tokens_limit: Optional[int] = None,
         **kwargs,
     ):

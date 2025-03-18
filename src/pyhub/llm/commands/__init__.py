@@ -4,7 +4,7 @@ import typer
 from rich.console import Console
 
 from pyhub.llm import LLM
-from pyhub.llm.enum import LLMChatModelEnum
+from pyhub.llm.types import LLMChatModelEnum
 
 # from . import embed, sqlite_vec
 

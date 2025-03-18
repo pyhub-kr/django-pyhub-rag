@@ -16,8 +16,13 @@ from PyPDF2.errors import PdfReadError
 
 from pyhub.llm import AnthropicLLM, GoogleLLM, OllamaLLM, OpenAILLM
 from pyhub.llm.base import BaseLLM, DescribeImageRequest
-from pyhub.llm.enum import LLMVendorEnum
-from pyhub.llm.types import GoogleChatModel, LLMChatModel, OpenAIChatModel, Reply
+from pyhub.llm.types import (
+    GoogleChatModelType,
+    LLMChatModelType,
+    OpenAIChatModelType,
+    Reply,
+    LLMVendorEnum,
+)
 from pyhub.parser.documents import Document
 
 from .settings import (
@@ -43,7 +48,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class ImageDescriptor:
     llm_vendor: LLMVendorEnum = "openai"
-    llm_model: LLMChatModel = "gpt-4o-mini"
+    llm_model: LLMChatModelType = "gpt-4o-mini"
     llm_api_key: Optional[str] = None
     llm_base_url: Optional[str] = None
     temperature: Optional[float] = None
@@ -70,12 +75,14 @@ class ImageDescriptor:
     def get_llm(self) -> BaseLLM:
         if "openai" == self.llm_vendor:
             llm = OpenAILLM(
-                model=cast(OpenAIChatModel, self.llm_model), api_key=self.llm_api_key, base_url=self.llm_base_url
+                model=cast(OpenAIChatModelType, self.llm_model),
+                api_key=self.llm_api_key,
+                base_url=self.llm_base_url,
             )
         elif "anthropic" == self.llm_vendor:
             llm = AnthropicLLM(model=self.llm_model, api_key=self.llm_api_key)
         elif "google" == self.llm_vendor:
-            llm = GoogleLLM(model=cast(GoogleChatModel, self.llm_model), api_key=self.llm_api_key)
+            llm = GoogleLLM(model=cast(GoogleChatModelType, self.llm_model), api_key=self.llm_api_key)
         elif "ollama" == self.llm_vendor:
             llm = OllamaLLM(model=self.llm_model, base_url=self.llm_base_url)
         else:
@@ -541,8 +548,8 @@ class UpstageDocumentParseParser:
             )
             logger.info(
                 "%s %s 모델을 통해 이미지 설명을 생성합니다.",
-                self.image_descriptor.llm_vendor,
-                self.image_descriptor.llm_model,
+                self.image_descriptor.llm_vendor.value,
+                self.image_descriptor.llm_model.value,
             )
 
             llm_reply_list: list[Reply] = await image_descriptor_llm.describe_images_async(request_list)

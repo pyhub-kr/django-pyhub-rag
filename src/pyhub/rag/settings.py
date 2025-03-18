@@ -4,7 +4,7 @@ from typing import Any, Optional, Union
 from django.conf import settings as proj_settings
 from django.core.exceptions import ImproperlyConfigured
 
-from pyhub.llm.types import LLMEmbeddingModel
+from pyhub.llm.types import LLMEmbeddingModelType
 
 DEFAULTS = {
     "openai_base_url": "https://api.openai.com/v1",
@@ -26,7 +26,7 @@ class RagSettings:
         anthropic_api_key: Optional[str] = None,
         google_api_key: Optional[str] = None,
         ollama_base_url: Optional[str] = None,
-        embedding_model: Optional[LLMEmbeddingModel] = None,
+        embedding_model: Optional[LLMEmbeddingModelType] = None,
         embedding_dimensions: Optional[int] = None,
         embedding_max_tokens_limit: Optional[int] = None,
     ):

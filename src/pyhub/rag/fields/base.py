@@ -5,9 +5,9 @@ from django.db import models
 
 from pyhub.llm import GoogleLLM, OpenAILLM
 from pyhub.llm.types import (
-    GoogleEmbeddingModel,
-    LLMEmbeddingModel,
-    OpenAIEmbeddingModel,
+    GoogleEmbeddingModelType,
+    LLMEmbeddingModelType,
+    OpenAIEmbeddingModelType,
 )
 from pyhub.rag.settings import rag_settings
 from pyhub.rag.utils import get_literal_values
@@ -22,7 +22,7 @@ class BaseVectorField(models.Field):
         openai_api_key: Optional[str] = None,
         openai_base_url: Optional[str] = None,
         google_api_key: Optional[str] = None,
-        embedding_model: Optional[LLMEmbeddingModel] = None,
+        embedding_model: Optional[LLMEmbeddingModelType] = None,
         embedding_max_tokens_limit: Optional[int] = None,
         **kwargs,
     ):
@@ -67,16 +67,16 @@ class BaseVectorField(models.Field):
     def embed(
         self,
         input: Union[str, list[str]],
-        model: Optional[LLMEmbeddingModel] = None,
+        model: Optional[LLMEmbeddingModelType] = None,
     ) -> Union[list[float], list[list[float]]]:
 
         embedding_model = model or self.embedding_model
 
-        if embedding_model in get_literal_values(OpenAIEmbeddingModel):
+        if embedding_model in get_literal_values(OpenAIEmbeddingModelType):
             llm = OpenAILLM(api_key=self.openai_api_key, base_url=self.openai_base_url)
             return llm.embed(input, model=embedding_model)
 
-        elif embedding_model in get_literal_values(GoogleEmbeddingModel):
+        elif embedding_model in get_literal_values(GoogleEmbeddingModelType):
             llm = GoogleLLM(api_key=self.google_api_key)
             return llm.embed(input, model=embedding_model)
 
@@ -85,15 +85,15 @@ class BaseVectorField(models.Field):
     async def embed_async(
         self,
         input: Union[str, list[str]],
-        model: Optional[LLMEmbeddingModel] = None,
+        model: Optional[LLMEmbeddingModelType] = None,
     ) -> Union[list[float], list[list[float]]]:
         embedding_model = model or self.embedding_model
 
-        if embedding_model in get_literal_values(OpenAIEmbeddingModel):
+        if embedding_model in get_literal_values(OpenAIEmbeddingModelType):
             llm = OpenAILLM(api_key=self.openai_api_key, base_url=self.openai_base_url)
             return await llm.embed_async(input, model=embedding_model)
 
-        elif embedding_model in get_literal_values(GoogleEmbeddingModel):
+        elif embedding_model in get_literal_values(GoogleEmbeddingModelType):
             llm = GoogleLLM(api_key=self.google_api_key)
             return await llm.embed_async(input, model=embedding_model)
 

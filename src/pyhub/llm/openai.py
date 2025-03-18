@@ -14,8 +14,8 @@ from .types import (
     Embed,
     EmbedList,
     Message,
-    OpenAIChatModel,
-    OpenAIEmbeddingModel,
+    OpenAIChatModelType,
+    OpenAIEmbeddingModelType,
     Reply,
     Usage,
 )
@@ -31,7 +31,7 @@ class OpenAIMixin:
         input_context: dict[str, Any],
         human_message: Message,
         messages: list[Message],
-        model: OpenAIChatModel,
+        model: OpenAIChatModelType,
         use_files: bool = True,
     ) -> dict:
         """OpenAI API 요청에 필요한 파라미터를 준비하고 시스템 프롬프트를 처리합니다."""
@@ -93,7 +93,7 @@ class OpenAIMixin:
         input_context: dict[str, Any],
         human_message: Message,
         messages: list[Message],
-        model: OpenAIChatModel,
+        model: OpenAIChatModelType,
     ) -> Reply:
         sync_client = SyncOpenAI(api_key=self.api_key, base_url=self.base_url)
         request_params = self._make_request_params(
@@ -116,7 +116,7 @@ class OpenAIMixin:
         input_context: dict[str, Any],
         human_message: Message,
         messages: list[Message],
-        model: OpenAIChatModel,
+        model: OpenAIChatModelType,
     ) -> Reply:
         async_client = AsyncOpenAI(api_key=self.api_key, base_url=self.base_url)
         request_params = self._make_request_params(
@@ -139,7 +139,7 @@ class OpenAIMixin:
         input_context: dict[str, Any],
         human_message: Message,
         messages: list[Message],
-        model: OpenAIChatModel,
+        model: OpenAIChatModelType,
     ) -> Generator[Reply, None, None]:
         sync_client = SyncOpenAI(api_key=self.api_key, base_url=self.base_url)
         request_params = self._make_request_params(
@@ -170,7 +170,7 @@ class OpenAIMixin:
         input_context: dict[str, Any],
         human_message: Message,
         messages: list[Message],
-        model: OpenAIChatModel,
+        model: OpenAIChatModelType,
     ) -> AsyncGenerator[Reply, None]:
         async_client = AsyncOpenAI(api_key=self.api_key, base_url=self.base_url)
         request_params = self._make_request_params(
@@ -200,7 +200,7 @@ class OpenAIMixin:
         self,
         input: Union[str, dict[str, Any]],
         files: Optional[list[Union[str, Path, File]]] = None,
-        model: Optional[OpenAIChatModel] = None,
+        model: Optional[OpenAIChatModelType] = None,
         context: Optional[dict[str, Any]] = None,
         *,
         stream: bool = False,
@@ -221,7 +221,7 @@ class OpenAIMixin:
         self,
         input: Union[str, dict[str, Any]],
         files: Optional[list[Union[str, Path, File]]] = None,
-        model: Optional[OpenAIChatModel] = None,
+        model: Optional[OpenAIChatModelType] = None,
         context: Optional[dict[str, Any]] = None,
         *,
         stream: bool = False,
@@ -239,9 +239,9 @@ class OpenAIMixin:
         )
 
     def embed(
-        self, input: Union[str, list[str]], model: Optional[OpenAIEmbeddingModel] = None
+        self, input: Union[str, list[str]], model: Optional[OpenAIEmbeddingModelType] = None
     ) -> Union[Embed, EmbedList]:
-        embedding_model = cast(OpenAIEmbeddingModel, model or self.embedding_model)
+        embedding_model = cast(OpenAIEmbeddingModelType, model or self.embedding_model)
 
         client = SyncOpenAI(
             api_key=self.api_key,
@@ -257,9 +257,9 @@ class OpenAIMixin:
         return EmbedList([Embed(v.embedding) for v in response.data], usage=usage)
 
     async def embed_async(
-        self, input: Union[str, list[str]], model: Optional[OpenAIEmbeddingModel] = None
+        self, input: Union[str, list[str]], model: Optional[OpenAIEmbeddingModelType] = None
     ) -> Union[Embed, EmbedList]:
-        embedding_model = cast(OpenAIEmbeddingModel, model or self.embedding_model)
+        embedding_model = cast(OpenAIEmbeddingModelType, model or self.embedding_model)
 
         client = AsyncOpenAI(
             api_key=self.api_key,
@@ -283,8 +283,8 @@ class OpenAILLM(OpenAIMixin, BaseLLM):
 
     def __init__(
         self,
-        model: OpenAIChatModel = "gpt-4o-mini",
-        embedding_model: OpenAIEmbeddingModel = "text-embedding-3-small",
+        model: OpenAIChatModelType = "gpt-4o-mini",
+        embedding_model: OpenAIEmbeddingModelType = "text-embedding-3-small",
         temperature: float = 0.2,
         max_tokens: int = 1000,
         system_prompt: Optional[Union[str, Template]] = None,
