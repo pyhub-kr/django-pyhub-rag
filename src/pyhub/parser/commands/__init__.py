@@ -282,6 +282,7 @@ def upstage(
         table.add_column("값", style="green")
 
         # Add rows to the table
+        table.add_row("환경변수 파일 경로", str(env_path))
         table.add_row("입력 문서 파일 경로", str(input_path.absolute()))
         table.add_row("파일 생성 폴더", str(output_dir_path.absolute()))
         table.add_row("Document 분할 전략", document_split_strategy.value)
