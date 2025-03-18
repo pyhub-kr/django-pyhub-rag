@@ -6,7 +6,7 @@ from pathlib import Path
 import typer
 from rich.console import Console
 
-from pyhub.llm.enum import EmbeddingDimensionsEnum, LLMEmbeddingModelEnum
+from pyhub.llm.types import EmbeddingDimensionsEnum, LLMEmbeddingModelEnum
 from pyhub.logger import LogCapture
 from pyhub.rag.db.sqlite_vec import (
     DistanceMetric,
@@ -23,22 +23,22 @@ except ImportError:
     sqlite_vec = None
 
 # Create SQLite-vec subcommand group
-app = typer.Typer(name="sqlite-vec", help="Commands related to SQLite-vec")
+app = typer.Typer(name="sqlite-vec", help="SQLite-vec 관련 명령어")
 console = Console()
 
 
 @app.command()
 def check():
     """
-    Check if sqlite-vec extension can be loaded properly.
+    sqlite-vec 확장이 제대로 로드될 수 있는지 확인합니다.
 
-    This command verifies:
-    1. If the system architecture is compatible (Windows ARM is not supported)
-    2. If Python version is 3.10 or later (required for sqlite-vec)
-    3. If the sqlite-vec library is installed
-    4. If the current Python installation supports SQLite extensions
+    이 명령어는 다음을 확인합니다:
+    1. 시스템 아키텍처가 호환되는지 (Windows ARM은 지원되지 않음)
+    2. Python 버전이 3.10 이상인지 (sqlite-vec에 필요)
+    3. sqlite-vec 라이브러리가 설치되어 있는지
+    4. 현재 Python 설치가 SQLite 확장을 지원하는지
 
-    Exits with error code 1 if any check fails, otherwise confirms successful setup.
+    확인 중 하나라도 실패하면 오류 코드 1로 종료하고, 그렇지 않으면 성공적인 설정을 확인합니다.
     """
 
     is_windows = sys.platform == "win32"
@@ -47,16 +47,16 @@ def check():
 
     if is_windows and is_arm:
         console.print(
-            "[bold red]ARM version of Python does not support sqlite-vec library. Please reinstall AMD64 version of Python.[/bold red]"
+            "[bold red]ARM 버전의 Python은 sqlite-vec 라이브러리를 지원하지 않습니다. AMD64 버전의 Python을 다시 설치해주세요.[/bold red]"
         )
         raise typer.Exit(code=1)
 
     if not is_python_3_10_or_later:
-        console.print("[bold red]Python 3.10 or later is required.[/bold red]")
+        console.print("[bold red]Python 3.10 이상이 필요합니다.[/bold red]")
         raise typer.Exit(code=1)
 
     if sqlite_vec is None:
-        console.print("[bold red]Please install sqlite-vec library.[/bold red]")
+        console.print("[bold red]sqlite-vec 라이브러리를 설치해주세요.[/bold red]")
         raise typer.Exit(code=1)
 
     with sqlite3.connect(":memory:") as db:
@@ -64,31 +64,31 @@ def check():
             load_extensions(db)
         except AttributeError:
             console.print(
-                "[bold red]This Python does not support sqlite3 extension. Please refer to the guide and reinstall Python.[/bold red]"
+                f"[bold red]{sys.executable} 은 sqlite3 확장을 지원하지 않습니다. 가이드를 참고하여 Python을 다시 설치해주세요.[/bold red]"
             )
             raise typer.Exit(code=1)
         else:
-            console.print("[bold green]This Python supports sqlite3 extension.[/bold green]")
-            console.print("[bold green]sqlite-vec extension is working properly.[/bold green]")
+            console.print(f"[bold green]{sys.executable} 은 sqlite3 확장을 지원합니다.[/bold green]")
+            console.print("[bold green]sqlite-vec 확장이 정상적으로 작동합니다.[/bold green]")
 
 
 @app.command(name="create-table")
 def command_create_table(
-    db_path: Path = typer.Argument(Path("db.sqlite3"), help="sqlite db path"),
-    table_name: str = typer.Argument("documents", help="table name"),
+    db_path: Path = typer.Argument(Path("db.sqlite3"), help="SQLite DB 경로"),
+    table_name: str = typer.Argument("documents", help="테이블 이름"),
     dimensions: EmbeddingDimensionsEnum = typer.Option(
-        EmbeddingDimensionsEnum.D_1536, help="Embedding dimensions for the vector table"
+        EmbeddingDimensionsEnum.D_1536, help="벡터 테이블의 임베딩 차원"
     ),
-    distance_metric: DistanceMetric = typer.Option(DistanceMetric.COSINE, help="Distance metric for similarity search"),
-    verbose: bool = typer.Option(False, help="Print additional debug information"),
+    distance_metric: DistanceMetric = typer.Option(DistanceMetric.COSINE, help="유사도 검색을 위한 거리 메트릭"),
+    verbose: bool = typer.Option(False, help="추가 디버그 정보 출력"),
 ):
     """
-    Create a vector table using sqlite-vec extension in SQLite database.
+    SQLite 데이터베이스에 sqlite-vec 확장을 사용하여 벡터 테이블을 생성합니다.
     """
 
     if not db_path.suffix:
         db_path = db_path.with_suffix(".sqlite3")
-        console.print(f"[yellow]No file extension provided. Using '{db_path}'[/yellow]")
+        console.print(f"[yellow]파일 확장자가 제공되지 않았습니다. '{db_path}'를 사용합니다.[/yellow]")
 
     if verbose:
         log_level = logging.DEBUG
@@ -107,19 +107,19 @@ def command_create_table(
             console.print(f"[red]{e}")
             raise typer.Exit(code=1)
         else:
-            console.print(f"[bold green]Successfully created virtual table '{table_name}' in {db_path}[/bold green]")
+            console.print(f"[bold green]'{table_name}' 가상 테이블을 {db_path}에 성공적으로 생성했습니다.[/bold green]")
 
 
 @app.command(name="import-jsonl")
 def command_import_jsonl(
-    db_path: Path = typer.Argument(Path("db.sqlite3"), help="sqlite db path"),
-    table_name: str = typer.Argument(None, help="table name (optional, auto-detected if not provided)"),
-    jsonl_path: Path = typer.Option(..., help="Path to the JSONL file with embeddings"),
-    clear: bool = typer.Option(False, help="Clear existing data in the table before loading"),
-    verbose: bool = typer.Option(False, help="Print additional debug information"),
+    jsonl_path: Path = typer.Argument(..., help="임베딩이 포함된 JSONL 파일 경로"),
+    db_path: Path = typer.Option(Path("db.sqlite3"), "--db-path", "-d", help="SQLite DB 경로"),
+    table_name: str = typer.Option(None, "--table", "-t", help="테이블 이름 (선택사항, 미지정시 자동 감지)"),
+    clear: bool = typer.Option(False, "--clear", "-c", help="로딩 전 테이블의 기존 데이터 삭제"),
+    verbose: bool = typer.Option(False, help="추가 디버그 정보 출력"),
 ):
     """
-    Load vector data from JSONL file into SQLite database table.
+    JSONL 파일의 벡터 데이터를 SQLite 데이터베이스 테이블로 로드합니다.
     """
 
     if verbose:
@@ -142,18 +142,18 @@ def command_import_jsonl(
 
 @app.command(name="similarity-search")
 def command_similarity_search(
-    db_path: Path = typer.Argument(Path("db.sqlite3"), help="Path to the SQLite database"),
-    table_name: str = typer.Argument(None, help="Name of the table to query"),
-    query: str = typer.Option(..., help="Text to search for similar documents"),
+    query: str = typer.Argument(..., help="유사한 문서를 검색할 텍스트"),
+    db_path: Path = typer.Option(Path("db.sqlite3"), "--db-path", "-d", help="SQLite DB 경로"),
+    table_name: str = typer.Option(None, "--table", "-t", help="테이블 이름 (선택사항, 미지정시 자동 감지)"),
     embedding_model: LLMEmbeddingModelEnum = typer.Option(
-        LLMEmbeddingModelEnum.TEXT_EMBEDDING_3_SMALL, help="Embedding model to use"
+        LLMEmbeddingModelEnum.TEXT_EMBEDDING_3_SMALL, help="사용할 임베딩 모델"
     ),
-    limit: int = typer.Option(4, help="Maximum number of results to return"),
-    no_metadata: bool = typer.Option(False, help="Hide metadata in the results"),
-    verbose: bool = typer.Option(False, help="Print additional debug information"),
+    limit: int = typer.Option(4, help="반환할 최대 결과 수"),
+    no_metadata: bool = typer.Option(False, help="결과에서 메타데이터 숨김"),
+    verbose: bool = typer.Option(False, help="추가 디버그 정보 출력"),
 ):
     """
-    Perform a semantic similarity search in a SQLite vector database.
+    SQLite 벡터 데이터베이스에서 의미적 유사도 검색을 수행합니다.
     """
 
     if verbose:

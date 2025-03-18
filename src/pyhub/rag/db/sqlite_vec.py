@@ -7,8 +7,7 @@ from pathlib import Path
 from typing import Generator, Optional, Union
 
 from pyhub.llm import LLM, LLMEmbeddingModelEnum
-from pyhub.llm.enum import EmbeddingDimensionsEnum
-from pyhub.llm.types import Embed
+from pyhub.llm.types import Embed, EmbeddingDimensionsEnum
 
 try:
     import sqlite_vec

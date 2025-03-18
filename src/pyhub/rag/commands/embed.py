@@ -5,11 +5,10 @@ import typer
 from rich.console import Console
 
 from pyhub.llm import LLM
-from pyhub.llm.enum import LLMEmbeddingModelEnum
-from pyhub.llm.types import Usage
+from pyhub.llm.types import LLMEmbeddingModelEnum, Usage
 from pyhub.rag.json import JSONDecodeError, json_dumps, json_loads
 
-app = typer.Typer(name="embed", help="Commands related to embedding")
+app = typer.Typer(name="embed", help="LLM 임베딩 관련 명령")
 console = Console()
 
 
@@ -30,19 +29,19 @@ def validate_embeddings(data: List[Dict]) -> Optional[int]:
 
 @app.command()
 def fill_jsonl(
-    jsonl_path: Path = typer.Argument(..., help="Path to the source JSONL file"),
+    jsonl_path: Path = typer.Argument(..., help="소스 JSONL 파일 경로"),
     embedding_model: LLMEmbeddingModelEnum = LLMEmbeddingModelEnum.TEXT_EMBEDDING_3_SMALL,
 ):
-    """Embeds the page_content field values from the JSONL file data and stores them in the embedding field."""
+    """JSONL 파일 데이터의 page_content 필드 값을 임베딩하고 embedding 필드에 저장합니다."""
 
     jsonl_out_path = jsonl_path.with_name(f"{jsonl_path.stem}-out{jsonl_path.suffix}")
     if jsonl_out_path.exists():
-        console.print(f"[red]Error: Output file {jsonl_out_path} already exists. Cannot proceed.[/red]")
+        console.print(f"[red]오류: 출력 파일 {jsonl_out_path}이(가) 이미 존재합니다. 진행할 수 없습니다.[/red]")
         raise typer.Exit(1)
 
     llm = LLM.create(embedding_model.value)
-    console.print(f"Using {llm.embedding_model} (dimensions: {llm.get_embed_size()})")
-    console.print(f"Parsing {jsonl_path} ...")
+    console.print(f"{llm.embedding_model} 사용 중 (차원: {llm.get_embed_size()})")
+    console.print(f"{jsonl_path} 파싱 중 ...")
     total_usage = Usage()
     try:
         with jsonl_out_path.open("w", encoding="utf-8") as out_f:
@@ -65,21 +64,21 @@ def fill_jsonl(
                         usage = embedding.usage
                         total_usage += usage
 
-                    out_f.write(json_dumps(obj, ensure_ascii=False) + "\n")
+                    out_f.write(json_dumps(obj) + "\n")
 
                     # Display progress on a single line
                     progress = (i + 1) / total_lines * 100
                     console.print(
-                        f"Progress: {progress:.1f}% ({i+1}/{total_lines}) - tokens: {total_usage.input}",
+                        f"진행률: {progress:.1f}% ({i+1}/{total_lines}) - 토큰: {total_usage.input}",
                         end="\r",
                     )
 
         # Display completion message
         console.print("\n")
-        console.print("[green]Embedding completed![/green]")
-        console.print(f"Output file created: {jsonl_out_path}")
-        console.print(f"Total items: {total_lines}")
-        console.print(f"Total tokens: {total_usage.input}")
+        console.print("[green]임베딩 완료![/green]")
+        console.print(f"출력 파일 생성됨: {jsonl_out_path}")
+        console.print(f"총 항목 수: {total_lines}")
+        console.print(f"총 토큰 수: {total_usage.input}")
     except (IOError, JSONDecodeError) as e:
-        console.print(f"[red]Error reading file: {e}[/red]")
+        console.print(f"[red]파일 읽기 오류: {e}[/red]")
         raise typer.Exit(1)

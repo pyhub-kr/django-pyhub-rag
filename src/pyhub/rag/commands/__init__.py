@@ -2,6 +2,7 @@ import typer
 from rich.console import Console
 
 from . import embed, sqlite_vec
+from ... import get_version
 
 app = typer.Typer()
 console = Console()
@@ -21,8 +22,11 @@ def main(ctx: typer.Context):
         ██████╔╝ ╚████╔╝ ███████║██║   ██║██████╔╝    ██████╔╝███████║██║  ███╗
         ██╔═══╝   ╚██╔╝  ██╔══██║██║   ██║██╔══██╗    ██╔══██╗██╔══██║██║   ██║
         ██║        ██║   ██║  ██║╚██████╔╝██████╔╝    ██║  ██║██║  ██║╚██████╔╝
-        ╚═╝        ╚═╝   ╚═╝  ╚═╝ ╚═════╝ ╚═════╝     ╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝ 
-        """,
-            style="bold blue",
+        ╚═╝        ╚═╝   ╚═╝  ╚═╝ ╚═════╝ ╚═════╝     ╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝
+                """
         )
-        console.print("Welcome to PyHub RAG CLI!", style="green")
+        console.print(f"Welcome to PyHub RAG CLI! {get_version()}")
+        console.print(
+            "\n장고와 함께 웹 기반의 PDF 지식 저장소를 손쉽게 구축하실 수 있습니다. - 파이썬사랑방 (me@pyhub.kr)",
+            style="green",
+        )

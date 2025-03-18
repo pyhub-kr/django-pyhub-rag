@@ -277,6 +277,9 @@ class OpenAIMixin:
 
 class OpenAILLM(OpenAIMixin, BaseLLM):
     EMBEDDING_DIMENSIONS = {
+        "text-embedding-ada-002": 1536,
+        "text-embedding-3-small": 1536,
+        "text-embedding-3-large": 3072,
         "embedding-query": 4096,
         "embedding-passage": 4096,
     }
