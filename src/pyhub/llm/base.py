@@ -420,13 +420,18 @@ class BaseLLM(abc.ABC):
     def describe_images(
         self,
         request: Union[DescribeImageRequest, list[DescribeImageRequest]],
+        max_parallel_size: int = 4,
     ) -> Reply:
-        return async_to_sync(self.describe_images_async)(request)
+        return async_to_sync(self.describe_images_async)(request, max_parallel_size)
 
     async def describe_images_async(
         self,
         request: Union[DescribeImageRequest, list[DescribeImageRequest]],
+        max_parallel_size: int = 4,
     ) -> Union[Reply, list[Reply]]:
+
+        # 최대 4개의 병렬 처리를 위한 세마포어 설정
+        semaphore = asyncio.Semaphore(max_parallel_size)
 
         cls = self.__class__
         sig = signature(cls.__init__)
@@ -467,14 +472,18 @@ class BaseLLM(abc.ABC):
             )
             return reply
 
-        # TODO: Task Queue (django-tasks, celery)를 통한 병렬 처리 + 한 Task 안에서 LLM batch API가 지원되면 활용하기
-        tasks = [process_single_image(request, idx, len(request_list)) for idx, request in enumerate(request_list)]
+        async def process_with_semaphore(request_item, idx, total):
+            async with semaphore:
+                return await process_single_image(request_item, idx, total)
+
+        # 세마포어를 통해 병렬 처리 제한
+        tasks = [process_with_semaphore(request, idx, len(request_list)) for idx, request in enumerate(request_list)]
         reply_list = await asyncio.gather(*tasks)
 
         for request in request_list:
             request.image.seek(0)
 
-        if isinstance(request_list, (list, tuple)):
+        if isinstance(request, (list, tuple)):
             return reply_list
 
         return reply_list[0]
