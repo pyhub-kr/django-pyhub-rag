@@ -1,7 +1,6 @@
 import logging
 import os
 from datetime import datetime
-from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 from shutil import rmtree
 from typing import List, Optional, Union, cast
@@ -13,7 +12,7 @@ from django.core.validators import URLValidator
 from rich.console import Console
 from rich.table import Table
 
-from pyhub import init
+from pyhub import get_version, init
 from pyhub.llm.types import LanguageEnum, LLMChatModelEnum, LLMVendorEnum
 from pyhub.parser.json import json_dumps
 from pyhub.parser.upstage import UpstageDocumentParseParser
@@ -37,13 +36,6 @@ from pyhub.rag.utils import get_literal_values
 
 app = typer.Typer()
 console = Console()
-
-
-def get_version() -> str:
-    try:
-        return version("django-pyhub-rag")
-    except PackageNotFoundError:
-        return "not found"
 
 
 @app.callback(invoke_without_command=True)
@@ -70,17 +62,20 @@ def main(
         ██╔═══╝   ╚██╔╝  ██╔══██║██║   ██║██╔══██╗    ██╔═══╝ ██╔══██║██╔══██╗╚════██║██╔══╝  ██╔══██╗
         ██║        ██║   ██║  ██║╚██████╔╝██████╔╝    ██║     ██║  ██║██║  ██║███████║███████╗██║  ██║
         ╚═╝        ╚═╝   ╚═╝  ╚═╝ ╚═════╝ ╚═════╝     ╚═╝     ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝╚══════╝╚═╝  ╚═╝
-        """,
-            style="bold blue",
+        """
         )
-        console.print("Welcome to PyHub Parser CLI!", style="green")
+
+        console.print(f"Welcome to PyHub Parser CLI! {get_version()}")
+        console.print(
+            "\n장고와 함께 웹 기반의 PDF 지식 저장소를 손쉽게 구축하실 수 있습니다. - 파이썬사랑방 (me@pyhub.kr)",
+            style="green",
+        )
 
 
 @app.command()
 def upstage(
-    input_path: Path = typer.Argument(
-        ...,
-        exists=True,
+    input_path: Optional[Path] = typer.Argument(
+        None,
         help=f"입력 파일 경로 (지원 포맷: {', '.join(SUPPORTED_FILE_EXTENSIONS)})",
     ),
     output_dir_path: Optional[Path] = typer.Option(
@@ -217,7 +212,12 @@ def upstage(
         "--env-file",
         help="환경 변수 파일(.env) 경로 (디폴트: ~/.pyhub.env)",
     ),
+    is_print_version: bool = typer.Option(False, "--version", "-V", help="현재 패키지 버전 출력"),
 ):
+    if is_print_version:
+        console.print(get_version())
+        raise typer.Exit()
+
     if is_verbose:
         log_level = logging.DEBUG
     else:
@@ -238,6 +238,14 @@ def upstage(
                 "[bold red]오류: Upstage API Key 형식이 올바르지 않습니다. Upstage API Key는 'up_'로 시작합니다.[/bold red]"
             )
             raise typer.Exit(code=1)
+
+    if input_path is None:
+        console.print(
+            "[bold red]오류: 입력 파일 경로가 지정되지 않았습니다. 처리할 문서 파일 경로를 지정해주세요.[/bold red]"
+        )
+        raise typer.Exit(1)
+
+    is_pdf = input_path.suffix.lower() == ".pdf"
 
     base64_encoding_category_list = cast(list[ElementCategoryType], base64_encodings)
     ignore_element_category_list = cast(list[ElementCategoryType], ignore_element_category)
@@ -274,9 +282,6 @@ def upstage(
 
     # Debug: Print all arguments except api_key
     if is_verbose:
-        # Check if input file is a PDF
-        is_pdf = input_path.suffix.lower() == ".pdf"
-
         table = Table(show_header=True, header_style="bold blue")
         table.add_column("설정", style="cyan")
         table.add_column("값", style="green")
@@ -319,7 +324,6 @@ def upstage(
         console.print(table)
 
     # Check if input file is a PDF. Warn if batch_size is specified but file is not a PDF
-    is_pdf = input_path.suffix.lower() == ".pdf"
     if not is_pdf and batch_page_size != DEFAULT_BATCH_PAGE_SIZE and not is_verbose:
         console.print(f"[yellow]경고: 배치 크기 매개변수({batch_page_size})는 PDF가 아닌 파일에는 무시됩니다.[/yellow]")
 

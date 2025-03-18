@@ -256,8 +256,7 @@ class BaseLLM(abc.ABC):
                 except Exception as e:
                     if raise_errors:
                         raise e
-                    logger.error("Error occurred during streaming API call: %s", e)
-                    yield Reply(text=f"Error occurred during streaming API call: {str(e)}")
+                    yield Reply(text=f"Error: {str(e)}")
 
             def sync_stream_handler() -> Generator[Reply, None, None]:
                 try:
@@ -277,8 +276,7 @@ class BaseLLM(abc.ABC):
                 except Exception as e:
                     if raise_errors:
                         raise e
-                    logger.error("Error occurred during streaming API call: %s", e)
-                    yield Reply(text=f"Error occurred during streaming API call: {str(e)}")
+                    yield Reply(text=f"Error: {str(e)}")
 
             return async_stream_handler() if is_async else sync_stream_handler()
 
@@ -296,8 +294,7 @@ class BaseLLM(abc.ABC):
                 except Exception as e:
                     if raise_errors:
                         raise e
-                    logger.error("Error occurred during API call: %s", e)
-                    return Reply(text=f"Error occurred during API call: {str(e)}")
+                    return Reply(text=f"Error: {str(e)}")
                 else:
                     if use_history:
                         self._update_history(human_message=human_message, ai_message=ask.text)
@@ -314,8 +311,7 @@ class BaseLLM(abc.ABC):
                 except Exception as e:
                     if raise_errors:
                         raise e
-                    logger.error("Error occurred during API call: %s", e)
-                    return Reply(text=f"Error occurred during API call: {str(e)}")
+                    return Reply(text=f"Error: {str(e)}")
                 else:
                     if use_history:
                         self._update_history(human_message=human_message, ai_message=ask.text)

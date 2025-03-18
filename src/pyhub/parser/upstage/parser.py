@@ -553,6 +553,8 @@ class UpstageDocumentParseParser:
             )
 
             llm_reply_list: list[Reply] = await image_descriptor_llm.describe_images_async(request_list)
+            if not isinstance(llm_reply_list, list):
+                llm_reply_list = [llm_reply_list]  # noqa
 
             # 이미지 설명을 각 element에 매핑
             current_idx = 0
