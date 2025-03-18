@@ -41,8 +41,8 @@ console = Console()
 @app.callback(invoke_without_command=True)
 def main(
     ctx: typer.Context,
-    is_print_version: bool = typer.Option(False, "--version", help="현재 패키지 버전 출력"),
     is_help: bool = typer.Option(False, "--help", "-h", help="도움말 메시지 출력"),
+    is_print_version: bool = typer.Option(False, "--version", help="현재 패키지 버전 출력"),
 ):
     """PyHub RAG CLI tool"""
     if is_print_version:
@@ -288,7 +288,6 @@ def upstage(
         table.add_column("값", style="green")
 
         # Add rows to the table
-        table.add_row("환경변수 파일 경로", str(env_path))
         table.add_row("입력 문서 파일 경로", str(input_path.absolute()))
         table.add_row("파일 생성 폴더", str(output_dir_path.absolute()))
         table.add_row("Document 분할 전략", document_split_strategy.value)
@@ -321,6 +320,8 @@ def upstage(
                 table.add_row("이미지 설명 최대 토큰", str(image_descriptor_max_tokens))
         else:
             table.add_row("이미지 설명 활성화", "아니오")
+
+        table.add_row("환경변수 파일 경로", str(env_path))
         # Print the table
         console.print(table)
 
