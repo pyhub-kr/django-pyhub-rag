@@ -1,9 +1,12 @@
 import logging
 import sys
+from io import StringIO
 from pathlib import Path
+from typing import Optional
 
 import django
 from django.conf import settings
+from environ import Env
 
 logger = logging.getLogger(__name__)
 
@@ -101,3 +104,23 @@ def init_django(debug: bool = False, log_level: int = logging.INFO):
         django.setup()
 
         logging.debug("Django 환경이 초기화되었습니다.")
+
+
+def load_envs(env_path: Optional[Path] = None):
+    if env_path is None:
+        env_path = Path.home() / ".pyhub.env"
+
+    env = Env()
+
+    if env_path.exists():
+        try:
+            env_text = env_path.read_text(encoding="utf-8")
+            env.read_env(StringIO(env_text), overwrite=True)
+            logger.debug("loaded %s", env_path.name)
+        except IOError:
+            pass
+
+
+def init(debug: bool = False, log_level: int = logging.INFO, env_path: Optional[Path] = None):
+    init_django(debug=debug, log_level=log_level)
+    load_envs(env_path)

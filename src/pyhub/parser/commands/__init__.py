@@ -13,7 +13,7 @@ from django.core.validators import URLValidator
 from rich.console import Console
 from rich.table import Table
 
-from pyhub.init import init_django
+from pyhub import init
 from pyhub.llm.types import LanguageEnum, LLMChatModelEnum, LLMVendorEnum
 from pyhub.parser.json import json_dumps
 from pyhub.parser.upstage import UpstageDocumentParseParser
@@ -212,12 +212,17 @@ def upstage(
     upstage_api_key: Optional[str] = typer.Option(
         None, help="Upstage API Key. 지정하지 않으면 UPSTAGE_API_KEY 환경 변수 사용"
     ),
+    env_path: Optional[Path] = typer.Option(
+        Path.home() / ".pyhub.env",
+        "--env-file",
+        help="환경 변수 파일(.env) 경로 (디폴트: ~/.pyhub.env)",
+    ),
 ):
     if is_verbose:
         log_level = logging.DEBUG
     else:
         log_level = logging.INFO
-    init_django(debug=True, log_level=log_level)
+    init(debug=True, log_level=log_level, env_path=env_path)
 
     if upstage_api_key is None:
         upstage_api_key = os.environ.get("UPSTAGE_API_KEY")
