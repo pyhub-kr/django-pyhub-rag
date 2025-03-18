@@ -1,6 +1,21 @@
 from enum import Enum
 
 
+class LanguageEnum(str, Enum):
+    KOREAN = "korean"
+    ENGLISH = "english"
+    JAPANESE = "japanese"
+    CHINESE = "chinese"
+
+
+class LLMVendorEnum(str, Enum):
+    OPENAI = "openai"
+    ANTHROPIC = "anthropic"
+    GOOGLE = "google"
+    UPSTAGE = "upstage"
+    OLLAMA = "ollama"
+
+
 class EmbeddingDimensionsEnum(str, Enum):
     D_768 = "768"
     D_1536 = "1536"
@@ -27,15 +42,15 @@ class LLMChatModelEnum(str, Enum):
     CLAUDE_3_5_HAIKU_LATEST = "claude-3-5-haiku-latest"
     CLAUDE_3_5_SONNET_LATEST = "claude-3-5-sonnet-latest"
     CLAUDE_3_OPUS_LATEST = "claude-3-opus-latest"
-    # solar
-    UPSTAGE_SOLAR_PRO = "solar-pro"
-    UPSTAGE_SOLAR_MINI = "solar-mini"
     # google
     GEMINI_2_0_FLASH = "gemini-2.0-flash"
     GEMINI_2_0_FLASH_LITE = "gemini-2.0-flash-lite"
     GEMINI_1_5_FLASH = "gemini-1.5-flash"
     GEMINI_1_5_FLASH_8B = "gemini-1.5-flash-8b"
     GEMINI_1_5_PRO = "gemini-1.5-pro"
+    # upstage
+    UPSTAGE_SOLAR_PRO = "solar-pro"
+    UPSTAGE_SOLAR_MINI = "solar-mini"
     # ollama
     LLAMA_3_3 = "llama3.3"
     LLAMA_3_2 = "llama3.2"

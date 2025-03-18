@@ -1,19 +1,23 @@
 import logging
 import os
+from datetime import datetime
 from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 from shutil import rmtree
-from typing import List, Optional, cast
+from typing import List, Optional, Union, cast
 
 import typer
 from django.core.exceptions import ValidationError
 from django.core.files import File
+from django.core.validators import URLValidator
 from rich.console import Console
 from rich.table import Table
 
 from pyhub.init import init_django
+from pyhub.llm.enum import LanguageEnum, LLMChatModelEnum, LLMVendorEnum
 from pyhub.parser.json import json_dumps
 from pyhub.parser.upstage import UpstageDocumentParseParser
+from pyhub.parser.upstage.parser import ImageDescriptor
 from pyhub.parser.upstage.settings import (
     CACHE_DIR_PATH,
     DEFAULT_BATCH_PAGE_SIZE,
@@ -29,6 +33,7 @@ from pyhub.parser.upstage.types import (
     OCRModeEnum,
 )
 from pyhub.parser.utils import manage_cache_directory
+from pyhub.rag.utils import get_literal_values
 
 app = typer.Typer()
 console = Console()
@@ -45,10 +50,15 @@ def get_version() -> str:
 def main(
     ctx: typer.Context,
     is_print_version: bool = typer.Option(False, "--version", "-V", help="현재 패키지 버전 출력"),
+    is_help: bool = typer.Option(False, "--help", "-h", help="도움말 메시지 출력"),
 ):
     """PyHub RAG CLI tool"""
     if is_print_version:
         console.print(get_version())
+        raise typer.Exit()
+
+    if is_help:
+        print_help(ctx)
         raise typer.Exit()
 
     if ctx.invoked_subcommand is None:
@@ -78,7 +88,13 @@ def upstage(
         "--output-dir-path",
         "-o",
         writable=True,
-        help="jsonl 출력 파일 경로. 각 줄은 page_content/metadata 필드로 구성됩니다.",
+        help="Document jsonl 파일을 생성할 폴더 경로",
+    ),
+    document_format: DocumentFormatEnum = typer.Option(
+        DocumentFormatEnum.MARKDOWN,
+        "--document-format",
+        "-d",
+        help="생성할 문서 포맷",
     ),
     is_create_unified_output: bool = typer.Option(
         False,
@@ -86,32 +102,14 @@ def upstage(
         "-c",
         help="통합 파일 생성 여부",
     ),
-    document_format: DocumentFormatEnum = typer.Option(
-        DocumentFormatEnum.MARKDOWN, "--document-format", "-d", help="생성할 문서 포맷"
-    ),
-    unified_document_format: Optional[str] = typer.Option(
-        ",".join([e.value for e in DocumentFormatEnum]),
-        "--unified-output-format",
-        "-u",
-        help="통합 출력 문서 포맷 (쉼표로 구분). 지정하지 않으면 모든 지원 포맷으로 생성됩니다.",
-    ),
     document_split_strategy: DocumentSplitStrategyEnum = typer.Option(
         DocumentSplitStrategyEnum.PAGE,
         "--document-split-strategy",
         "-s",
-        help="문서 분할 전략 | (1) page: 페이지 단위로 Document 생성, (2) element: Element 단위로 Document 생성, (3) none: 파일 전체를 하나의 Document로 생성",
-    ),
-    ocr_mode: OCRModeEnum = typer.Option(OCRModeEnum.FORCE, help="OCR 모드"),
-    base64_encodings: str = typer.Option(
-        "figure,chart,table",
-        help=f"Base64로 인코딩할 요소 카테고리 목록 (쉼표로 구분): {', '.join([e.value for e in CategoryEnum])}",
-        callback=lambda x: validate_categories(x),
-    ),
-    ignore_element_category: str = typer.Option(
-        "footer",
-        "--ignore",
-        help="파싱 결과에서 제외할 요소 카테고리 목록 (쉼표로 구분). 기본값으로 footer가 제외됩니다.",
-        callback=lambda x: validate_categories(x),
+        help=(
+            "문서 분할 전략 | (1) page: 페이지 단위로 Document 생성, (2) element: Element 단위로 Document 생성, "
+            "(3) none: 파일 전체를 하나의 Document로 생성"
+        ),
     ),
     batch_page_size: int = typer.Option(
         DEFAULT_BATCH_PAGE_SIZE,
@@ -121,11 +119,88 @@ def upstage(
         max=MAX_BATCH_PAGE_SIZE,
         help=(
             f"한 번의 API 호출에서 처리할 PDF 페이지 수입니다. Upstage Document Parse API는 "
-            f"하나의 API 호출당 최대 {MAX_BATCH_PAGE_SIZE}페이지까지 지원합니다. "
+            f"하나의 API 호출당 최대 {MAX_BATCH_PAGE_SIZE} 페이지까지 지원합니다. "
             f"{MAX_BATCH_PAGE_SIZE}페이지를 초과하는 PDF 파일에는 이 설정이 꼭 필요합니다."
         ),
     ),
-    max_page: int = typer.Option(0, "--max-page", "-m", min=0, help="처리할 최대 페이지 수 (0: 모든 페이지)"),
+    max_page: int = typer.Option(
+        0,
+        "--max-page",
+        "-m",
+        min=0,
+        help="처리할 최대 페이지 수 (0: 모든 페이지)",
+    ),
+    ocr_mode: OCRModeEnum = typer.Option(OCRModeEnum.FORCE, help="OCR 모드"),
+    base64_encodings: str = typer.Option(
+        "figure,chart,table",
+        help=f"Base64로 인코딩할 요소 카테고리 목록 (쉼표로 구분) : {', '.join([e.value for e in CategoryEnum])}",
+        callback=lambda x: validate_categories(x),
+    ),
+    ignore_element_category: str = typer.Option(
+        "footer",
+        "--ignore",
+        help=f"파싱 결과에서 제외할 요소 카테고리 목록 (쉼표로 구분) (디폴트: footer) : {', '.join(get_literal_values(ElementCategoryType))}",
+        callback=lambda x: validate_categories(x),
+    ),
+    is_enable_image_descriptor: bool = typer.Option(
+        False,
+        "--enable-image-descriptor",
+        "-i",
+        help=(
+            "이미지 요소에 대한 자동 설명 생성 여부. 활성화하면 --base64-encodings 옵션으로 지정한 요소들에 대한 텍스트 설명을 "
+            "LLM을 통해 자동으로 생성하고, Document metadata의 image_descriptions 필드에 저장합니다."
+        ),
+    ),
+    image_descriptor_llm_vendor: LLMVendorEnum = typer.Option(
+        LLMVendorEnum.OPENAI,
+        "--image-descriptor-llm-vendor",
+        "-e",
+        help="이미지 설명 생성에 사용할 LLM Vendor",
+    ),
+    image_descriptor_llm_model: LLMChatModelEnum = typer.Option(
+        LLMChatModelEnum.GPT_4O_MINI,
+        "--image-descriptor-llm-model",
+        "-q",
+        help="이미지 설명 생성에 사용할 LLM 모델",
+    ),
+    image_descriptor_api_key: Optional[str] = typer.Option(
+        None,
+        "--image-descriptor-api-key",
+        "-k",
+        help=(
+            "이미지 설명 생성에 사용할 LLM API 키. LLM 벤더에 맞게 지정해야 합니다. 미지정 시 각 벤더별 기본 "
+            "환경변수(OPENAI_API_KEY, ANTHROPIC_API_KEY, UPSTAGE_API_KEY, GEMINI_API_KEY 등)에서 로딩됩니다."
+        ),
+    ),
+    image_descriptor_base_url: Optional[str] = typer.Option(
+        None,
+        "--image-descriptor-base-url",
+        "-r",
+        help=(
+            "이미지 설명 생성에 사용할 LLM API의 기본 URL. 기본 API 엔드포인트가 아닌 다른 엔드포인트를 사용하려는 경우 지정합니다. "
+            "예: OpenAI 호환 API 서버, Ollama"
+        ),
+        callback=lambda x: validate_url(x),
+    ),
+    image_descriptor_temperature: Optional[float] = typer.Option(
+        None,
+        "--image-descriptor-temperature",
+        "-t",
+        help="이미지 설명 생성에 사용할 온도 값 (높을수록 다양한 응답)",
+    ),
+    image_descriptor_max_tokens: Optional[int] = typer.Option(
+        None,
+        "--image-descriptor-max-tokens",
+        "-n",
+        help="이미지 설명 생성의 최대 토큰 수",
+    ),
+    image_descriptor_language: str = typer.Option(
+        LanguageEnum.KOREAN.value,
+        "--image-descriptor-language",
+        "-l",
+        help="이미지 설명 생성에 사용할 언어",
+        callback=lambda x: validate_language(x),
+    ),
     is_verbose: bool = typer.Option(False, "--verbose", "-v", help="상세한 처리 정보 표시"),
     is_force: bool = typer.Option(False, "--force", "-f", help="확인 없이 출력 폴더 삭제 후 재생성"),
     is_ignore_cache: bool = typer.Option(
@@ -162,20 +237,11 @@ def upstage(
     base64_encoding_category_list = cast(list[ElementCategoryType], base64_encodings)
     ignore_element_category_list = cast(list[ElementCategoryType], ignore_element_category)
 
-    # Process unified_document_format
-    unified_document_formats = []
-    if unified_document_format:
-        unified_document_formats = validate_output_formats(unified_document_format)
-
-    # If no formats specified, use document_format
-    if not unified_document_formats:
-        unified_document_formats = [document_format]
-
     # Check if output file exists and confirm overwrite if force option is not set
     if output_dir_path.exists():
         if is_force:
             if is_verbose:
-                console.print(f"[yellow]출력 폴더 {output_dir_path}을 삭제합니다.[/yellow]")
+                console.print(f"[yellow]출력 폴더 삭제 : {output_dir_path}[/yellow]")
             rmtree(output_dir_path, ignore_errors=True)
         else:
             overwrite = typer.confirm(
@@ -194,15 +260,12 @@ def upstage(
     # create one based on input_path with .jsonl extension
     jsonl_output_path = output_dir_path / input_path.with_suffix(".jsonl")
 
-    if is_create_unified_output:
-        unified_document_paths = []
-        for format_enum in unified_document_formats:
-            ext = DocumentFormatEnum.to_ext(format_enum)
-            unified_output_path = output_dir_path / input_path.with_suffix(ext).name
-            unified_output_path.unlink(missing_ok=True)
-            unified_document_paths.append((format_enum, unified_output_path))
-    else:
-        unified_document_paths = []
+    unified_document_paths = []
+    for format_enum in (DocumentFormatEnum.MARKDOWN, DocumentFormatEnum.HTML, DocumentFormatEnum.TEXT):
+        ext = DocumentFormatEnum.to_ext(format_enum)
+        unified_output_path = output_dir_path / input_path.with_suffix(ext).name
+        unified_output_path.unlink(missing_ok=True)
+        unified_document_paths.append((format_enum, unified_output_path))
 
     # Debug: Print all arguments except api_key
     if is_verbose:
@@ -210,7 +273,7 @@ def upstage(
         is_pdf = input_path.suffix.lower() == ".pdf"
 
         table = Table(show_header=True, header_style="bold blue")
-        table.add_column("매개변수", style="cyan")
+        table.add_column("설정", style="cyan")
         table.add_column("값", style="green")
 
         # Add rows to the table
@@ -219,11 +282,9 @@ def upstage(
         table.add_row("Document 분할 전략", document_split_strategy.value)
         table.add_row("OCR 모드", ocr_mode.value)
         table.add_row("생성할 Document 포맷", document_format.value)
-        if is_create_unified_output:
-            table.add_row("통합 출력 문서 포맷", ", ".join([fmt.value for fmt in unified_document_formats]))
         table.add_row("Base64 인코딩", ", ".join(base64_encoding_category_list))
         table.add_row("제외할 요소", ", ".join(ignore_element_category_list))
-        table.add_row("통합 문서 생성 여부", str(is_create_unified_output))
+        table.add_row("통합 문서 생성 여부", "예" if is_create_unified_output else "아니오")
 
         # Add batch size with warning if needed
         batch_size_str = str(batch_page_size)
@@ -232,9 +293,22 @@ def upstage(
         table.add_row("배치 크기", batch_size_str)
 
         table.add_row("최대 페이지", str(max_page))
-        table.add_row("상세 정보", str(is_verbose))
-        table.add_row("강제 덮어쓰기", str(is_force))
+        table.add_row("상세 정보", "예" if is_verbose else "아니오")
+        table.add_row("강제 덮어쓰기", "예" if is_force else "아니오")
 
+        # Add image descriptor information if enabled
+        if is_enable_image_descriptor:
+            table.add_row("이미지 설명 활성화", "예")
+            table.add_row("이미지 설명 LLM", f"{image_descriptor_llm_vendor} {image_descriptor_llm_model}")
+            if image_descriptor_base_url:
+                table.add_row("이미지 설명 LLM 기본 URL", image_descriptor_base_url)
+            table.add_row("이미지 설명 언어", image_descriptor_language)
+            if image_descriptor_temperature is not None:
+                table.add_row("이미지 설명 온도", str(image_descriptor_temperature))
+            if image_descriptor_max_tokens is not None:
+                table.add_row("이미지 설명 최대 토큰", str(image_descriptor_max_tokens))
+        else:
+            table.add_row("이미지 설명 활성화", "아니오")
         # Print the table
         console.print(table)
 
@@ -243,10 +317,24 @@ def upstage(
     if not is_pdf and batch_page_size != DEFAULT_BATCH_PAGE_SIZE and not is_verbose:
         console.print(f"[yellow]경고: 배치 크기 매개변수({batch_page_size})는 PDF가 아닌 파일에는 무시됩니다.[/yellow]")
 
+    if is_enable_image_descriptor:
+        image_descriptor = ImageDescriptor(
+            llm_vendor=image_descriptor_llm_vendor,
+            llm_model=image_descriptor_llm_model,
+            llm_api_key=image_descriptor_api_key,
+            llm_base_url=image_descriptor_base_url,
+            prompt_context={"language": image_descriptor_language},
+            temperature=image_descriptor_temperature,
+            max_tokens=image_descriptor_max_tokens,
+        )
+    else:
+        image_descriptor = None
+
     parser = UpstageDocumentParseParser(
         upstage_api_key=upstage_api_key,
         split=document_split_strategy.value,
         max_page=max_page,
+        image_descriptor=image_descriptor,
         ocr_mode=ocr_mode.value,
         document_format=document_format.value,
         base64_encoding_category_list=base64_encoding_category_list,
@@ -343,6 +431,14 @@ def validate_categories(categories_str: str) -> list[str]:
     return valid_categories
 
 
+def validate_language(value: str) -> Union[LanguageEnum, str]:
+    """Validates language input and returns either LanguageEnum or custom string value."""
+    try:
+        return LanguageEnum(value.upper())
+    except ValueError:
+        return value
+
+
 def validate_output_formats(formats_str: str) -> List[DocumentFormatEnum]:
     """Validates and converts comma-separated format strings to DocumentFormatEnum list."""
     if not formats_str:
@@ -368,3 +464,22 @@ def validate_output_formats(formats_str: str) -> List[DocumentFormatEnum]:
         raise typer.BadParameter(f"유효하지 않은 포맷: {', '.join(invalid_formats)}. 유효한 포맷: {valid_values}")
 
     return formats
+
+
+def validate_url(url: Optional[str]) -> Optional[str]:
+    """URL 형식의 유효성을 검사합니다."""
+    if url is None:
+        return None
+
+    validator = URLValidator(schemes=("http", "https"))
+
+    try:
+        validator(url)
+    except ValidationError:
+        raise typer.BadParameter(f"Invalid URL Pattern : {url}")
+
+
+def print_help(ctx: typer.Context) -> None:
+    console.print(ctx.get_help())
+    console.print(f"[dim] © {datetime.now().year} 파이썬사랑방 (기능 제안 및 컨설팅/교육 문의 : me@pyhub.kr)[/dim]")
+    raise typer.Exit()

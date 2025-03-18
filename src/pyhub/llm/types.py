@@ -8,12 +8,14 @@ from django.core.files import File
 from openai.types import ChatModel as OpenAIChatModel
 from typing_extensions import Optional
 
+LLMVendor: TypeAlias = Literal["openai", "anthropic", "google", "ollama"]
+
 #
 # Language
 #
 
 LanguageType: TypeAlias = Union[
-    Literal["Korean", "English", "Japanese", "Chinese"],
+    Literal["korean", "english", "japanese", "chinese"],
     str,
 ]
 
@@ -92,7 +94,7 @@ GoogleChatModel: TypeAlias = Union[
 ]
 
 
-LLMChatModel: TypeAlias = Union[OpenAIChatModel, AnthropicChatModel, UpstageChatModel, GoogleChatModel]
+LLMChatModel: TypeAlias = Union[OpenAIChatModel, AnthropicChatModel, UpstageChatModel, GoogleChatModel, OllamaChatModel]
 
 
 #

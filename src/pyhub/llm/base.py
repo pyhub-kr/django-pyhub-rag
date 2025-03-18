@@ -1,5 +1,7 @@
 import abc
+import asyncio
 import logging
+from dataclasses import dataclass
 from inspect import signature
 from pathlib import Path
 from typing import Any, AsyncGenerator, Generator, Optional, Union, cast
@@ -14,7 +16,6 @@ from .types import (
     ChainReply,
     Embed,
     EmbedList,
-    LanguageType,
     LLMChatModel,
     LLMEmbeddingModel,
     Message,
@@ -22,6 +23,16 @@ from .types import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass
+class DescribeImageRequest:
+    image: Union[str, Path, File]
+    system_prompt: Union[str, Template]
+    user_prompt: Union[str, Template]
+    temperature: Optional[float] = None
+    max_tokens: Optional[int] = None
+    prompt_context: Optional[dict[str, Any]] = None
 
 
 class BaseLLM(abc.ABC):
@@ -195,6 +206,8 @@ class BaseLLM(abc.ABC):
         """Generate a streaming response asynchronously using the specific LLM provider"""
         yield Reply(text="")
 
+    # TODO: 장식자를 통한 API 요청 캐싱 (using django file cache)
+
     def _ask_impl(
         self,
         input: Union[str, dict[str, str]],
@@ -243,7 +256,7 @@ class BaseLLM(abc.ABC):
                 except Exception as e:
                     if raise_errors:
                         raise e
-                    logger.error(f"Error occurred during streaming API call: {str(e)}")
+                    logger.error("Error occurred during streaming API call: %s", e)
                     yield Reply(text=f"Error occurred during streaming API call: {str(e)}")
 
             def sync_stream_handler() -> Generator[Reply, None, None]:
@@ -264,7 +277,7 @@ class BaseLLM(abc.ABC):
                 except Exception as e:
                     if raise_errors:
                         raise e
-                    logger.error(f"Error occurred during streaming API call: {str(e)}")
+                    logger.error("Error occurred during streaming API call: %s", e)
                     yield Reply(text=f"Error occurred during streaming API call: {str(e)}")
 
             return async_stream_handler() if is_async else sync_stream_handler()
@@ -283,7 +296,7 @@ class BaseLLM(abc.ABC):
                 except Exception as e:
                     if raise_errors:
                         raise e
-                    logger.error(f"Error occurred during API call: {str(e)}")
+                    logger.error("Error occurred during API call: %s", e)
                     return Reply(text=f"Error occurred during API call: {str(e)}")
                 else:
                     if use_history:
@@ -301,7 +314,7 @@ class BaseLLM(abc.ABC):
                 except Exception as e:
                     if raise_errors:
                         raise e
-                    logger.error(f"Error occurred during API call: {str(e)}")
+                    logger.error("Error occurred during API call: %s", e)
                     return Reply(text=f"Error occurred during API call: {str(e)}")
                 else:
                     if use_history:
@@ -406,68 +419,65 @@ class BaseLLM(abc.ABC):
 
     def describe_images(
         self,
-        images: Union[str, Path, File, list[Union[str, Path, File]]],
-        language: LanguageType = "english",
-        temperature: Optional[float] = None,
-        max_tokens: Optional[int] = None,
-        system_prompt="prompts/describe_images/system_prompt.txt",
-        user_prompt="prompts/describe_images/user_prompt.txt",
+        request: Union[DescribeImageRequest, list[DescribeImageRequest]],
     ) -> Reply:
-        return async_to_sync(self.describe_images_async)(
-            images=images,
-            language=language,
-            temperature=temperature,
-            max_tokens=max_tokens,
-            system_prompt=system_prompt,
-            user_prompt=user_prompt,
-        )
+        return async_to_sync(self.describe_images_async)(request)
 
     async def describe_images_async(
         self,
-        images: Union[str, Path, File, list[Union[str, Path, File]]],
-        language: LanguageType = "english",
-        temperature: Optional[float] = None,
-        max_tokens: Optional[int] = None,
-        system_prompt="prompts/describe_images/system_prompt.txt",
-        user_prompt="prompts/describe_images/user_prompt.txt",
+        request: Union[DescribeImageRequest, list[DescribeImageRequest]],
     ) -> Union[Reply, list[Reply]]:
+
         cls = self.__class__
-
         sig = signature(cls.__init__)
-        if "max_tokens" in sig.parameters:  # max_tokens is not supported in ollama
-            llm = cls(
-                model=self.model,
-                temperature=self.temperature if temperature is None else temperature,
-                max_tokens=self.max_tokens if max_tokens is None else max_tokens,
-                system_prompt=system_prompt,
-            )
+        is_supported_max_tokens = "max_tokens" in sig.parameters  # max_tokens is not supported in ollama
+
+        if not isinstance(request, (list, tuple)):
+            request_list = [request]
         else:
-            llm = cls(
-                model=self.model,
-                temperature=self.temperature if temperature is None else temperature,
-                system_prompt=system_prompt,
-            )
-            if max_tokens is not None:
-                logger.warning("max_tokens is not supported for this LLM")
+            request_list = request
 
-        if not isinstance(images, (list, tuple)):
-            images = [images]
+        async def process_single_image(
+            task_request: DescribeImageRequest,
+            idx: int,
+            total: int,
+        ) -> Reply:
+            logger.info("describe_images [%d/%d] : %s", idx + 1, total, task_request.image.name)
 
-        reply_list = []
-        for image in images:  # TODO: batch llm api 호출
+            if is_supported_max_tokens:
+                llm = cls(
+                    model=self.model,
+                    temperature=self.temperature if task_request.temperature is None else task_request.temperature,
+                    max_tokens=self.max_tokens if task_request.max_tokens is None else task_request.max_tokens,
+                    system_prompt=task_request.system_prompt,
+                )
+            else:
+                llm = cls(
+                    model=self.model,
+                    temperature=self.temperature if task_request.temperature is None else task_request.temperature,
+                    system_prompt=task_request.system_prompt,
+                )
+                if task_request.max_tokens is not None:
+                    logger.debug("max_tokens is not supported for %s LLM", self.model)
+
             reply = await llm.ask_async(
-                input=user_prompt,
-                files=[image],
-                context={
-                    "language": language,
-                },
+                input=task_request.user_prompt,
+                files=[task_request.image],
+                context=task_request.prompt_context,
             )
-            reply_list.append(reply)
+            return reply
 
-        if len(reply_list) == 1:
-            return reply_list[0]
+        # TODO: Task Queue (django-tasks, celery)를 통한 병렬 처리 + 한 Task 안에서 LLM batch API가 지원되면 활용하기
+        tasks = [process_single_image(request, idx, len(request_list)) for idx, request in enumerate(request_list)]
+        reply_list = await asyncio.gather(*tasks)
 
-        return reply_list
+        for request in request_list:
+            request.image.seek(0)
+
+        if isinstance(request_list, (list, tuple)):
+            return reply_list
+
+        return reply_list[0]
 
 
 class SequentialChain:

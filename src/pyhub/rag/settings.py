@@ -9,6 +9,7 @@ from pyhub.llm.types import LLMEmbeddingModel
 DEFAULTS = {
     "openai_base_url": "https://api.openai.com/v1",
     "upstage_base_url": "https://api.upstage.ai/v1/solar",
+    "ollama_base_url": "http://localhost:11434",
     "embedding_model": "text-embedding-3-small",
     "embedding_dimensions": 1536,
     "embedding_max_tokens_limit": 8191,
@@ -24,6 +25,7 @@ class RagSettings:
         upstage_base_url: Optional[str] = None,
         anthropic_api_key: Optional[str] = None,
         google_api_key: Optional[str] = None,
+        ollama_base_url: Optional[str] = None,
         embedding_model: Optional[LLMEmbeddingModel] = None,
         embedding_dimensions: Optional[int] = None,
         embedding_max_tokens_limit: Optional[int] = None,
@@ -35,6 +37,7 @@ class RagSettings:
             "upstage_base_url": upstage_base_url,
             "anthropic_api_key": anthropic_api_key,
             "google_api_key": google_api_key,
+            "ollama_base_url": ollama_base_url,
             "embedding_model": embedding_model,
             "embedding_dimensions": embedding_dimensions,
             "embedding_max_tokens_limit": embedding_max_tokens_limit,
@@ -47,6 +50,7 @@ class RagSettings:
         self.upstage_base_url = upstage_base_url
         self.anthropic_api_key = anthropic_api_key
         self.google_api_key = google_api_key
+        self.ollama_base_url = ollama_base_url
         self.embedding_model = embedding_model
         self.embedding_dimensions = embedding_dimensions
         self.embedding_max_tokens_limit = embedding_max_tokens_limit
@@ -80,6 +84,12 @@ class RagSettings:
             self.upstage_base_url = (
                 self.get_proj_settings_or_environ(("RAG_UPSTAGE_BASE_URL", "UPSTAGE_BASE_URL"))
                 or DEFAULTS["upstage_base_url"]
+            )
+
+        if self.ollama_base_url is None:
+            self.ollama_base_url = (
+                self.get_proj_settings_or_environ(("RAG_OLLAMA_BASE_URL", "OLLAMA_BASE_URL"))
+                or DEFAULTS["ollama_base_url"]
             )
 
         if self.embedding_model is None:

@@ -7,6 +7,7 @@ from ollama import AsyncClient
 from ollama import Client as SyncClient
 from ollama import ListResponse
 
+from ..rag.settings import rag_settings
 from .base import BaseLLM
 from .types import (
     Embed,
@@ -31,7 +32,7 @@ class OllamaLLM(BaseLLM):
 
     def __init__(
         self,
-        model: OllamaChatModel = "mistral:latest",
+        model: OllamaChatModel = "mistral",
         embedding_model: OllamaEmbeddingModel = "nomic-embed-text",
         temperature: float = 0.2,
         # max_tokens: int = 1000,
@@ -39,7 +40,7 @@ class OllamaLLM(BaseLLM):
         prompt: Optional[Union[str, Template]] = None,
         output_key: str = "text",
         initial_messages: Optional[list[Message]] = None,
-        api_base: str = "http://localhost:11434",
+        base_url: Optional[str] = None,
         timeout: int = 60,
     ):
         """
@@ -53,7 +54,7 @@ class OllamaLLM(BaseLLM):
             prompt: 사용자 프롬프트 템플릿
             output_key: 출력 결과를 저장할 키
             initial_messages: 초기 대화 메시지 목록
-            api_base: Ollama API 기본 URL
+            base_url: Ollama API 기본 URL
             timeout: API 요청 타임아웃 (초)
         """
 
@@ -73,7 +74,7 @@ class OllamaLLM(BaseLLM):
             output_key=output_key,
             initial_messages=initial_messages,
         )
-        self.api_base = api_base
+        self.base_url = base_url or rag_settings.ollama_base_url
         self.timeout = timeout
 
     def check(self) -> list[Error]:
@@ -82,23 +83,23 @@ class OllamaLLM(BaseLLM):
         def add_error(msg: str, hint: str = None):
             errors.append(Error(msg, hint=hint, obj=self))
 
-        client = SyncClient(host=self.api_base)
+        client = SyncClient(host=self.base_url)
         try:
             response: ListResponse = client.list()
         except ConnectionError:
-            add_error(f"Unable to connect to Ollama server at {self.api_base}.")
+            add_error(f"Unable to connect to Ollama server at {self.base_url}.")
         else:
             model_name_set = {model.model for model in response.models}
 
             if self.model not in model_name_set:
                 add_error(
-                    f"Ollama model '{self.model}' not found on server at {self.api_base}",
+                    f"Ollama model '{self.model}' not found on server at {self.base_url}",
                     hint="Please check if the model is installed or use 'ollama pull {self.model}' to download it.",
                 )
 
             if self.embedding_model not in model_name_set:
                 add_error(
-                    f"Ollama embedding model '{self.embedding_model}' not found on server at {self.api_base}",
+                    f"Ollama embedding model '{self.embedding_model}' not found on server at {self.base_url}",
                     hint="Please check if the embedding model is installed or use 'ollama pull {self.embedding_model}' to download it.",
                 )
 
@@ -158,7 +159,7 @@ class OllamaLLM(BaseLLM):
             "messages": message_history,
             "options": {
                 "temperature": self.temperature,
-                #  "max_tokens": self.max_tokens,  # TODO: ollama에서는 미지원?
+                #  "max_tokens": self.max_tokens,  # ollama 에서는 미지원
             },
         }
 
@@ -173,7 +174,7 @@ class OllamaLLM(BaseLLM):
         Ollama API를 사용하여 동기적으로 응답을 생성합니다.
         """
 
-        sync_client = SyncClient(host=self.api_base)
+        sync_client = SyncClient(host=self.base_url)
         request_params = self._make_request_params(
             input_context=input_context, human_message=human_message, messages=messages, model=model
         )
@@ -193,7 +194,7 @@ class OllamaLLM(BaseLLM):
         Ollama API를 사용하여 비동기적으로 응답을 생성합니다.
         """
 
-        async_client = AsyncClient(host=self.api_base)
+        async_client = AsyncClient(host=self.base_url)
         request_params = self._make_request_params(
             input_context=input_context, human_message=human_message, messages=messages, model=model
         )
@@ -213,7 +214,7 @@ class OllamaLLM(BaseLLM):
         Ollama API를 사용하여 동기적으로 스트리밍 응답을 생성합니다.
         """
 
-        sync_client = SyncClient(host=self.api_base)
+        sync_client = SyncClient(host=self.base_url)
         request_params = self._make_request_params(
             input_context=input_context, human_message=human_message, messages=messages, model=model
         )
@@ -232,7 +233,7 @@ class OllamaLLM(BaseLLM):
         """
         Ollama API를 사용하여 비동기적으로 스트리밍 응답을 생성합니다.
         """
-        async_client = AsyncClient(host=self.api_base)
+        async_client = AsyncClient(host=self.base_url)
         request_params = self._make_request_params(
             input_context=input_context, human_message=human_message, messages=messages, model=model
         )
@@ -251,7 +252,7 @@ class OllamaLLM(BaseLLM):
         """
         embedding_model = model or self.embedding_model
 
-        client = SyncClient(host=self.api_base)
+        client = SyncClient(host=self.base_url)
         response = client.embed(
             model=cast(str, embedding_model),
             input=input,
@@ -271,7 +272,7 @@ class OllamaLLM(BaseLLM):
 
         embedding_model = model or self.embedding_model
 
-        client = AsyncClient(host=self.api_base)
+        client = AsyncClient(host=self.base_url)
         response = await client.embed(
             model=cast(str, embedding_model),
             input=input,

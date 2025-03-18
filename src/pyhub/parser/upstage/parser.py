@@ -3,9 +3,10 @@ import io
 import json
 import logging
 import os.path
+from dataclasses import dataclass
 from functools import reduce
 from hashlib import md5
-from typing import AsyncGenerator, Generator, Optional
+from typing import Any, AsyncGenerator, Generator, Optional, cast
 
 import httpx
 from django.core.exceptions import ValidationError
@@ -13,6 +14,10 @@ from django.core.files import File
 from PyPDF2 import PdfReader, PdfWriter
 from PyPDF2.errors import PdfReadError
 
+from pyhub.llm import AnthropicLLM, GoogleLLM, OllamaLLM, OpenAILLM
+from pyhub.llm.base import BaseLLM, DescribeImageRequest
+from pyhub.llm.enum import LLMVendorEnum
+from pyhub.llm.types import GoogleChatModel, LLMChatModel, OpenAIChatModel, Reply
 from pyhub.parser.documents import Document
 
 from .settings import (
@@ -35,6 +40,62 @@ from .validators import validate_upstage_document
 logger = logging.getLogger(__name__)
 
 
+@dataclass
+class ImageDescriptor:
+    llm_vendor: LLMVendorEnum = "openai"
+    llm_model: LLMChatModel = "gpt-4o-mini"
+    llm_api_key: Optional[str] = None
+    llm_base_url: Optional[str] = None
+    temperature: Optional[float] = None
+    max_tokens: Optional[int] = None
+    system_prompts = {
+        "default": "prompts/describe/image/system.md",
+        "table": "prompts/describe/table/system.md",
+    }
+    user_prompts = {
+        "default": "prompts/describe/image/user.md",
+        "table": "prompts/describe/table/user.md",
+    }
+    prompt_context: Optional[dict[str, Any]] = None
+
+    def __str__(self) -> str:
+        """인스턴스 정보를 문자열로 반환합니다. API 키는 제외됩니다."""
+        return (
+            f"ImageDescriptor(vendor={self.llm_vendor}, model={self.llm_model}, "
+            f"temperature={self.temperature}, max_tokens={self.max_tokens}, "
+            f"system_prompts={list(self.system_prompts.keys())}, "
+            f"user_prompts={list(self.user_prompts.keys())})"
+        )
+
+    def get_llm(self) -> BaseLLM:
+        if "openai" == self.llm_vendor:
+            llm = OpenAILLM(
+                model=cast(OpenAIChatModel, self.llm_model), api_key=self.llm_api_key, base_url=self.llm_base_url
+            )
+        elif "anthropic" == self.llm_vendor:
+            llm = AnthropicLLM(model=self.llm_model, api_key=self.llm_api_key)
+        elif "google" == self.llm_vendor:
+            llm = GoogleLLM(model=cast(GoogleChatModel, self.llm_model), api_key=self.llm_api_key)
+        elif "ollama" == self.llm_vendor:
+            llm = OllamaLLM(model=self.llm_model, base_url=self.llm_base_url)
+        else:
+            raise ValueError(f"Not Implemented llm vendor: {self.llm_vendor}")
+
+        return llm
+
+    def get_system_prompt(self, category: ElementCategoryType) -> Optional[str]:
+        try:
+            return self.system_prompts[category]
+        except KeyError:
+            return self.system_prompts["default"]
+
+    def get_user_prompt(self, category: ElementCategoryType) -> Optional[str]:
+        try:
+            return self.user_prompts[category]
+        except KeyError:
+            return self.user_prompts["default"]
+
+
 class UpstageDocumentParseParser:
     def __init__(
         self,
@@ -43,6 +104,7 @@ class UpstageDocumentParseParser:
         model: str = DOCUMENT_PARSE_DEFAULT_MODEL,
         split: DocumentSplitStrategyType = "page",
         max_page: int = 0,
+        image_descriptor: ImageDescriptor = None,
         ocr_mode: OCRModeType = "auto",
         document_format: DocumentFormatType = "html",
         coordinates: bool = False,
@@ -94,6 +156,7 @@ class UpstageDocumentParseParser:
         self.model = model
         self.split = split
         self.max_page = max_page
+        self.image_descriptor = image_descriptor
         self.ocr_mode = ocr_mode
         self.document_format = document_format
         self.coordinates = coordinates
@@ -164,7 +227,7 @@ class UpstageDocumentParseParser:
                 except StopAsyncIteration:
                     break
         except Exception as e:
-            raise ValueError(f"동기 파싱 중 오류 발생: {e}")
+            raise ValueError(f"오류 발생: {e}")
 
     async def lazy_parse_async(
         self,
@@ -187,8 +250,6 @@ class UpstageDocumentParseParser:
         Raises:
             ValueError: 유효하지 않은 분할 유형이 제공되거나 파일 검증이 실패한 경우 발생합니다.
         """
-        # 파일 유효성 검사 추가
-        logger.debug("비동기 lazy_parse_async를 batch_page_size=%d로 시작합니다", batch_page_size)
 
         if ignore_validation is False:
             if not self.is_valid(file):
@@ -251,11 +312,10 @@ class UpstageDocumentParseParser:
             ValueError: PDF 파일 읽기 실패 또는 batch_page_size가 최대 허용 페이지 수를 초과할 경우 발생합니다.
         """
         try:
-            logger.debug("파일을 PDF로 읽기 시도 중")
             full_docs = PdfReader(file)
             total_pages = len(full_docs.pages)
             is_pdf = True
-            logger.debug("PDF를 %d 페이지로 성공적으로 읽었습니다", total_pages)
+            logger.info("PDF 파일 : 총 %d 페이지", total_pages)
         except PdfReadError:
             logger.debug("파일이 PDF가 아닙니다. 단일 페이지 문서로 처리합니다")
             full_docs = None
@@ -268,45 +328,41 @@ class UpstageDocumentParseParser:
         # max_page 제한 적용 (설정된 경우)
         if self.max_page > 0 and is_pdf:
             total_pages = min(total_pages, self.max_page)
-            logger.debug("max_page 설정으로 인해 처리를 %d 페이지로 제한합니다", total_pages)
-
-        if is_pdf:
-            logger.debug("%d 페이지의 PDF 파일 처리 중", total_pages)
-        else:
-            logger.debug("PDF가 아닌 파일을 단일 페이지 문서로 처리 중")
+            logger.debug("max_page=%d 설정 : %d 페이지까지만 변환", self.max_page, total_pages)
 
         # batch_page_size가 최대 허용 페이지 수를 초과하지 않는지 검증
         if batch_page_size > MAX_BATCH_PAGE_SIZE:
-            logger.debug(
-                "batch_page_size (%d)가 최대 허용 페이지 수 (%d)를 초과합니다", batch_page_size, MAX_BATCH_PAGE_SIZE
-            )
             raise ValueError(
                 f"batch_page_size ({batch_page_size})가 최대 허용 페이지 수 ({MAX_BATCH_PAGE_SIZE})를 초과합니다"
             )
 
         if is_pdf:
-            start_page = 0
-            while start_page < total_pages:
+            start_page_index = 0
+            while start_page_index < total_pages:
                 # 실제로 처리할 페이지 수 계산 (남은 페이지와 batch_page_size 중 작은 값)
-                pages_to_process = min(batch_page_size, total_pages - start_page)
+                pages_to_process = min(batch_page_size, total_pages - start_page_index)
+                end_page_index = start_page_index + pages_to_process - 1
 
-                logger.debug(
-                    "%d 페이지부터 %d 페이지까지 처리 중 (총 %d 페이지)",
-                    start_page,
-                    start_page + pages_to_process - 1,
-                    total_pages,
-                )
+                if start_page_index == end_page_index:
+                    logger.debug("%d / %d 페이지", start_page_index + 1, total_pages)
+                else:
+                    logger.debug(
+                        "%d~%d / %d 페이지",
+                        start_page_index + 1,
+                        end_page_index + 1,
+                        total_pages,
+                    )
 
                 merger = PdfWriter()
                 merger.append(
                     full_docs,
-                    pages=(start_page, min(start_page + pages_to_process, len(full_docs.pages))),
+                    pages=(start_page_index, min(start_page_index + pages_to_process, len(full_docs.pages))),
                 )
                 with io.BytesIO() as buffer:
                     merger.write(buffer)
                     buffer.seek(0)
                     response_obj = await self._call_document_parse_api({"document": buffer})
-                    async for element in self._parse_response_obj(response_obj, total_pages):
+                    async for element in self._response_to_elements(response_obj, total_pages):
                         if element.category in self.ignore_element_category_list:
                             content_s = getattr(element.content, self.document_format)
                             content_preview = content_s[:100] + ("..." if len(content_s) > 100 else "")
@@ -314,16 +370,14 @@ class UpstageDocumentParseParser:
                                 "Ignore element category : %s, content: %s", element.category, repr(content_preview)
                             )
                         else:
-                            element.page += start_page
+                            element.page += start_page_index
                             yield element
 
-                start_page += pages_to_process
+                start_page_index += pages_to_process
 
         else:
-            logger.debug("PDF가 아닌 파일을 단일 페이지 문서로 처리 중")
-
             response_obj = await self._call_document_parse_api({"document": file})
-            async for element in self._parse_response_obj(response_obj, total_pages):
+            async for element in self._response_to_elements(response_obj, total_pages):
                 if element.category in self.ignore_element_category_list:
                     content_s = getattr(element.content, self.document_format)
                     content_preview = content_s[:100] + ("..." if len(content_s) > 100 else "")
@@ -414,8 +468,7 @@ class UpstageDocumentParseParser:
         except Exception as e:
             raise ValueError(f"오류 발생: {e}")
 
-    @staticmethod
-    async def _parse_response_obj(response_obj: dict, total_pages: int) -> AsyncGenerator[Element, None]:
+    async def _response_to_elements(self, response_obj: dict, total_pages: int) -> AsyncGenerator[Element, None]:
         """
         API 응답 객체를 파싱하여 Element 객체들을 생성하는 비동기 제너레이터입니다.
 
@@ -429,23 +482,86 @@ class UpstageDocumentParseParser:
         api: str = response_obj.get("api")
         model: str = response_obj.get("model")
         # usage: dict = response_obj.get("usage")  # ex: { "pages": 10 }
-        elements = response_obj.get("elements") or []
+        bare_element_list = response_obj.get("elements") or []
 
-        logger.debug("%d개의 요소를 받았습니다", len(elements))
+        logger.info("%d개의 요소를 찾았습니다.", len(bare_element_list))
 
-        for element in elements:
-            yield Element(
-                id=element["id"],
-                page=element["page"],
+        if self.image_descriptor is not None:
+            image_descriptor_llm = self.image_descriptor.get_llm()
+            prompt_context = (self.image_descriptor.prompt_context or {}).copy()
+        else:
+            image_descriptor_llm = None
+            prompt_context = {}
+
+        element_list: list[Element] = []
+        request_list: list[DescribeImageRequest] = []
+        for bare_element in bare_element_list:
+            element = Element(
+                id=bare_element["id"],
+                page=bare_element["page"],
                 total_pages=total_pages,
-                category=element["category"],
+                category=bare_element["category"],
                 content=ElementContent(
-                    markdown=element["content"]["markdown"],
-                    text=element["content"]["text"],
-                    html=element["content"]["html"],
+                    markdown=bare_element["content"]["markdown"],
+                    text=bare_element["content"]["text"],
+                    html=bare_element["content"]["html"],
                 ),
-                b64_str=element.get("base64_encoding", ""),
-                coordinates=element.get("coordinates") or [],
+                b64_str=bare_element.get("base64_encoding", ""),
+                coordinates=bare_element.get("coordinates") or [],
                 api=api,
                 model=model,
             )
+
+            element_list.append(element)
+
+            if image_descriptor_llm is not None and len(element.files) > 0:
+                system_prompt = self.image_descriptor.get_system_prompt(element.category)
+                user_prompt = self.image_descriptor.get_user_prompt(element.category)
+
+                for __, file in element.files.items():
+                    context = prompt_context.copy()
+                    context["context"] = None  # 맥락이 있다면 추가
+
+                    request_list.append(
+                        DescribeImageRequest(
+                            image=file,
+                            system_prompt=system_prompt,
+                            user_prompt=user_prompt,
+                            temperature=self.image_descriptor.temperature,
+                            max_tokens=self.image_descriptor.max_tokens,
+                            prompt_context=prompt_context,
+                        )
+                    )
+
+        if image_descriptor_llm is not None and len(request_list) > 0:
+            logger.info(
+                "%d개의 요소에서 %d개의 이미지를 찾았습니다.",
+                len(element_list),
+                len(request_list),
+            )
+            logger.info(
+                "%s %s 모델을 통해 이미지 설명을 생성합니다.",
+                self.image_descriptor.llm_vendor,
+                self.image_descriptor.llm_model,
+            )
+
+            llm_reply_list: list[Reply] = await image_descriptor_llm.describe_images_async(request_list)
+
+            # 이미지 설명을 각 element에 매핑
+            current_idx = 0
+            for element in element_list:
+                if element.files:
+                    num_files = len(element.files)
+
+                    for file_name, reply in zip(
+                        element.files.keys(),
+                        llm_reply_list[current_idx : current_idx + num_files],
+                    ):
+                        element.image_descriptions += f"<image name='{file_name}'>" + reply.text + "</image>" + "\n"
+
+                    element.image_descriptions = element.image_descriptions.strip()
+
+                    current_idx += num_files
+
+        for element in element_list:
+            yield element

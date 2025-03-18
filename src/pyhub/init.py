@@ -73,7 +73,6 @@ def init_django(debug: bool = False, log_level: int = logging.INFO):
                         "()": "colorlog.ColoredFormatter",
                         "format": "%(log_color)s[%(asctime)s] %(message)s",
                         "log_colors": {
-                            "DEBUG": "blue",
                             "INFO": "green",
                             "WARNING": "yellow",
                             "ERROR": "red",
@@ -99,7 +98,6 @@ def init_django(debug: bool = False, log_level: int = logging.INFO):
             },
         )
 
-        # Django 설정 초기화
         django.setup()
 
         logging.debug("Django 환경이 초기화되었습니다.")

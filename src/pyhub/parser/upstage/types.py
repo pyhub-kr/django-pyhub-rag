@@ -129,9 +129,11 @@ class Element:
     coordinates: list[Coordinate]
     api: str
     model: str
+    # API 응답에서 Element 마다 base64 파일은 1개이지만, Element가 합쳐지면 2개 이상이 될 수 있기에 dict 타입으로 지정했습니다.
     files: dict[str, File] = field(default_factory=dict)
     separator: str = "\n\n"
     elements: list["Element"] = field(default_factory=list)
+    image_descriptions: str = ""
 
     def __post_init__(self):
         if self.b64_str:
@@ -188,6 +190,7 @@ class Element:
             files=merged_files,  # Add merged files dictionary
             separator=self.separator,
             elements=accumulated_elements,  # Add accumulated elements
+            image_descriptions=(self.image_descriptions + self.separator + other.image_descriptions).strip(),
         )
 
     def to_dict(self) -> dict:
@@ -199,6 +202,9 @@ class Element:
             document_format,
             f"Invalid document_format : {document_format}",
         )
+
+        if self.image_descriptions:
+            kwargs["image_descriptions"] = self.image_descriptions
 
         return Document(
             page_content=page_content,
