@@ -19,9 +19,9 @@ from pyhub.llm.base import BaseLLM, DescribeImageRequest
 from pyhub.llm.types import (
     GoogleChatModelType,
     LLMChatModelType,
+    LLMVendorEnum,
     OpenAIChatModelType,
     Reply,
-    LLMVendorEnum,
 )
 from pyhub.parser.documents import Document
 
@@ -565,6 +565,8 @@ class UpstageDocumentParseParser:
                         llm_reply_list[current_idx : current_idx + num_files],
                     ):
                         element.image_descriptions += f"<image name='{file_name}'>" + reply.text + "</image>" + "\n"
+                        if reply.usage:
+                            logger.debug("Image description token : %s", reply.usage)
 
                     element.image_descriptions = element.image_descriptions.strip()
 

@@ -171,6 +171,11 @@ class Usage:
             return Usage(input=self.input + other.input, output=self.output + other.output)
         return NotImplemented
 
+    def __bool__(self):
+        if self.input == 0 and self.output == 0:
+            return False
+        return True
+
 
 @dataclass
 class Price:

@@ -299,7 +299,7 @@ def upstage(
         # Add image descriptor information if enabled
         if is_enable_image_descriptor:
             table.add_row("이미지 설명 활성화", "예")
-            table.add_row("이미지 설명 LLM", f"{image_descriptor_llm_vendor} {image_descriptor_llm_model}")
+            table.add_row("이미지 설명 LLM", f"{image_descriptor_llm_vendor.value} {image_descriptor_llm_model.value}")
             if image_descriptor_base_url:
                 table.add_row("이미지 설명 LLM 기본 URL", image_descriptor_base_url)
             table.add_row("이미지 설명 언어", image_descriptor_language)
