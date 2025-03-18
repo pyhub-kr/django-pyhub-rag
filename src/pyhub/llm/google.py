@@ -120,9 +120,13 @@ class GoogleLLM(BaseLLM):
         )
 
         system_prompt: Optional[str] = self.get_system_prompt(input_context)
+        if system_prompt is None:
+            system_instruction = None
+        else:
+            system_instruction = Content(parts=[Part(text=system_prompt)])
 
         config = GenerateContentConfig(
-            system_instruction=Content(parts=[Part(text=system_prompt)]),
+            system_instruction=system_instruction,
             max_output_tokens=self.max_tokens,
             temperature=self.temperature,
         )
