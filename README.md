@@ -37,7 +37,7 @@ OPENAI_API_KEY=sk-...
 pip install --upgrade 'django-pyhub-rag[parser]'
 ```
 
-라이브러리가 정상적으로 설치되셨다면, 다음 2가지 방법으로 `pyhub.parser upstage` 명령을 실행하실 수 있습니다.
+라이브러리가 정상적으로 설치되셨다면, 다음 3가지 방법으로 `pyhub.parser upstage` 명령을 실행하실 수 있습니다.
 
 ```
 # 실행 방법 #1
@@ -45,6 +45,9 @@ python -m pyhub.parser upstage --help
 
 # 실행 방법 #2
 pyhub.parser upstage --help
+
+# 실행 방법 #3
+uv run -m pyhub.parser upstage --help
 ```
 
 변환할 PDF 파일을 하나 준비해주세요. PDF 파일 경로를 지정하시면 즉시 PDF 문서 파싱이 수행되고 `./output/` 경로에 jsonl 파일 및 추출된 이미지 파일이 저장됩니다.
@@ -109,7 +112,8 @@ class TaxlawDocument(SQLiteVectorDocument):
 
 ## 관련 튜토리얼
 
-1. [장고로 만드는 RAG 웹 채팅 서비스](https://ai.pyhub.kr/hands-on-lab/django-webchat-rag/) 문서에서 본 라이브러리 Vector Store 기능 활용에 대해서 다루고 있습니다.
+1. `django-pyhub-rag` 라이브러리에 대한 직접적인 활용 방법에 대해서는 [파이썬사랑방 TV](https://www.youtube.com/@pyhub-kr) 유튜브 채널에서 다양하게 다뤄보겠습니다.
+2. [장고로 만드는 RAG 웹 채팅 서비스](https://ai.pyhub.kr/hands-on-lab/django-webchat-rag/) 문서에서 본 라이브러리 Vector Store 기능 활용에 대해서 다루고 있습니다.
 
 ## 라이선스
 
