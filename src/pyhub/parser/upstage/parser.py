@@ -234,7 +234,7 @@ class UpstageDocumentParseParser:
                 except StopAsyncIteration:
                     break
         except Exception as e:
-            raise ValueError(f"오류 발생: {e}")
+            raise ValueError(str(e)) from e
 
     async def lazy_parse_async(
         self,
@@ -329,8 +329,7 @@ class UpstageDocumentParseParser:
             total_pages = 1
             is_pdf = False
         except Exception as e:
-            logger.debug("파일 읽기 오류: %s", str(e))
-            raise ValueError(f"PDF 파일 읽기 실패: {e}")
+            raise ValueError(f"PDF 파일 읽기 실패: {e}") from e
 
         # max_page 제한 적용 (설정된 경우)
         if self.max_page > 0 and is_pdf:
@@ -473,7 +472,7 @@ class UpstageDocumentParseParser:
         except json.JSONDecodeError as e:
             raise ValueError(f"JSON 응답 디코딩 실패: {e}")
         except Exception as e:
-            raise ValueError(f"오류 발생: {e}")
+            raise ValueError(str(e)) from e
 
     async def _response_to_elements(self, response_obj: dict, total_pages: int) -> AsyncGenerator[Element, None]:
         """

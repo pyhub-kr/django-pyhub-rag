@@ -8,6 +8,8 @@ from pyhub.llm.types import (
     GoogleEmbeddingModelType,
     LLMEmbeddingModelType,
     OpenAIEmbeddingModelType,
+    Embed,
+    EmbedList,
 )
 from pyhub.rag.settings import rag_settings
 from pyhub.rag.utils import get_literal_values
@@ -68,7 +70,7 @@ class BaseVectorField(models.Field):
         self,
         input: Union[str, list[str]],
         model: Optional[LLMEmbeddingModelType] = None,
-    ) -> Union[list[float], list[list[float]]]:
+    ) -> Union[Embed, EmbedList]:
 
         embedding_model = model or self.embedding_model
 
@@ -86,7 +88,7 @@ class BaseVectorField(models.Field):
         self,
         input: Union[str, list[str]],
         model: Optional[LLMEmbeddingModelType] = None,
-    ) -> Union[list[float], list[list[float]]]:
+    ) -> Union[Embed, EmbedList]:
         embedding_model = model or self.embedding_model
 
         if embedding_model in get_literal_values(OpenAIEmbeddingModelType):

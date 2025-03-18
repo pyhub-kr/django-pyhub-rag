@@ -214,6 +214,7 @@ def upstage(
         help="환경 변수 파일(.env) 경로 (디폴트: ~/.pyhub.env)",
     ),
     is_print_version: bool = typer.Option(False, "--version", help="현재 패키지 버전 출력"),
+    is_debug: bool = typer.Option(False, "--debug"),
 ):
     if is_print_version:
         console.print(get_version())
@@ -408,13 +409,14 @@ def upstage(
         raise typer.Exit(code=1)
     except ValidationError as e:
         console.print("[bold red]유효성 검사 오류:[/bold red] 파일이 필요한 제약 조건을 충족하지 않습니다")
-        console.print(f"[red]세부 정보: {str(e)}[/red]")
+        console.print(f"[red]{str(e)}[/red]")
         raise typer.Exit(code=1)
     except Exception as e:
         console.print(f"[bold red]오류:[/bold red] 파일을 열거나 처리하는 데 실패했습니다: {input_path}")
-        console.print(f"[red]세부 정보: {str(e)}[/red]")
+        console.print(f"[red]{str(e)}[/red]")
 
-        console.print_exception()
+        if is_debug:
+            console.print_exception()
 
         raise typer.Exit(code=1)
 
