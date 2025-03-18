@@ -1,6 +1,6 @@
 [project]
 name = "django-pyhub-rag"
-version = "0.9.9"
+version = "0.9.10"
 description = "Django app library for RAG integration"
 authors = [{ name = "Chinseok Lee", email = "me@pyhub.kr" }]
 requires-python = ">=3.10"
