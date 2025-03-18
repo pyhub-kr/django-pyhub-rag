@@ -6,7 +6,7 @@ DOCUMENT_PARSE_DEFAULT_MODEL = "document-parse"
 DEFAULT_TIMEOUT = 600
 
 # 파일 제약사항 관련 상수
-SUPPORTED_FILE_EXTENSIONS = ["pdf", "jpeg", "jpg", "png", "bmp", "tiff", "tif", "heic", "docx", "pptx", "xlsx"]
+SUPPORTED_FILE_EXTENSIONS = ["pdf"]  #, "jpeg", "jpg", "png", "bmp", "tiff", "tif", "heic", "docx", "pptx", "xlsx"]
 MAX_FILE_SIZE_MB = 50
 MAX_PIXELS_PER_PAGE = 100_000_000  # 1억 픽셀
 
