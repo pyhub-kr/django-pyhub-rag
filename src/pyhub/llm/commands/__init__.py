@@ -22,7 +22,7 @@ console = Console()
 @app.callback(invoke_without_command=True)
 def main(
     ctx: typer.Context,
-    is_print_version: bool = typer.Option(False, "--version", "-V", help="현재 패키지 버전 출력"),
+    is_print_version: bool = typer.Option(False, "--version", help="현재 패키지 버전 출력"),
 ):
     """PyHub RAG CLI tool"""
 
@@ -70,8 +70,8 @@ def ask(
         "--env-file",
         help="환경 변수 파일(.env) 경로 (디폴트: ~/.pyhub.env)",
     ),
-    is_print_version: bool = typer.Option(False, "--version", "-V", help="현재 패키지 버전 출력"),
-    is_verbose: bool = typer.Option(False, "--verbose", "-v", help="상세한 처리 정보 표시"),
+    is_print_version: bool = typer.Option(False, "--version", help="현재 패키지 버전 출력"),
+    is_verbose: bool = typer.Option(False, "--verbose", help="상세한 처리 정보 표시"),
 ):
     if is_print_version:
         console.print(get_version())

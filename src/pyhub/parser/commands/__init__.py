@@ -41,7 +41,7 @@ console = Console()
 @app.callback(invoke_without_command=True)
 def main(
     ctx: typer.Context,
-    is_print_version: bool = typer.Option(False, "--version", "-V", help="현재 패키지 버전 출력"),
+    is_print_version: bool = typer.Option(False, "--version", help="현재 패키지 버전 출력"),
     is_help: bool = typer.Option(False, "--help", "-h", help="도움말 메시지 출력"),
 ):
     """PyHub RAG CLI tool"""
@@ -121,14 +121,15 @@ def upstage(
     max_page: int = typer.Option(
         0,
         "--max-page",
-        "-m",
         min=0,
         help="처리할 최대 페이지 수 (0: 모든 페이지)",
     ),
     ocr_mode: OCRModeEnum = typer.Option(OCRModeEnum.FORCE, help="OCR 모드"),
-    base64_encodings: str = typer.Option(
+    extract_element_types: str = typer.Option(
         "figure,chart,table",
-        help=f"Base64로 인코딩할 요소 카테고리 목록 (쉼표로 구분) : {', '.join([e.value for e in CategoryEnum])}",
+        "--extract-element-types",
+        "-t",
+        help=f"이미지로서 추출할 요소 (쉼표로 구분) : {', '.join([e.value for e in CategoryEnum])}",
         callback=lambda x: validate_categories(x),
     ),
     ignore_element_category: str = typer.Option(
@@ -142,20 +143,20 @@ def upstage(
         "--enable-image-descriptor",
         "-i",
         help=(
-            "이미지 요소에 대한 자동 설명 생성 여부. 활성화하면 --base64-encodings 옵션으로 지정한 요소들에 대한 텍스트 설명을 "
+            "이미지 요소에 대한 자동 설명 생성 여부. 활성화하면 --extract-element-types 옵션으로 지정한 요소들에 대한 텍스트 설명을 "
             "LLM을 통해 자동으로 생성하고, Document metadata의 image_descriptions 필드에 저장합니다."
         ),
     ),
     image_descriptor_llm_vendor: LLMVendorEnum = typer.Option(
         LLMVendorEnum.OPENAI,
         "--image-descriptor-llm-vendor",
-        "-e",
+        "-v",
         help="이미지 설명 생성에 사용할 LLM Vendor",
     ),
     image_descriptor_llm_model: LLMChatModelEnum = typer.Option(
         LLMChatModelEnum.GPT_4O_MINI,
         "--image-descriptor-llm-model",
-        "-q",
+        "-m",
         help="이미지 설명 생성에 사용할 LLM 모델",
     ),
     image_descriptor_api_key: Optional[str] = typer.Option(
@@ -180,7 +181,7 @@ def upstage(
     image_descriptor_temperature: Optional[float] = typer.Option(
         None,
         "--image-descriptor-temperature",
-        "-t",
+        "-p",
         help="이미지 설명 생성에 사용할 온도 값 (높을수록 다양한 응답)",
     ),
     image_descriptor_max_tokens: Optional[int] = typer.Option(
@@ -196,7 +197,7 @@ def upstage(
         help="이미지 설명 생성에 사용할 언어",
         callback=lambda x: validate_language(x),
     ),
-    is_verbose: bool = typer.Option(False, "--verbose", "-v", help="상세한 처리 정보 표시"),
+    is_verbose: bool = typer.Option(False, "--verbose", help="상세한 처리 정보 표시"),
     is_force: bool = typer.Option(False, "--force", "-f", help="확인 없이 출력 폴더 삭제 후 재생성"),
     is_ignore_cache: bool = typer.Option(
         False, "--ignore-cache", help="API 응답 캐시를 무시하고 항상 새로운 API 요청을 보냅니다. 캐시는 유지됩니다."
@@ -212,7 +213,7 @@ def upstage(
         "--env-file",
         help="환경 변수 파일(.env) 경로 (디폴트: ~/.pyhub.env)",
     ),
-    is_print_version: bool = typer.Option(False, "--version", "-V", help="현재 패키지 버전 출력"),
+    is_print_version: bool = typer.Option(False, "--version", help="현재 패키지 버전 출력"),
 ):
     if is_print_version:
         console.print(get_version())
@@ -247,7 +248,7 @@ def upstage(
 
     is_pdf = input_path.suffix.lower() == ".pdf"
 
-    base64_encoding_category_list = cast(list[ElementCategoryType], base64_encodings)
+    extract_element_category_list = cast(list[ElementCategoryType], extract_element_types)
     ignore_element_category_list = cast(list[ElementCategoryType], ignore_element_category)
 
     # Check if output file exists and confirm overwrite if force option is not set
@@ -293,7 +294,7 @@ def upstage(
         table.add_row("Document 분할 전략", document_split_strategy.value)
         table.add_row("OCR 모드", ocr_mode.value)
         table.add_row("생성할 Document 포맷", document_format.value)
-        table.add_row("Base64 인코딩", ", ".join(base64_encoding_category_list))
+        table.add_row("이미지로서 추출할 요소", ", ".join(extract_element_category_list))
         table.add_row("제외할 요소", ", ".join(ignore_element_category_list))
         table.add_row("통합 문서 생성 여부", "예" if is_create_unified_output else "아니오")
 
@@ -347,7 +348,7 @@ def upstage(
         image_descriptor=image_descriptor,
         ocr_mode=ocr_mode.value,
         document_format=document_format.value,
-        base64_encoding_category_list=base64_encoding_category_list,
+        base64_encoding_category_list=extract_element_category_list,
         ignore_element_category_list=ignore_element_category_list,
         ignore_cache=is_ignore_cache,
         verbose=is_verbose,
