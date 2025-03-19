@@ -23,6 +23,14 @@
 > 랭체인, 라마인덱스, 스프링 등의 서비스에서 손쉽게 변환된 데이터를 가져가실 수 있습니다.
 > `django-pyhub-rag` 라이브러리와 함께 만들어가보시죠. 😉
 
+## TODO
+
+* [ ] 공식 문서 사이트 개설
+* [ ] 이미지 생성 프롬프트 커스텀 지원
+* [ ] API 캐싱을 API 벤더 별로 분리
+* [ ] API 캐싱 백엔드 커스텀 지원 (Redis, DB 등)
+* [ ] 명령 자동완성 지원
+
 ## 검토 중인 기능
 
 * [ ] 자체 웹 서버 구동 기능
@@ -38,8 +46,9 @@ PDF 파싱을 위해 Upstage API Key와 이미지 설명 생성을 위해 OpenAI
 + [Upstage API Key 얻기](https://console.upstage.ai/api-keys) : 가입하시면 웰컴 쿠폰으로 `$10`을 받으실 수 있습니다. 1페이지 변환에 `$0.01` 비용이 부과되므로 1,000장을 변환하실 수 있습니다.
 + [OpenAI API Key 얻기](https://platform.openai.com/api-keys)
 
-획득하신 각 Key는 `~/.pyhub.env` (윈도우: `c:\Users\사용자명\.pyhub.env`) 경로에 저장하시면 유틸리티에서 자동으로 읽어갑니다.
+획득하신 각 Key는 `~/.pyhub.env` (윈도우: `c:\Users\사용자명\.pyhub.env`) 경로에 저장하시면 유틸리티에서 환경변수로서 추가로 읽어갑니다. 
 Upstage API Key는 `UPSTAGE_API_KEY` 이름으로 지정해주시고, OpenAI API Key는 `OPENAI_API_KEY` 이름으로 지정해주세요.
+`~/.pyhub.env` 가 아니라 시스템/유저 환경변수로 등록되어있어도 동작합니다.
 
 ```
 UPSTAGE_API_KEY=up_...
