@@ -8,18 +8,30 @@
 
 ## 주요 기능
 
-1. `pyhub.parser upstage` 명령을 통해 손쉽게 PDF 문서를 jsonl 문서로 파싱할 수 있습니다. 이미지/표를 이미지로 추출가능하며, `-i` 옵션 지정 만으로
-   openai, anthropic, google 등의 다양한 모델을 통해 이미지 설명을 생성할 수 있습니다.
-2. 장고 모델에 손쉽게 Vector Store 기능을 통합할 수 있습니다. 내부적으로 `pgvector` 라이브러리와 `sqlite-vec` 라이브러리를 활용합니다.
+1. `pyhub.parser upstage` 명령을 통해 손쉽게 PDF 문서를 jsonl 문서로 파싱할 수 있습니다. 이미지/표를 이미지로 추출가능하며, `--enable-image-descriptor` (`-i`) 옵션 지정 만으로 `openai`, `anthropic`, `google`, `ollama` 등의 다양한 모델을 통해 이미지 설명을 생성할 수 있습니다.
+2. 동일 `upstage`/`openai`/`anthropic`/`google`/`ollama` api 요청을 최대 5,000개까지 캐싱하여 (장고 캐시 프레임워크 활용), 동일 API 요청에 대해 캐싱하여 API 요금을 절감합니다.
+    - 디폴트 로컬에 파일로 캐싱되며, 손쉽게 설정 만으로 외부 redis/db 서버를 캐시 서버로 쓸 수 있습니다. 그러면 다른 유저와 캐싱된 API 응답을 공유할 수 있습니다. (옵션 제공 예정)
+3. 장고 모델에 손쉽게 Vector Store 기능을 통합할 수 있습니다. 내부적으로 `pgvector` 라이브러리와 `sqlite-vec` 라이브러리를 활용합니다.
 
     - 유사도 기반 조회를 지원합니다.
+    - `pyhub.parser upstate` 명령으로 생성된 Document jsonl 파일을 장고 모델로 구성된 Vector Store에 저장한 후에 즉시 RAG 채팅을 구현할 수도 있습니다.
     - 참고: [pgvector 설치가이드](https://ai.pyhub.kr/setup/vector-stores/pgvector/)
+
+> 장고로 만들어진 유틸리티 혹은 API 서버를 AI 에이전트 시스템을 위한 데이터 전처리 전용 웹서비스로 만드시는 것은 어떠신가요?
+> 랭체인, 라마인덱스, 스프링 등의 서비스에서 손쉽게 변환된 데이터를 가져가실 수 있습니다.
+> `django-pyhub-rag` 라이브러리와 함께 만들어가보시죠. 😉
+
+## 검토 중인 기능
+
+* [ ] 자체 웹 서버 구동 기능
+* [ ] 자체 GUI 구동 기능
+* [ ] RAG 시스템 통합
 
 ## PDF 문서 파싱 기능
 
 PDF 파싱을 위해 Upstage API Key와 이미지 설명 생성을 위해 OpenAI API Key를 먼저 획득해주세요.
 
-+ [Upstage API Key 얻기](https://console.upstage.ai/api-keys) : 가입하시면 웰컴 쿠폰으로 $10을 받으실 수 있습니다.
++ [Upstage API Key 얻기](https://console.upstage.ai/api-keys) : 가입하시면 웰컴 쿠폰으로 `$10`을 받으실 수 있습니다. 1페이지 변환에 `$0.01` 비용이 부과되므로 1,000장을 변환하실 수 있습니다.
 + [OpenAI API Key 얻기](https://platform.openai.com/api-keys)
 
 획득하신 각 Key는 `~/.pyhub.env` 경로에 저장하시면 유틸리티에서 자동으로 읽어갑니다.
@@ -78,7 +90,7 @@ pyhub.parser upstage ./argus-bitumen.pdf
 {"page_content": "생략", "metadata": {"id": 0, "page": 1, "total_pages": 1, "category": "heading1", "coordinates": [], "api": "2.0", "model": "document-parse-250116"}}
 ```
 
-`--enable-image-descriptor` 옵션(단축: `-i`)을 추가로 지정하시면, 디폴트로 openai gpt-4o-mini 모델로 이미지 생성을 생성해줍니다.
+`--enable-image-descriptor` (`-i`) 옵션을 추가로 지정하시면, 디폴트로 openai gpt-4o-mini 모델로 이미지 생성을 생성해줍니다.
 
 ```
 pyhub.parser upstage -i ./argus-bitumen.pdf
@@ -89,6 +101,10 @@ pyhub.parser upstage -i ./argus-bitumen.pdf
 ```markdown
 {"page_content": "생략", "metadata": {"id": 0, "page": 1, "total_pages": 1, "category": "heading1", "coordinates": [], "api": "2.0", "model": "document-parse-250116", "image_descriptions": "<image name='table/12.jpg'><title>\n비트멘 가격 현황 (2023년 3월 16-22일)\n</title>\n<details>\n이 표는 비트멘의 수출 및 국내 가격을 나타냅니다. \n- 수출 화물 가격은 지중해에서 445.43달러에서 449.77달러로, 로테르담은 482.15달러에서 487.15달러로, 발틱 지역은 470.15달러에서 474.15달러로 변동했습니다.\n- 국내 가격에서는 앤트워프가 576달러에서 587달러로, 남부 독일은 522달러에서 523달러로, 헝가리는 571달러로 보고되었습니다.\n</details>\n<entities>\n비트멘, 수출 화물 가격, 국내 가격, 지중해, 로테르담, 발틱, 앤트워프, 남부 독일, 헝가리\n</entities>\n<hypothetical_questions>\n- 비트멘 가격 상승이 건설 산업에 미치는 영향은 무엇인가요?\n- 각 지역의 가격 변동이 글로벌 시장에 미치는 영향은 어떻게 될까요?\n</hypothetical_questions></image>"}}
 ```
+
+디폴트로 로컬 머신에 `upstate`/`openai`/`anthropic`/`google`/`ollama` API 요청 내역을 캐싱합니다.
+방금 수행한 `pyhub.parser upstage -i ./argus-bitumen.pdf` 명령을 다시 수행해보시면
+캐싱된 내역을 사용하기에 즉시 명령이 종료되고 `output` 폴더 경로에 파일이 재생성됨을 확인하실 수 있습니다.
 
 보다 자세한 옵션은 `--help` 도움말을 참고해주세요.
 

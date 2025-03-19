@@ -408,6 +408,9 @@ def upstage(
 
         raise typer.Exit(code=1)
 
+    else:
+        print_copyright()
+
 
 def validate_categories(categories_str: str) -> list[str]:
     """Raises BadParameter exception if values not in CategoryEnum are entered."""
@@ -483,5 +486,9 @@ def validate_url(url: Optional[str]) -> Optional[str]:
 
 def print_help(ctx: typer.Context) -> None:
     console.print(ctx.get_help())
-    console.print(f"[dim] © {datetime.now().year} 파이썬사랑방 (기능 제안 및 컨설팅/교육 문의 : me@pyhub.kr)[/dim]")
+    print_copyright()
     raise typer.Exit()
+
+
+def print_copyright() -> None:
+    console.print(f"[dim] © {datetime.now().year} 파이썬사랑방 (기능 제안 및 컨설팅/교육 문의 : me@pyhub.kr)[/dim]")
