@@ -6,6 +6,8 @@
 
 `django-pyhub-rag`는 장고 프로젝트에서 RAG (Retrieval Augmented Generation) 기능을 손쉽게 구현할 수 있도록 도와주는 라이브러리입니다.
 
+**윈도우/맥/리눅스 모두 지원**
+
 ## 주요 기능
 
 1. `pyhub.parser upstage` 명령을 통해 손쉽게 PDF 문서를 jsonl 문서로 파싱할 수 있습니다. 이미지/표를 이미지로 추출가능하며, `--enable-image-descriptor` (`-i`) 옵션 지정 만으로 `openai`, `anthropic`, `google`, `ollama` 등의 다양한 모델을 통해 이미지 설명을 생성할 수 있습니다.
@@ -27,14 +29,16 @@
 * [ ] 자체 GUI 구동 기능
 * [ ] RAG 시스템 통합
 
-## PDF 문서 파싱 기능
+## 1번의 명령으로 PDF로부터 문서내용/이미지/이미지설명 추출하기 
+
+### API Key 획득 및 저장
 
 PDF 파싱을 위해 Upstage API Key와 이미지 설명 생성을 위해 OpenAI API Key를 먼저 획득해주세요.
 
 + [Upstage API Key 얻기](https://console.upstage.ai/api-keys) : 가입하시면 웰컴 쿠폰으로 `$10`을 받으실 수 있습니다. 1페이지 변환에 `$0.01` 비용이 부과되므로 1,000장을 변환하실 수 있습니다.
 + [OpenAI API Key 얻기](https://platform.openai.com/api-keys)
 
-획득하신 각 Key는 `~/.pyhub.env` 경로에 저장하시면 유틸리티에서 자동으로 읽어갑니다.
+획득하신 각 Key는 `~/.pyhub.env` (윈도우: `c:\Users\사용자명\.pyhub.env`) 경로에 저장하시면 유틸리티에서 자동으로 읽어갑니다.
 Upstage API Key는 `UPSTAGE_API_KEY` 이름으로 지정해주시고, OpenAI API Key는 `OPENAI_API_KEY` 이름으로 지정해주세요.
 
 ```
@@ -42,12 +46,29 @@ UPSTAGE_API_KEY=up_...
 OPENAI_API_KEY=sk-...
 ```
 
-다른 라이브러리와 충돌을 막기 위해, 가상환경을 먼저 생성하시고 활성화하신 후에,
+이 외에도 Anthropic, Google API를 사용하신다면 `ANTHROPIC_API_KEY`와 `GOOGLE_API_KEY` 설정도 지원합니다.
+
+![](./docs/assets/01_pyhub_env.png)
+
+### 가상환경 생성 및 활성화 
+
+다른 라이브러리와 충돌을 막기 위해, 가상환경을 먼저 생성하시고 활성화해주세요.
+
+![](./docs/assets/02_venv.png)
+
 `django-pyhub-rag[parser]` 라이브러리를 설치해주세요. 
 
+### 라이브러리 설치
+
+윈도우/맥/리눅스에서 `django-pyhub-rag[parser]`
+
 ```
-pip install --upgrade 'django-pyhub-rag[parser]'
+python -m pip install --upgrade 'django-pyhub-rag[parser]'
 ```
+
+![](./docs/assets/03_package_install.png)
+
+### 설치 확인
 
 라이브러리가 정상적으로 설치되셨다면, 다음 3가지 방법으로 `pyhub.parser upstage` 명령을 실행하실 수 있습니다.
 
@@ -62,18 +83,28 @@ pyhub.parser upstage --help
 uv run -m pyhub.parser upstage --help
 ```
 
-변환할 PDF 파일을 하나 준비해주세요.
+![](./docs/assets/04_package_install_complete.png)
 
-[Argus Bitumen](https://www.argusmedia.com/en/solutions/products/argus-bitumen)는
-전 세계 비트멘(아스팔트) 시장에 대한 가격 평가, 뉴스, 시장 분석을 제공하는 주간 서비스입니다
-사이트의 Related documents 메뉴에서 Sample Report, Download now 링크를 통해 샘플 보고서를 다운받으실 수 있는 데요.
-매 페이지마다 상하단에 header/footer가 있고 **2단 컬럼** 구조이며, 표와 이미지가 포함된 복잡한 PDF 문서입니다.
+그리고, 변환할 PDF 파일을 하나 준비해주세요.
+
++ [Argus Bitumen](https://www.argusmedia.com/en/solutions/products/argus-bitumen)는
+  전 세계 비트멘(아스팔트) 시장에 대한 가격 평가, 뉴스, 시장 분석을 제공하는 주간 서비스입니다
+  사이트의 Related documents 메뉴에서 Sample Report, Download now 링크를 통해 샘플 보고서를 다운받으실 수 있는 데요.
+  매 페이지마다 상하단에 header/footer가 있고 **2단 컬럼** 구조이며, 표와 이미지가 포함된 복잡한 PDF 문서입니다.
+
+### 첫 변환
 
 PDF 파일 경로를 지정하시면 즉시 PDF 문서 파싱이 수행되고 `./output/` 경로에 jsonl 파일 및 추출된 이미지 파일이 저장됩니다.
 
 ```
 pyhub.parser upstage ./argus-bitumen.pdf
 ```
+
+![](./docs/assets/05_gen_1.png)
+
+명령이 성공적으로 수행되었습니다.
+
+![](./docs/assets/06_gen_2.png)
 
 이때 `UPSTAGE_API_KEY`에 문제가 있다면 다음의 에러 메시지를 만나시게 됩니다.
 `~/.pyhub.env` 파일에서 `UPSTAGE_API_KEY` 설정을 확인해주세요. 등호 `=` 앞 뒤로 절대 띄워쓰기를 쓰시면 안 됩니다.
@@ -84,29 +115,68 @@ pyhub.parser upstage ./argus-bitumen.pdf
 (https://console.upstage.ai/docs/getting-started/overview)","type":"invalid_request_error","param":"","code":"invalid_api_key"}}
 ```
 
+면, `output/` 폴더 경로에
+
++ `chart`, `figure`, `table` 폴더에 Upstage Document Parse로부터 추출된 이미지가 모두 저장되며
++ `argus-bitumen.jsonl` 경로에 Vector Store에 즉시 저장하실 수 있도록 `Document(page_content, metadata)` 포맷의 `jsonl` 파일로 생성되며,
+    - 디폴트로 PDF 페이지 단위로 묶어서 `Document`가 생성되며, `--document-split-strategy` (`-s`) 옵션을 `element`로 지정하시면
+      Update Document Parse에서 생성해준 Element 단위로 `Document`가 생성됩니다.
++ 그리고, 통합문서로서 `.md`, `.html`, `.md` 문서가 자동 생성되며, `.md`, `.html` 파일에는 이미지 링크가 자동으로 걸립니다.
+
+![](./docs/assets/07_file_list_1.png)
+
+![](./docs/assets/08_file_list_2.png)
+
 생성된 `./output/argus-bitumen.jsonl` 파일의 `metadata`는 아래와 같습니다.
 
 ```markdown
 {"page_content": "생략", "metadata": {"id": 0, "page": 1, "total_pages": 1, "category": "heading1", "coordinates": [], "api": "2.0", "model": "document-parse-250116"}}
 ```
 
-`--enable-image-descriptor` (`-i`) 옵션을 추가로 지정하시면, 디폴트로 openai gpt-4o-mini 모델로 이미지 생성을 생성해줍니다.
+### 수행내역 자세히 보기
+
+`--verbose` 옵션을 적용하시면, 각종 설정 및 수행내역을 자세히 확인하실 수 있습니다.
+
+![](./docs/assets/09_verbose.png)
+
+### 이미지 설명 생성하기
+
+`--enable-image-descriptor` (`-i`) 옵션을 추가로 지정하시면, 디폴트로 `OpenAI` `gpt-4o-mini` 모델로 이미지 설명을 생성해줍니다.
+물론 `anthropic`, `google`, `ollama` 등을 통한 이미지 설명을 생성하실 수 있습니다.
 
 ```
 pyhub.parser upstage -i ./argus-bitumen.pdf
 ```
 
-그럼 아래와 같이 `metadata` 속성에 `image_descriptions`가 추가되었음을 확인하실 수 있습니다.
+아래 스크린샷에서 `-f` 옵션은 `output` 폴더가 있더라도 제거하고 강제로 재생성하는 옵션입니다. `-f` 옵션을 붙이지 않으면 `output` 폴더가 있을 경우
+진행유무를 물어봅니다.
 
-```markdown
-{"page_content": "생략", "metadata": {"id": 0, "page": 1, "total_pages": 1, "category": "heading1", "coordinates": [], "api": "2.0", "model": "document-parse-250116", "image_descriptions": "<image name='table/12.jpg'><title>\n비트멘 가격 현황 (2023년 3월 16-22일)\n</title>\n<details>\n이 표는 비트멘의 수출 및 국내 가격을 나타냅니다. \n- 수출 화물 가격은 지중해에서 445.43달러에서 449.77달러로, 로테르담은 482.15달러에서 487.15달러로, 발틱 지역은 470.15달러에서 474.15달러로 변동했습니다.\n- 국내 가격에서는 앤트워프가 576달러에서 587달러로, 남부 독일은 522달러에서 523달러로, 헝가리는 571달러로 보고되었습니다.\n</details>\n<entities>\n비트멘, 수출 화물 가격, 국내 가격, 지중해, 로테르담, 발틱, 앤트워프, 남부 독일, 헝가리\n</entities>\n<hypothetical_questions>\n- 비트멘 가격 상승이 건설 산업에 미치는 영향은 무엇인가요?\n- 각 지역의 가격 변동이 글로벌 시장에 미치는 영향은 어떻게 될까요?\n</hypothetical_questions></image>"}}
-```
+![](./docs/assets/10_image_descriptions.png)
+
+`argus-bitumen.pdf` 파일에 대한 `Upstage Document Parse` API가 이미 호출했었기에,
+지금 다시 명령을 수행하더라도 `Upstage Document Parse` API 호출을 다시 하지 않고, 로컬에 파일로 캐싱된 API 응답을 활용합니다.
+(장고 캐시 프레임워크 활용)
+
+각 이미지에 대해서 `OpenAI`, `gpt-4o-mini` API 호출은 처음이기에, 각 이미지 별로 `OpenAI` API 호출이 순차적으로 이뤄집니다.
+수행이 끝나면 아래와 같이 각 이미지 파일과 함께 설명 파일을 확인하실 수 있습니다.
+
+![](./docs/assets/11_file_list_1.png)
+
+![](./docs/assets/12_file_list_2.png)
+
+생성된 `.jsonl` 파일에서는 이렇게 이미지 링크가 설명이 잘 생성되어있음을 확인하실 수 있습니다.
+
+![](./docs/assets/13_jsonl_image_descriptions.png)
 
 디폴트로 로컬 머신에 `upstate`/`openai`/`anthropic`/`google`/`ollama` API 요청 내역을 캐싱합니다.
 방금 수행한 `pyhub.parser upstage -i ./argus-bitumen.pdf` 명령을 다시 수행해보시면
 캐싱된 내역을 사용하기에 즉시 명령이 종료되고 `output` 폴더 경로에 파일이 재생성됨을 확인하실 수 있습니다.
 
+### help
+
 보다 자세한 옵션은 `--help` 도움말을 참고해주세요.
+
+![](./docs/assets/14_help.png)
 
 ## Vector Store 모델
 
