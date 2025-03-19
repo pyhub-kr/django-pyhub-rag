@@ -110,7 +110,8 @@ class UpstageDocumentParseParser:
         api_url: str = DOCUMENT_PARSE_API_URL,
         model: str = DOCUMENT_PARSE_DEFAULT_MODEL,
         split: DocumentSplitStrategyType = "page",
-        max_page: int = 0,
+        start_page: int = 1,
+        max_page: Optional[int] = None,
         image_descriptor: ImageDescriptor = None,
         ocr_mode: OCRModeType = "auto",
         document_format: DocumentFormatType = "html",
@@ -137,8 +138,9 @@ class UpstageDocumentParseParser:
                                          - "none": 분할 없음, 전체 문서를 단일 청크로 반환합니다.
                                          - "page": 문서를 페이지별로 분할합니다.
                                          - "element": 문서를 개별 요소(단락, 표 등)로 분할합니다.
+            start_page (int, optional): 시작 페이지 번호
             max_page (int, optional): 처리할 최대 페이지 수.
-                                     0은 모든 페이지를 처리함을 의미합니다. 기본값은 0입니다.
+                                      None은 모든 페이지를 처리함을 의미합니다. 기본값은 None입니다.
             ocr_mode (OCRMode, optional): OCR을 사용하여 문서의 이미지에서 텍스트를 추출합니다.
                                      기본값은 "auto"입니다.
                                      옵션:
@@ -162,6 +164,7 @@ class UpstageDocumentParseParser:
         self.api_url = api_url
         self.model = model
         self.split = split
+        self.start_page = start_page
         self.max_page = max_page
         self.image_descriptor = image_descriptor
         self.ocr_mode = ocr_mode
@@ -332,8 +335,8 @@ class UpstageDocumentParseParser:
             raise ValueError(f"PDF 파일 읽기 실패: {e}") from e
 
         # max_page 제한 적용 (설정된 경우)
-        if self.max_page > 0 and is_pdf:
-            total_pages = min(total_pages, self.max_page)
+        if (self.max_page or 0) > 0 and is_pdf:
+            total_pages = min(total_pages, self.start_page + self.max_page)
             logger.debug("max_page=%d 설정 : %d 페이지까지만 변환", self.max_page, total_pages)
 
         # batch_page_size가 최대 허용 페이지 수를 초과하지 않는지 검증
@@ -343,7 +346,7 @@ class UpstageDocumentParseParser:
             )
 
         if is_pdf:
-            start_page_index = 0
+            start_page_index = max(0, self.start_page - 1)  # self.start_page 이상 범위에서 시작
             while start_page_index < total_pages:
                 # 실제로 처리할 페이지 수 계산 (남은 페이지와 batch_page_size 중 작은 값)
                 pages_to_process = min(batch_page_size, total_pages - start_page_index)

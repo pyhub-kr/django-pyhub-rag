@@ -118,24 +118,28 @@ def upstage(
             f"{MAX_BATCH_PAGE_SIZE}페이지를 초과하는 PDF 파일에는 이 설정이 꼭 필요합니다."
         ),
     ),
-    max_page: int = typer.Option(
-        0,
-        "--max-page",
-        min=0,
-        help="처리할 최대 페이지 수 (0: 모든 페이지)",
+    start_page: int = typer.Option(
+        1,
+        min=1,
+        help="시작 페이지 번호 (PDF 변환에서만 적용)",
+    ),
+    max_page: Optional[int] = typer.Option(
+        None,
+        min=1,
+        help="처리할 최대 페이지 수",
     ),
     ocr_mode: OCRModeEnum = typer.Option(OCRModeEnum.FORCE, help="OCR 모드"),
     extract_element_types: str = typer.Option(
         "figure,chart,table",
         "--extract-element-types",
         "-t",
-        help=f"이미지로서 추출할 요소 (쉼표로 구분) : {', '.join([e.value for e in CategoryEnum])}",
+        help=f"이미지로서 추출할 Element (쉼표로 구분) : {', '.join([e.value for e in CategoryEnum])}",
         callback=lambda x: validate_categories(x),
     ),
     ignore_element_category: str = typer.Option(
         "footer",
         "--ignore",
-        help=f"파싱 결과에서 제외할 요소 카테고리 목록 (쉼표로 구분) (디폴트: footer) : {', '.join(get_literal_values(ElementCategoryType))}",
+        help=f"파싱 결과에서 제외할 Element 카테고리 목록 (쉼표로 구분) (디폴트: footer) : {', '.join(get_literal_values(ElementCategoryType))}",
         callback=lambda x: validate_categories(x),
     ),
     is_enable_image_descriptor: bool = typer.Option(
@@ -143,7 +147,7 @@ def upstage(
         "--enable-image-descriptor",
         "-i",
         help=(
-            "이미지 요소에 대한 자동 설명 생성 여부. 활성화하면 --extract-element-types 옵션으로 지정한 요소들에 대한 텍스트 설명을 "
+            "이미지 Element에 대한 자동 설명 생성 여부. 활성화하면 --extract-element-types 옵션으로 지정한 Element들에 대한 텍스트 설명을 "
             "LLM을 통해 자동으로 생성하고, Document metadata의 image_descriptions 필드에 저장합니다."
         ),
     ),
@@ -291,11 +295,11 @@ def upstage(
         # Add rows to the table
         table.add_row("입력 문서 파일 경로", str(input_path.absolute()))
         table.add_row("파일 생성 폴더", str(output_dir_path.absolute()))
-        table.add_row("Document 분할 전략", document_split_strategy.value)
+        table.add_row("이미지로서 추출할 Element", ", ".join(extract_element_category_list))
+        table.add_row("제외할 Element", ", ".join(ignore_element_category_list))
         table.add_row("OCR 모드", ocr_mode.value)
+        table.add_row("Elements to Document 분할 전략", document_split_strategy.value)
         table.add_row("생성할 Document 포맷", document_format.value)
-        table.add_row("이미지로서 추출할 요소", ", ".join(extract_element_category_list))
-        table.add_row("제외할 요소", ", ".join(ignore_element_category_list))
         table.add_row("통합 문서 생성 여부", "예" if is_create_unified_output else "아니오")
 
         # Add batch size with warning if needed
@@ -304,9 +308,8 @@ def upstage(
             batch_size_str += " [yellow](경고: PDF 파일에서만 사용됩니다.)[/yellow]"
         table.add_row("배치 크기", batch_size_str)
 
-        table.add_row("최대 페이지", str(max_page))
-        table.add_row("상세 정보", "예" if is_verbose else "아니오")
-        table.add_row("강제 덮어쓰기", "예" if is_force else "아니오")
+        end_page_label = f"끝" if max_page is None else f"{start_page + max_page}"
+        table.add_row("페이지 범위", f"{start_page} ~ {end_page_label}")
 
         # Add image descriptor information if enabled
         if is_enable_image_descriptor:
@@ -322,6 +325,8 @@ def upstage(
         else:
             table.add_row("이미지 설명 활성화", "아니오")
 
+        # table.add_row("터미널에 상세 정보 출력하기", "예" if is_verbose else "아니오")
+        # table.add_row("생성 폴더 강제 재생성", "예" if is_force else "아니오")
         table.add_row("환경변수 파일 경로", str(env_path))
         # Print the table
         console.print(table)
@@ -346,6 +351,7 @@ def upstage(
     parser = UpstageDocumentParseParser(
         upstage_api_key=upstage_api_key,
         split=document_split_strategy.value,
+        start_page=start_page,
         max_page=max_page,
         image_descriptor=image_descriptor,
         ocr_mode=ocr_mode.value,
