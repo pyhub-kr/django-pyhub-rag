@@ -17,6 +17,12 @@ def pytest_configure():
             "pyhub.rag",
             "test_app",
         ],
+        CACHES={
+            "default": {
+                "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+                "LOCATION": "pyhub_cache",
+            },
+        },
         TEMPLATES=[
             {
                 "BACKEND": "django.template.backends.django.DjangoTemplates",

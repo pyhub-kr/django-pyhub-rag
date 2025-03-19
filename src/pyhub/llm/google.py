@@ -4,12 +4,19 @@ from base64 import b64decode
 from pathlib import Path
 from typing import Any, AsyncGenerator, Generator, Optional, Union, cast
 
+import pydantic
 from django.core.checks import Error
 from django.core.files import File
 from django.template import Template
 from google import genai
-from google.genai.types import Content, GenerateContentConfig, Part
+from google.genai.types import (
+    Content,
+    GenerateContentConfig,
+    GenerateContentResponse,
+    Part,
+)
 
+from pyhub.caches import cache_make_key_and_get, cache_make_key_and_get_async, cache_set
 from pyhub.rag.settings import rag_settings
 
 from .base import BaseLLM
@@ -145,14 +152,35 @@ class GoogleLLM(BaseLLM):
         model: GoogleChatModelType,
     ) -> Reply:
         client = genai.Client(api_key=self.api_key)
-
         request_params = self._make_request_params(input_context, human_message, messages, model)
-        response = client.models.generate_content(**request_params)
-        usage = Usage(
-            input=response.usage_metadata.prompt_token_count or 0,
-            output=response.usage_metadata.candidates_token_count or 0,
+
+        cache_key, cached_value = cache_make_key_and_get(
+            "google",
+            client,
+            request_params,
         )
-        return Reply(response.text, usage)
+
+        response: Optional[GenerateContentResponse] = None
+        if cached_value is not None:
+            try:
+                response = GenerateContentResponse.model_validate_json(cached_value)
+            except pydantic.ValidationError:
+                logger.error("cached value is invalid : %s", cached_value)
+
+        if response is None:
+            logger.debug("request to google genai")
+            response = client.models.generate_content(**request_params)
+            cache_set(cache_key, response.model_dump_json())
+
+        assert response is not None
+
+        return Reply(
+            text=response.text,
+            usage=Usage(
+                input=response.usage_metadata.prompt_token_count or 0,
+                output=response.usage_metadata.candidates_token_count or 0,
+            ),
+        )
 
     async def _make_ask_async(
         self,
@@ -162,14 +190,34 @@ class GoogleLLM(BaseLLM):
         model: GoogleChatModelType,
     ) -> Reply:
         client = genai.Client(api_key=self.api_key)
-
         request_params = self._make_request_params(input_context, human_message, messages, model)
-        response = await client.aio.models.generate_content(**request_params)
-        usage = Usage(
-            input=response.usage_metadata.prompt_token_count or 0,
-            output=response.usage_metadata.candidates_token_count or 0,
+
+        cache_key, cached_value = await cache_make_key_and_get_async(
+            "google",
+            client,
+            request_params,
         )
-        return Reply(response.text, usage)
+
+        response: Optional[GenerateContentResponse] = None
+        if cached_value is not None:
+            try:
+                response = GenerateContentResponse.model_validate_json(cached_value)
+            except pydantic.ValidationError:
+                logger.error("cached value is invalid : %s", cached_value)
+
+        if response is None:
+            logger.debug("request to google genai")
+            response = await client.aio.models.generate_content(**request_params)
+
+        assert response is not None
+
+        return Reply(
+            text=response.text,
+            usage=Usage(
+                input=response.usage_metadata.prompt_token_count or 0,
+                output=response.usage_metadata.candidates_token_count or 0,
+            ),
+        )
 
     def _make_ask_stream(
         self,
@@ -179,20 +227,41 @@ class GoogleLLM(BaseLLM):
         model: GoogleChatModelType,
     ) -> Generator[Reply, None, None]:
         client = genai.Client(api_key=self.api_key)
-
         request_params = self._make_request_params(input_context, human_message, messages, model)
-        response = client.models.generate_content_stream(**request_params)
 
-        input_tokens = 0
-        output_tokens = 0
+        cache_key, cached_value = cache_make_key_and_get(
+            "google",
+            client,
+            dict(stream=True, **request_params),
+        )
 
-        for chunk in response:
-            yield Reply(text=chunk.text)
-            input_tokens += chunk.usage_metadata.prompt_token_count or 0
-            output_tokens += chunk.usage_metadata.candidates_token_count or 0
+        if cached_value is not None:
+            reply_list = cast(list[Reply], cached_value)
+            for reply in reply_list:
+                reply.usage = None  # cache 된 응답이기에 usage 내역 제거
+                yield reply
 
-        usage = Usage(input=input_tokens, output=output_tokens)
-        yield Reply(text="", usage=usage)
+        else:
+            response = client.models.generate_content_stream(**request_params)
+
+            input_tokens = 0
+            output_tokens = 0
+
+            reply_list: list[Reply] = []
+            for chunk in response:
+                reply = Reply(text=chunk.text)
+                reply_list.append(reply)
+                yield reply
+                input_tokens += chunk.usage_metadata.prompt_token_count or 0
+                output_tokens += chunk.usage_metadata.candidates_token_count or 0
+
+            if input_tokens > 0 or output_tokens > 0:
+                usage = Usage(input=input_tokens, output=output_tokens)
+                reply = Reply(text="", usage=usage)
+                reply_list.append(reply)
+                yield reply
+
+            cache_set(cache_key, reply_list)
 
     async def _make_ask_stream_async(
         self,
@@ -202,20 +271,41 @@ class GoogleLLM(BaseLLM):
         model: GoogleChatModelType,
     ) -> AsyncGenerator[Reply, None]:
         client = genai.Client(api_key=self.api_key)
-
         request_params = self._make_request_params(input_context, human_message, messages, model)
-        response = await client.aio.models.generate_content_stream(**request_params)
 
-        input_tokens = 0
-        output_tokens = 0
+        cache_key, cached_value = await cache_make_key_and_get_async(
+            "google",
+            client,
+            dict(stream=True, **request_params),
+        )
 
-        async for chunk in response:
-            yield Reply(text=chunk.text)
-            input_tokens += chunk.usage_metadata.prompt_token_count or 0
-            output_tokens += chunk.usage_metadata.candidates_token_count or 0
+        if cached_value is not None:
+            reply_list = cast(list[Reply], cached_value)
+            for reply in reply_list:
+                reply.usage = None
+                yield reply
 
-        usage = Usage(input=input_tokens, output=output_tokens)
-        yield Reply(text="", usage=usage)
+        else:
+            logger.debug("request to google genai")
+
+            response = await client.aio.models.generate_content_stream(**request_params)
+
+            input_tokens = 0
+            output_tokens = 0
+
+            reply_list: list[Reply] = []
+            async for chunk in response:
+                reply = Reply(text=chunk.text)
+                reply_list.append(reply)
+                yield reply
+                input_tokens += chunk.usage_metadata.prompt_token_count or 0
+                output_tokens += chunk.usage_metadata.candidates_token_count or 0
+
+            if input_tokens > 0 or output_tokens > 0:
+                usage = Usage(input=input_tokens, output=output_tokens)
+                reply = Reply(text="", usage=usage)
+                reply_list.append(reply)
+                yield reply
 
     def ask(
         self,

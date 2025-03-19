@@ -5,11 +5,11 @@ from django.db import models
 
 from pyhub.llm import GoogleLLM, OpenAILLM
 from pyhub.llm.types import (
+    Embed,
+    EmbedList,
     GoogleEmbeddingModelType,
     LLMEmbeddingModelType,
     OpenAIEmbeddingModelType,
-    Embed,
-    EmbedList,
 )
 from pyhub.rag.settings import rag_settings
 from pyhub.rag.utils import get_literal_values

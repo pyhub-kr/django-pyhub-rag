@@ -17,7 +17,7 @@ from pyhub.llm import (
 from pyhub.llm.types import ChainReply, Reply
 
 
-async def check_llm(llm: BaseLLM):
+async def check_llm_async(llm: BaseLLM):
     errors = llm.check()
     if len(errors) > 0:
         msg = " ".join([str(e) for e in errors])
@@ -31,7 +31,7 @@ async def check_llm(llm: BaseLLM):
         # llm.clear()
         # assert len(llm) == 0
 
-        reply1 = llm.ask("hello. my name is tom.")
+        reply1 = await llm.ask_async("hello. my name is tom.")
         assert isinstance(reply1, Reply)
         assert "Error" not in reply1.text
         assert len(llm) == 2
@@ -45,14 +45,55 @@ async def check_llm(llm: BaseLLM):
         llm.clear()
         assert len(llm) == 0
 
-        gen1 = llm.ask("hello. my name is tom.", stream=True)
-        reply_list1 = [reply for reply in gen1]
+        gen1 = await llm.ask_async("hello. my name is tom.", stream=True)
+        reply_list1 = [reply async for reply in gen1]
         assert all([isinstance(reply, Reply) for reply in reply_list1])
         assert "Error" not in "".join([reply.text for reply in reply_list1])
         assert len(llm) == 2
 
         gen2 = await llm.ask_async("hello. my name is tom.", stream=True)
         reply_list2 = [reply async for reply in gen2]
+        assert all([isinstance(reply, Reply) for reply in reply_list2])
+        assert "Error" not in "".join([reply.text for reply in reply_list2])
+        assert len(llm) == 4
+
+
+def check_llm(llm: BaseLLM):
+    errors = llm.check()
+    if len(errors) > 0:
+        msg = " ".join([str(e) for e in errors])
+        pytest.skip(msg)
+    else:
+        # 이미지는 텍스트에 비해 API 비용이 비싸므로 꺼둡니다.
+        # image_file = create_white_image()
+        # image_reply = llm.ask("What is this image", files=[image_file])
+        # assert "Error" not in image_reply.text
+        # assert len(llm) == 2
+        # llm.clear()
+        # assert len(llm) == 0
+
+        reply1 = llm.ask("hello. my name is tom.", raise_errors=True)
+        assert isinstance(reply1, Reply)
+        assert "Error" not in reply1.text
+        assert len(llm) == 2
+
+        reply2 = llm.ask("what is my name?", raise_errors=True)
+        assert isinstance(reply2, Reply)
+        assert "Error" not in reply2.text
+        assert "tom" in reply2.text.lower()
+        assert len(llm) == 4
+
+        llm.clear()
+        assert len(llm) == 0
+
+        gen1 = llm.ask("hello. my name is tom.", stream=True, raise_errors=True)
+        reply_list1 = [reply for reply in gen1]
+        assert all([isinstance(reply, Reply) for reply in reply_list1])
+        assert "Error" not in "".join([reply.text for reply in reply_list1])
+        assert len(llm) == 2
+
+        gen2 = llm.ask("hello. my name is tom.", stream=True, raise_errors=True)
+        reply_list2 = [reply for reply in gen2]
         assert all([isinstance(reply, Reply) for reply in reply_list2])
         assert "Error" not in "".join([reply.text for reply in reply_list2])
         assert len(llm) == 4
@@ -76,33 +117,58 @@ async def test_openai_system_prompt_template():
 
 
 @pytest.mark.asyncio
+async def test_openai_async():
+    llm = OpenAILLM()
+    await check_llm_async(llm)
+
+
 async def test_openai():
     llm = OpenAILLM()
-    await check_llm(llm)
+    check_llm(llm)
 
 
 @pytest.mark.asyncio
+async def test_upstage_async():
+    llm = UpstageLLM()
+    await check_llm_async(llm)
+
+
 async def test_upstage():
     llm = UpstageLLM()
-    await check_llm(llm)
+    check_llm(llm)
 
 
 @pytest.mark.asyncio
+async def test_anthropic_async():
+    llm = AnthropicLLM()
+    await check_llm_async(llm)
+
+
 async def test_anthropic():
     llm = AnthropicLLM()
-    await check_llm(llm)
+    check_llm(llm)
 
 
 @pytest.mark.asyncio
-async def test_ollama():
-    llm = OllamaLLM()
-    await check_llm(llm)
+async def test_google_async():
+    llm = GoogleLLM()
+    await check_llm_async(llm)
 
 
-@pytest.mark.asyncio
 async def test_google():
     llm = GoogleLLM()
-    await check_llm(llm)
+    check_llm(llm)
+
+
+@pytest.mark.asyncio
+async def test_ollama_async():
+    llm = OllamaLLM()
+    await check_llm_async(llm)
+
+
+async def test_ollama():
+    llm = OllamaLLM()
+    check_llm(llm)
 
 
 @pytest.mark.it("Django Template를 활용한 프롬프트 문자열 생성 테스트")

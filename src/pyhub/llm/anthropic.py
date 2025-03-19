@@ -1,7 +1,10 @@
+import logging
 import re
 from pathlib import Path
-from typing import Any, AsyncGenerator, Generator, Optional, Union
+from typing import Any, AsyncGenerator, Generator, Optional, Union, cast
 
+import anthropic.types
+import pydantic
 from anthropic import NOT_GIVEN as ANTHROPIC_NOT_GIVEN
 from anthropic import Anthropic as SyncAnthropic
 from anthropic import AsyncAnthropic
@@ -9,18 +12,14 @@ from django.core.checks import Error
 from django.core.files import File
 from django.template import Template
 
+from pyhub.caches import cache_make_key_and_get, cache_make_key_and_get_async, cache_set
 from pyhub.rag.settings import rag_settings
 
 from .base import BaseLLM
-from .types import (
-    AnthropicChatModelType,
-    Embed,
-    EmbedList,
-    Message,
-    Reply,
-    Usage,
-)
+from .types import AnthropicChatModelType, Embed, EmbedList, Message, Reply, Usage
 from .utils.files import FileType, encode_files
+
+logger = logging.getLogger(__name__)
 
 
 class AnthropicLLM(BaseLLM):
@@ -124,21 +123,6 @@ class AnthropicLLM(BaseLLM):
             max_tokens=self.max_tokens,
         )
 
-    async def _make_ask_async(
-        self,
-        input_context: dict[str, Any],
-        human_message: Message,
-        messages: list[Message],
-        model: AnthropicChatModelType,
-    ) -> Reply:
-        async_client = AsyncAnthropic(api_key=self.api_key)
-        request_params = self._make_request_params(
-            input_context=input_context, human_message=human_message, messages=messages, model=model
-        )
-        response = await async_client.messages.create(**request_params)
-        usage = Usage(input=response.usage.input_tokens, output=response.usage.output_tokens)
-        return Reply(response.content[0].text, usage)
-
     def _make_ask(
         self,
         input_context: dict[str, Any],
@@ -150,9 +134,66 @@ class AnthropicLLM(BaseLLM):
         request_params = self._make_request_params(
             input_context=input_context, human_message=human_message, messages=messages, model=model
         )
-        response = sync_client.messages.create(**request_params)
-        usage = Usage(input=response.usage.input_tokens, output=response.usage.output_tokens)
-        return Reply(response.content[0].text, usage)
+
+        cache_key, cached_value = cache_make_key_and_get(
+            "anthropic",
+            sync_client,
+            request_params,
+        )
+
+        response: Optional[anthropic.types.Message] = None
+        if cached_value is not None:
+            try:
+                response = anthropic.types.Message.model_validate_json(cached_value)
+            except pydantic.ValidationError:
+                logger.error("cached_value is valid : %s", cached_value)
+
+        if response is None:
+            logger.debug("request to anthropic")
+            response = sync_client.messages.create(**request_params)
+
+        assert response is not None
+
+        return Reply(
+            text=response.content[0].text,
+            usage=Usage(input=response.usage.input_tokens, output=response.usage.output_tokens),
+        )
+
+    async def _make_ask_async(
+        self,
+        input_context: dict[str, Any],
+        human_message: Message,
+        messages: list[Message],
+        model: AnthropicChatModelType,
+    ) -> Reply:
+        async_client = AsyncAnthropic(api_key=self.api_key)
+        request_params = self._make_request_params(
+            input_context=input_context, human_message=human_message, messages=messages, model=model
+        )
+
+        cache_key, cached_value = await cache_make_key_and_get_async(
+            "anthropic",
+            async_client,
+            request_params,
+        )
+
+        response: Optional[anthropic.types.Message] = None
+        if cached_value is not None:
+            try:
+                response = anthropic.types.Message.model_validate_json(cached_value)
+            except pydantic.ValidationError:
+                logger.error("cached_value is valid : %s", cached_value)
+
+        if response is None:
+            logger.debug("request to anthropic")
+            response = await async_client.messages.create(**request_params)
+
+        assert response is not None
+
+        return Reply(
+            text=response.content[0].text,
+            usage=Usage(input=response.usage.input_tokens, output=response.usage.output_tokens),
+        )
 
     def _make_ask_stream(
         self,
@@ -167,29 +208,55 @@ class AnthropicLLM(BaseLLM):
             input_context=input_context, human_message=human_message, messages=messages, model=model
         )
         request_params["stream"] = True
-        response = sync_client.messages.create(**request_params)
 
-        input_tokens = 0
-        output_tokens = 0
+        cache_key, cached_value = cache_make_key_and_get(
+            "anthropic",
+            sync_client,
+            request_params,
+        )
 
-        for chunk in response:
-            if hasattr(chunk, "delta") and hasattr(chunk.delta, "text"):
-                yield Reply(text=chunk.delta.text)
-            elif hasattr(chunk, "type") and chunk.type == "content_block_delta":
+        if cached_value is not None:
+            reply_list = cast(list[Reply], cached_value)
+            for reply in reply_list:
+                reply.usage = None
+                yield reply
+        else:
+            logger.debug("request to anthropic")
+
+            response = sync_client.messages.create(**request_params)
+
+            input_tokens = 0
+            output_tokens = 0
+
+            reply_list: list[Reply] = []
+            for chunk in response:
                 if hasattr(chunk, "delta") and hasattr(chunk.delta, "text"):
-                    yield Reply(text=chunk.delta.text)
-                elif hasattr(chunk, "content_block") and hasattr(chunk.content_block, "text"):
-                    yield Reply(text=chunk.content_block.text)
+                    reply = Reply(text=chunk.delta.text)
+                    reply_list.append(reply)
+                    yield reply
+                elif hasattr(chunk, "type") and chunk.type == "content_block_delta":
+                    if hasattr(chunk, "delta") and hasattr(chunk.delta, "text"):
+                        reply = Reply(text=chunk.delta.text)
+                        reply_list.append(reply)
+                        yield reply
+                    elif hasattr(chunk, "content_block") and hasattr(chunk.content_block, "text"):
+                        reply = Reply(text=chunk.content_block.text)
+                        reply_list.append(reply)
+                        yield reply
 
-            if hasattr(chunk, "message") and hasattr(chunk.message, "usage"):
-                input_tokens += getattr(chunk.message.usage, "input_tokens", None) or 0
-                output_tokens += getattr(chunk.message.usage, "output_tokens", None) or 0
+                if hasattr(chunk, "message") and hasattr(chunk.message, "usage"):
+                    input_tokens += getattr(chunk.message.usage, "input_tokens", None) or 0
+                    output_tokens += getattr(chunk.message.usage, "output_tokens", None) or 0
 
-            if hasattr(chunk, "usage") and chunk.usage:
-                input_tokens += getattr(chunk.usage, "input_tokens", None) or 0
-                output_tokens += getattr(chunk.usage, "output_tokens", None) or 0
+                if hasattr(chunk, "usage") and chunk.usage:
+                    input_tokens += getattr(chunk.usage, "input_tokens", None) or 0
+                    output_tokens += getattr(chunk.usage, "output_tokens", None) or 0
 
-        yield Reply(text="", usage=Usage(input_tokens, output_tokens))
+            reply = Reply(text="", usage=Usage(input_tokens, output_tokens))
+            reply_list.append(reply)
+            yield reply
+
+            cache_set(cache_key, reply_list)
 
     async def _make_ask_stream_async(
         self,
@@ -204,29 +271,52 @@ class AnthropicLLM(BaseLLM):
             input_context=input_context, human_message=human_message, messages=messages, model=model
         )
         request_params["stream"] = True
-        response = await async_client.messages.create(**request_params)
 
-        input_tokens = 0
-        output_tokens = 0
+        cache_key, cached_value = await cache_make_key_and_get_async(
+            "anthropic",
+            async_client,
+            request_params,
+        )
 
-        async for chunk in response:
-            if hasattr(chunk, "delta") and hasattr(chunk.delta, "text"):
-                yield Reply(text=chunk.delta.text)
-            elif hasattr(chunk, "type") and chunk.type == "content_block_delta":
+        if cached_value is not None:
+            reply_list = cast(list[Reply], cached_value)
+            for reply in reply_list:
+                reply.usage = None
+                yield reply
+        else:
+            logger.debug("request to anthropic")
+            response = await async_client.messages.create(**request_params)
+
+            input_tokens = 0
+            output_tokens = 0
+
+            reply_list: list[Reply] = []
+            async for chunk in response:
                 if hasattr(chunk, "delta") and hasattr(chunk.delta, "text"):
-                    yield Reply(text=chunk.delta.text)
-                elif hasattr(chunk, "content_block") and hasattr(chunk.content_block, "text"):
-                    yield Reply(text=chunk.content_block.text)
+                    reply = Reply(text=chunk.delta.text)
+                    reply_list.append(reply)
+                    yield reply
+                elif hasattr(chunk, "type") and chunk.type == "content_block_delta":
+                    if hasattr(chunk, "delta") and hasattr(chunk.delta, "text"):
+                        reply = Reply(text=chunk.delta.text)
+                        reply_list.append(reply)
+                        yield reply
+                    elif hasattr(chunk, "content_block") and hasattr(chunk.content_block, "text"):
+                        reply = Reply(text=chunk.content_block.text)
+                        reply_list.append(reply)
+                        yield reply
 
-            if hasattr(chunk, "message") and hasattr(chunk.message, "usage"):
-                input_tokens += getattr(chunk.message.usage, "input_tokens", None) or 0
-                output_tokens += getattr(chunk.message.usage, "output_tokens", None) or 0
+                if hasattr(chunk, "message") and hasattr(chunk.message, "usage"):
+                    input_tokens += getattr(chunk.message.usage, "input_tokens", None) or 0
+                    output_tokens += getattr(chunk.message.usage, "output_tokens", None) or 0
 
-            if hasattr(chunk, "usage") and chunk.usage:
-                input_tokens += getattr(chunk.usage, "input_tokens", None) or 0
-                output_tokens += getattr(chunk.usage, "output_tokens", None) or 0
+                if hasattr(chunk, "usage") and chunk.usage:
+                    input_tokens += getattr(chunk.usage, "input_tokens", None) or 0
+                    output_tokens += getattr(chunk.usage, "output_tokens", None) or 0
 
-        yield Reply(text="", usage=Usage(input_tokens, output_tokens))
+            reply = Reply(text="", usage=Usage(input_tokens, output_tokens))
+            reply_list.append(reply)
+            yield reply
 
     def ask(
         self,

@@ -74,10 +74,10 @@ def init_django(debug: bool = False, log_level: int = logging.INFO):
                     # 개당 200KB 기준 * 5,000개 = 1GB
                     "OPTIONS": {"MAX_ENTRIES": 5_000},
                 },
-                "locmem": {
-                    "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
-                    "LOCATION": "pyhub_cache",
-                },
+                # "locmem": {
+                #     "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+                #     "LOCATION": "pyhub_cache",
+                # },
             },
             LOGGING={
                 "version": 1,

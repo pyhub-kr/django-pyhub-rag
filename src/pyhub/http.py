@@ -1,14 +1,14 @@
 import logging
-from typing import Any, Union, Optional, Literal
+from typing import Any, Literal, Optional, Union
 
 import httpx
 from asgiref.sync import async_to_sync
 from django.core.cache.backends.base import DEFAULT_TIMEOUT
 from httpx import URL
-from httpx._client import UseClientDefault, USE_CLIENT_DEFAULT  # noqa
+from httpx._client import USE_CLIENT_DEFAULT, UseClientDefault  # noqa
 from httpx._types import HeaderTypes, RequestData, RequestFiles, TimeoutTypes  # noqa
 
-from pyhub.caches import cache_make_key, cache_get_async, cache_set_async
+from pyhub.caches import cache_get_async, cache_make_key, cache_set_async
 
 logger = logging.getLogger(__name__)
 
@@ -34,11 +34,21 @@ async def cached_http_async(
     if ignore_cache:
         cache_key = None
     else:
-        cache_key = cache_make_key([url, headers, data, files, ignore_cache])
+        cache_key = cache_make_key(
+            {
+                "url": url,
+                "method": str(method),
+                "headers": headers,
+                "data": data,
+                "files": files,
+            }
+        )
         cached_value = await cache_get_async(cache_key, alias=cache_alias)
 
-        if cached_value is not None:
-            logger.debug("cache hit : %s", url)
+        if cached_value is None:
+            logger.debug("cache[%s] miss : %s - sending request to URL", cache_alias, url)
+        else:
+            logger.debug("cache[%s] hit : %s - not sending request to URL", cache_alias, url)
             return cached_value
 
     try:
@@ -52,7 +62,7 @@ async def cached_http_async(
                 files=files,
                 timeout=timeout,
             )
-            logger.debug("received response (%d) from %s", response.status_code, url)
+            logger.debug("received response (status code: %d) from %s", response.status_code, url)
             if response.status_code == 200:
                 response_data: bytes = response.content
                 logger.debug("received response data : %d bytes", len(response_data))

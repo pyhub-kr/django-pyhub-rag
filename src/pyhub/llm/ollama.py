@@ -4,10 +4,17 @@ from typing import Any, AsyncGenerator, Generator, Optional, Union, cast
 
 from django.core.checks import Error
 from django.template import Template
-from ollama import AsyncClient
+from ollama import AsyncClient, ChatResponse
 from ollama import Client as SyncClient
 from ollama import ListResponse
+from pydantic import ValidationError
 
+from pyhub.caches import (
+    cache_make_key_and_get,
+    cache_make_key_and_get_async,
+    cache_set,
+    cache_set_async,
+)
 from pyhub.rag.settings import rag_settings
 
 from .base import BaseLLM
@@ -182,12 +189,32 @@ class OllamaLLM(BaseLLM):
 
         sync_client = SyncClient(host=self.base_url)
         request_params = self._make_request_params(
-            input_context=input_context, human_message=human_message, messages=messages, model=model
+            input_context=input_context,
+            human_message=human_message,
+            messages=messages,
+            model=model,
         )
-        response = sync_client.chat(**request_params)
-        return Reply(
-            text=response.message.content,
+
+        cache_key, cached_value = cache_make_key_and_get(
+            "ollama",
+            sync_client,
+            request_params,
         )
+
+        response: Optional[ChatResponse] = None
+        if cached_value is not None:
+            try:
+                response = ChatResponse.model_validate_json(cached_value)
+            except ValidationError:
+                logger.error("cached value is invalid : %s", cached_value)
+
+        if response is None:
+            logger.debug("request to ollama")
+            response = sync_client.chat(**request_params)
+            cache_set(cache_key, response.model_dump_json())
+
+        assert response is not None
+        return Reply(text=response.message.content)
 
     async def _make_ask_async(
         self,
@@ -202,12 +229,32 @@ class OllamaLLM(BaseLLM):
 
         async_client = AsyncClient(host=self.base_url)
         request_params = self._make_request_params(
-            input_context=input_context, human_message=human_message, messages=messages, model=model
+            input_context=input_context,
+            human_message=human_message,
+            messages=messages,
+            model=model,
         )
-        response = await async_client.chat(**request_params)
-        return Reply(
-            text=response.message.content,
+
+        cache_key, cached_value = await cache_make_key_and_get_async(
+            "ollama",
+            async_client,
+            request_params,
         )
+        response: Optional[ChatResponse] = None
+        if cached_value is not None:
+            try:
+                response = ChatResponse.model_validate_json(cached_value)
+            except ValidationError:
+                logger.error("cached value is invalid : %s", cached_value)
+                cached_value = None
+
+        if cached_value is None:
+            logger.debug("request to ollama")
+            response: ChatResponse = await async_client.chat(**request_params)
+            await cache_set_async(cache_key, response.model_dump_json())
+
+        assert response is not None
+        return Reply(text=response.message.content)
 
     def _make_ask_stream(
         self,
@@ -222,12 +269,35 @@ class OllamaLLM(BaseLLM):
 
         sync_client = SyncClient(host=self.base_url)
         request_params = self._make_request_params(
-            input_context=input_context, human_message=human_message, messages=messages, model=model
+            input_context=input_context,
+            human_message=human_message,
+            messages=messages,
+            model=model,
         )
         request_params["stream"] = True
-        response = sync_client.chat(**request_params)
-        for chunk in response:
-            yield Reply(text=chunk.message.content or "")
+
+        cache_key, cached_value = cache_make_key_and_get(
+            "ollama",
+            sync_client,
+            request_params,
+        )
+
+        if cached_value is not None:
+            reply_list = cast(list[Reply], cached_value)
+            for reply in reply_list:
+                yield reply
+        else:
+            logger.debug("request to ollama")
+
+            response_stream = sync_client.chat(**request_params)
+
+            reply_list: list[Reply] = []
+            for chunk in response_stream:
+                reply = Reply(text=chunk.message.content or "")
+                reply_list.append(reply)
+                yield reply
+
+            cache_set(cache_key, reply_list)
 
     async def _make_ask_stream_async(
         self,
@@ -241,12 +311,34 @@ class OllamaLLM(BaseLLM):
         """
         async_client = AsyncClient(host=self.base_url)
         request_params = self._make_request_params(
-            input_context=input_context, human_message=human_message, messages=messages, model=model
+            input_context=input_context,
+            human_message=human_message,
+            messages=messages,
+            model=model,
         )
         request_params["stream"] = True
-        response = await async_client.chat(**request_params)
-        async for chunk in response:
-            yield Reply(text=chunk.message.content or "")
+
+        cache_key, cached_value = await cache_make_key_and_get_async(
+            "ollama",
+            async_client,
+            request_params,
+        )
+        if cached_value is not None:
+            reply_list = cast(list[Reply], cached_value)
+            for reply in reply_list:
+                yield reply
+        else:
+            logger.debug("request to ollama")
+
+            response = await async_client.chat(**request_params)
+
+            reply_list: list[Reply] = []
+            async for chunk in response:
+                reply = Reply(text=chunk.message.content or "")
+                reply_list.append(reply)
+                yield reply
+
+            await cache_set_async(cache_key, reply_list)
 
     def embed(
         self,

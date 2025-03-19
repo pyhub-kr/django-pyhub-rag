@@ -2,13 +2,22 @@ import logging
 from pathlib import Path
 from typing import Any, AsyncGenerator, Generator, Optional, Union, cast
 
+import pydantic
 from django.core.checks import Error
 from django.core.files import File
 from django.template import Template
 from openai import AsyncOpenAI
 from openai import OpenAI as SyncOpenAI
+from openai.types.chat import ChatCompletion
 
-from ..rag.settings import rag_settings
+from pyhub.caches import (
+    cache_make_key_and_get,
+    cache_make_key_and_get_async,
+    cache_set,
+    cache_set_async,
+)
+from pyhub.rag.settings import rag_settings
+
 from .base import BaseLLM
 from .types import (
     Embed,
@@ -102,7 +111,27 @@ class OpenAIMixin:
             messages=messages,
             model=model,
         )
-        response = sync_client.chat.completions.create(**request_params)
+
+        cache_key, cached_value = cache_make_key_and_get(
+            "openai",
+            sync_client,
+            request_params,
+        )
+
+        response: Optional[ChatCompletion] = None
+        if cached_value is not None:
+            try:
+                response = ChatCompletion.model_validate_json(cached_value)
+            except pydantic.ValidationError:
+                logger.error("cached value is invalid : %s", cached_value)
+
+        if response is None:
+            logger.debug("request to openai")
+            response: ChatCompletion = sync_client.chat.completions.create(**request_params)
+            cache_set(cache_key, response.model_dump_json())
+
+        assert response is not None
+
         return Reply(
             text=response.choices[0].message.content,
             usage=Usage(
@@ -125,7 +154,27 @@ class OpenAIMixin:
             messages=messages,
             model=model,
         )
-        response = await async_client.chat.completions.create(**request_params)
+
+        cache_key, cached_value = await cache_make_key_and_get_async(
+            "openai",
+            async_client,
+            request_params,
+        )
+
+        response: Optional[ChatCompletion] = None
+        if cached_value is not None:
+            try:
+                response = ChatCompletion.model_validate_json(cached_value)
+            except pydantic.ValidationError:
+                logger.error("cached value is invalid : %s", cached_value)
+
+        if response is None:
+            logger.debug("request to openai")
+            response = await async_client.chat.completions.create(**request_params)
+            await cache_set_async(cache_key, response.model_dump_json())
+
+        assert response is not None
+
         return Reply(
             text=response.choices[0].message.content,
             usage=Usage(
@@ -150,20 +199,41 @@ class OpenAIMixin:
         )
         request_params["stream"] = True
 
-        response_stream = sync_client.chat.completions.create(**request_params)
-        usage = None
+        cache_key, cached_value = cache_make_key_and_get(
+            "openai",
+            sync_client,
+            request_params,
+        )
 
-        for chunk in response_stream:
-            if chunk.choices and chunk.choices[0].delta.content:
-                yield Reply(text=chunk.choices[0].delta.content)
-            if chunk.usage:
-                usage = Usage(
-                    input=chunk.usage.prompt_tokens or 0,
-                    output=chunk.usage.completion_tokens or 0,
-                )
+        if cached_value is not None:
+            reply_list = cast(list[Reply], cached_value)
+            for reply in reply_list:
+                reply.usage = None  # cache 된 응답이기에 usage 내역 제거
+                yield reply
+        else:
+            logger.debug("request to openai")
 
-        if usage:
-            yield Reply(text="", usage=usage)
+            response_stream = sync_client.chat.completions.create(**request_params)
+            usage = None
+
+            reply_list: list[Reply] = []
+            for chunk in response_stream:
+                if chunk.choices and chunk.choices[0].delta.content:  # noqa
+                    reply = Reply(text=chunk.choices[0].delta.content)
+                    reply_list.append(reply)
+                    yield reply
+                if chunk.usage:
+                    usage = Usage(
+                        input=chunk.usage.prompt_tokens or 0,
+                        output=chunk.usage.completion_tokens or 0,
+                    )
+
+            if usage:
+                reply = Reply(text="", usage=usage)
+                reply_list.append(reply)
+                yield reply
+
+            cache_set(cache_key, reply_list)
 
     async def _make_ask_stream_async(
         self,
@@ -181,20 +251,41 @@ class OpenAIMixin:
         )
         request_params["stream"] = True
 
-        response_stream = await async_client.chat.completions.create(**request_params)
-        usage = None
+        cache_key, cached_value = await cache_make_key_and_get_async(
+            "openai",
+            async_client,
+            request_params,
+        )
 
-        async for chunk in response_stream:
-            if chunk.choices and chunk.choices[0].delta.content:
-                yield Reply(text=chunk.choices[0].delta.content)
-            if chunk.usage:
-                usage = Usage(
-                    input=chunk.usage.prompt_tokens or 0,
-                    output=chunk.usage.completion_tokens or 0,
-                )
+        if cached_value is not None:
+            reply_list = cast(list[Reply], cached_value)
+            for reply in reply_list:
+                reply.usage = None  # cache 된 응답이기에 usage 내역 제거
+                yield reply
+        else:
+            logger.debug("request to openai")
 
-        if usage:
-            yield Reply(text="", usage=usage)
+            response_stream = await async_client.chat.completions.create(**request_params)
+            usage = None
+
+            reply_list: list[Reply] = []
+            async for chunk in response_stream:
+                if chunk.choices and chunk.choices[0].delta.content:  # noqa
+                    reply = Reply(text=chunk.choices[0].delta.content)
+                    reply_list.append(reply)
+                    yield reply
+                if chunk.usage:
+                    usage = Usage(
+                        input=chunk.usage.prompt_tokens or 0,
+                        output=chunk.usage.completion_tokens or 0,
+                    )
+
+            if usage:
+                reply = Reply(text="", usage=usage)
+                reply_list.append(reply)
+                yield reply
+
+            await cache_set_async(cache_key, reply_list)
 
     def ask(
         self,

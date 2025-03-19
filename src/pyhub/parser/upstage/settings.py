@@ -1,6 +1,3 @@
-import tempfile
-from pathlib import Path
-
 DOCUMENT_PARSE_API_URL = "https://api.upstage.ai/v1/document-ai/document-parse"
 DOCUMENT_PARSE_DEFAULT_MODEL = "document-parse"
 DEFAULT_TIMEOUT = 600

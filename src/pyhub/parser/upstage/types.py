@@ -16,18 +16,32 @@ logger = logging.getLogger(__name__)
 DocumentSplitStrategyType = Literal["page", "element", "none"]
 OCRModeType = Literal["force", "auto"]
 DocumentFormatType = Literal["markdown", "html", "text"]
+
+# 공간 정보 (spacing, position)와 스타일 정보(font size, font style)dmf ghkfdydgo
 ElementCategoryType = Literal[
+    # 문서에서 가장 중요한 텍스트 단락으로, 본문 내용을 구성하는 핵심적인 요소
     "paragraph",
+    # 행과 열과 데이터를 구성해 정보를 한눈에 비교/분석하도록 정리하는 요소
     "table",
+    # 다이어그램, 그림, 사진 등 시각 자료를 담고 있는 요소
     "figure",
+    # 각 페이지 상단에 위치해, 문서 식별자나 제목 등 반복 표시가 필요한 정보를 담는 영역
     "header",
+    # 문서 하단에 배치해 페이지 번호나 문서 제목 같은 반복 정보를 표시하는 영역
     "footer",
+    # 표나 그림 등 시각적 요소에 대한 설명을 제공하는 텍스트 영역
     "caption",
+    # 블럭 형태의 수식이나 수학적 표현을 표시하는 영역
     "equation",
+    # 문서 내 주요 섹션이나 페이지 제목 등, 구조를 구분하기 위해 큰 제목으로 사용되는 요소
     "heading1",
+    # 불릿 포인트나 번호를 활용해 텍스트를 목록 형태로 구성해, 정보를 더 구조적으로 정리하고 읽기 쉽게 만드는 요소
     "list",
+    # 문서 전체의 목차나 참조 목록처럼, 특정 버로를 빠릐게 찾을 수 있도록 모아두는 요소
     "index",
+    # 본문과 연계되는 주석이나 참고 자료 등을 페이지 하단에 별도로 표기하는 요소
     "footnote",
+    # bar, pie, line 차트 형태로 데이터를 시각화해 표현하는 요소
     "chart",
 ]
 

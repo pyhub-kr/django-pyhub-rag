@@ -18,9 +18,7 @@ from pyhub.llm.types import LanguageEnum, LLMChatModelEnum, LLMVendorEnum
 from pyhub.parser.json import json_dumps
 from pyhub.parser.upstage import UpstageDocumentParseParser
 from pyhub.parser.upstage.parser import ImageDescriptor
-from pyhub.parser.upstage.settings import (
-    # DEFAULT_BATCH_PAGE_SIZE,
-    # MAX_BATCH_PAGE_SIZE,
+from pyhub.parser.upstage.settings import (  # DEFAULT_BATCH_PAGE_SIZE,; MAX_BATCH_PAGE_SIZE,
     SUPPORTED_FILE_EXTENSIONS,
 )
 from pyhub.parser.upstage.types import (
@@ -308,7 +306,7 @@ def upstage(
         #     batch_size_str += " [yellow](경고: PDF 파일에서만 사용됩니다.)[/yellow]"
         # table.add_row("배치 크기", batch_size_str)
 
-        end_page_label = f"끝" if max_page is None else f"{start_page + max_page}"
+        end_page_label = "끝" if max_page is None else f"{start_page + max_page}"
         table.add_row("페이지 범위", f"{start_page} ~ {end_page_label}")
 
         # Add image descriptor information if enabled

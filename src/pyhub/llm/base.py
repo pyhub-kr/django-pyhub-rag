@@ -206,8 +206,6 @@ class BaseLLM(abc.ABC):
         """Generate a streaming response asynchronously using the specific LLM provider"""
         yield Reply(text="")
 
-    # TODO: 장식자를 통한 API 요청 캐싱 (using django file cache)
-
     def _ask_impl(
         self,
         input: Union[str, dict[str, str]],
@@ -324,17 +322,19 @@ class BaseLLM(abc.ABC):
         input: Union[str, dict[str, str]],
         files: Optional[list[Union[str, Path, File]]] = None,
         stream: bool = False,
+        raise_errors: bool = False,
     ) -> Reply:
         """langchain 호환 메서드: 동기적으로 LLM에 메시지를 전송하고 응답을 반환합니다."""
-        return self.ask(input=input, files=files, stream=stream)
+        return self.ask(input=input, files=files, stream=stream, raise_errors=raise_errors)
 
     def stream(
         self,
         input: Union[str, dict[str, str]],
         files: Optional[list[Union[str, Path, File]]] = None,
+        raise_errors: bool = False,
     ) -> Generator[Reply, None, None]:
         """langchain 호환 메서드: 동기적으로 LLM에 메시지를 전송하고 응답을 스트리밍합니다."""
-        return self.ask(input=input, files=files, stream=True)
+        return self.ask(input=input, files=files, stream=True, raise_errors=raise_errors)
 
     def ask(
         self,
@@ -417,13 +417,15 @@ class BaseLLM(abc.ABC):
         self,
         request: Union[DescribeImageRequest, list[DescribeImageRequest]],
         max_parallel_size: int = 4,
+        raise_errors: bool = False,
     ) -> Reply:
-        return async_to_sync(self.describe_images_async)(request, max_parallel_size)
+        return async_to_sync(self.describe_images_async)(request, max_parallel_size, raise_errors)
 
     async def describe_images_async(
         self,
         request: Union[DescribeImageRequest, list[DescribeImageRequest]],
         max_parallel_size: int = 4,
+        raise_errors: bool = False,
     ) -> Union[Reply, list[Reply]]:
 
         # 최대 4개의 병렬 처리를 위한 세마포어 설정
@@ -465,6 +467,7 @@ class BaseLLM(abc.ABC):
                 input=task_request.user_prompt,
                 files=[task_request.image],
                 context=task_request.prompt_context,
+                raise_errors=raise_errors,
             )
             return reply
 
@@ -477,7 +480,8 @@ class BaseLLM(abc.ABC):
         reply_list = await asyncio.gather(*tasks)
 
         for request in request_list:
-            request.image.seek(0)
+            if hasattr(request.image, "seek"):
+                request.image.seek(0)
 
         if isinstance(request, (list, tuple)):
             return reply_list

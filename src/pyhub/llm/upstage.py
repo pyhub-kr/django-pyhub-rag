@@ -5,7 +5,8 @@ from django.core.checks import Error
 from django.template import Template
 from openai import OpenAI as SyncOpenAI
 
-from ..rag.settings import rag_settings
+from pyhub.rag.settings import rag_settings
+
 from .base import BaseLLM
 from .openai import OpenAIMixin
 from .types import (

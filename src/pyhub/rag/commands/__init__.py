@@ -1,8 +1,8 @@
 import typer
 from rich.console import Console
 
-from . import sqlite_vec
 from ... import get_version
+from . import sqlite_vec
 
 app = typer.Typer()
 console = Console()

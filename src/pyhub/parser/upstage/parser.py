@@ -11,6 +11,7 @@ from django.core.files import File
 from PyPDF2 import PdfReader, PdfWriter
 from PyPDF2.errors import PdfReadError
 
+from pyhub.http import cached_http_async
 from pyhub.llm import AnthropicLLM, GoogleLLM, OllamaLLM, OpenAILLM
 from pyhub.llm.base import BaseLLM, DescribeImageRequest
 from pyhub.llm.types import (
@@ -20,8 +21,6 @@ from pyhub.llm.types import (
     OpenAIChatModelType,
     Reply,
 )
-
-from pyhub.http import cached_http_async
 from pyhub.parser.documents import Document
 
 from .settings import (
@@ -453,7 +452,7 @@ class UpstageDocumentParseParser:
         # usage: dict = response_obj.get("usage")  # ex: { "pages": 10 }
         bare_element_list = response_obj.get("elements") or []
 
-        logger.info("%d개의 요소를 찾았습니다.", len(bare_element_list))
+        logger.info("Upstage %s (%s) API 요청에서 %d개의 요소를 찾았습니다.", model, api, len(bare_element_list))
 
         if self.image_descriptor is not None:
             image_descriptor_llm = self.image_descriptor.get_llm()
