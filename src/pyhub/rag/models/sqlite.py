@@ -32,7 +32,7 @@ class SQLiteVectorDocumentQuerySet(BaseDocumentQuerySet):
         query_embedding = await self.model.embed_async(query)
 
         qs = self._prepare_search_query(query_embedding)
-        return await sync_to_async(list)(qs[:k])  # noqa
+        return await sync_to_async(list, thread_sensitive=True)(qs[:k])  # noqa
 
 
 class SQLiteVectorDocument(AbstractDocument):

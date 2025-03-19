@@ -55,7 +55,7 @@ class PGVectorDocumentQuerySet(BaseDocumentQuerySet):
         query_embedding = await model_cls.embed_async(query)
 
         qs = self._prepare_search_query(query_embedding)
-        return await sync_to_async(list)(qs[:k])  # noqa
+        return await sync_to_async(list, thread_sensitive=True)(qs[:k])  # noqa
 
 
 class PGVectorDocument(AbstractDocument):
