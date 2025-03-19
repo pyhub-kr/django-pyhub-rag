@@ -19,7 +19,7 @@ from pyhub.parser.upstage import UpstageDocumentParseParser
 from pyhub.parser.upstage.parser import ImageDescriptor
 from pyhub.parser.upstage.settings import (
     CACHE_DIR_PATH,
-    DEFAULT_BATCH_PAGE_SIZE,
+    # DEFAULT_BATCH_PAGE_SIZE,
     # MAX_BATCH_PAGE_SIZE,
     MAX_CACHE_SIZE_MB,
     SUPPORTED_FILE_EXTENSIONS,
@@ -161,7 +161,7 @@ def upstage(
         LLMChatModelEnum.GPT_4O_MINI,
         "--image-descriptor-llm-model",
         "-m",
-        help="이미지 설명 생성에 사용할 LLM 모델",
+        help="이미지 설명 생성에 사용할 LLM 모델. gpt-4o-mini 처럼 멀티모달을 지원하는 모델을 지정하셔야 합니다.",
     ),
     image_descriptor_api_key: Optional[str] = typer.Option(
         None,
@@ -253,7 +253,7 @@ def upstage(
         )
         raise typer.Exit(1)
 
-    is_pdf = input_path.suffix.lower() == ".pdf"
+    # is_pdf = input_path.suffix.lower() == ".pdf"
 
     extract_element_category_list = cast(list[ElementCategoryType], extract_element_types)
     ignore_element_category_list = cast(list[ElementCategoryType], ignore_element_category)
@@ -279,7 +279,7 @@ def upstage(
     output_dir_path.mkdir(parents=True, exist_ok=True)
 
     # create one based on input_path with .jsonl extension
-    jsonl_output_path = output_dir_path / input_path.with_suffix(".jsonl")
+    jsonl_output_path = output_dir_path / input_path.with_suffix(".jsonl").name
 
     unified_document_paths = []
     for format_enum in (DocumentFormatEnum.MARKDOWN, DocumentFormatEnum.HTML, DocumentFormatEnum.TEXT):
@@ -409,19 +409,17 @@ def upstage(
                 if unified_document_paths:
                     for _, output_path in unified_document_paths:
                         console.print(f"[green]성공:[/green] {output_path} 경로에 통합 문서를 생성했습니다.")
-    except FileNotFoundError:
-        console.print(f"[bold red]오류:[/bold red] 파일을 찾을 수 없습니다: {input_path}")
-        raise typer.Exit(code=1)
-    except PermissionError:
-        console.print(f"[bold red]오류:[/bold red] 파일 접근 권한이 거부되었습니다: {input_path}")
-        raise typer.Exit(code=1)
-    except ValidationError as e:
-        console.print("[bold red]유효성 검사 오류:[/bold red] 파일이 필요한 제약 조건을 충족하지 않습니다")
-        console.print(f"[red]{str(e)}[/red]")
-        raise typer.Exit(code=1)
+    # except FileNotFoundError as e:
+    #     console.print(f"[red]{e}[/red]")
+    #     raise typer.Exit(code=1)
+    # except PermissionError as e:
+    #     console.print(f"[red]{e}[/red]")
+    #     raise typer.Exit(code=1)
+    # except ValidationError as e:
+    #     console.print(f"[red]{e}[/red]")
+    #     raise typer.Exit(code=1)
     except Exception as e:
-        console.print(f"[bold red]오류:[/bold red] 파일을 열거나 처리하는 데 실패했습니다: {input_path}")
-        console.print(f"[red]{str(e)}[/red]")
+        console.print(f"[red]{e}[/red]")
 
         if is_debug:
             console.print_exception()
