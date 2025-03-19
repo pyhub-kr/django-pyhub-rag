@@ -14,6 +14,3 @@ MAX_PIXELS_PER_PAGE = 100_000_000  # 1억 픽셀
 #  - 파일 1개당 최대 100페이지 지원. 그 이상은 비동기 API를 통해 처리 가능.
 MAX_BATCH_PAGE_SIZE = 100
 DEFAULT_BATCH_PAGE_SIZE = 10
-
-CACHE_DIR_PATH = Path(tempfile.gettempdir()) / "pyhub.parser"
-MAX_CACHE_SIZE_MB = 1024

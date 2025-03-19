@@ -3,7 +3,6 @@ import hashlib
 import logging
 import mimetypes
 import re
-from pathlib import Path
 from typing import Optional, Tuple
 
 from django.core.files import File
@@ -136,55 +135,3 @@ def get_extension_from_mimetype(mimetype: str) -> str:
         return ".bin"
 
     return extension
-
-
-def manage_cache_directory(cache_dir: Path, max_size_mb: int = 512) -> None:
-    """
-    캐시 디렉토리의 크기를 관리합니다. 최대 용량을 초과하면 오래된 파일부터 삭제합니다.
-
-    Args:
-        cache_dir: 캐시 디렉토리 경로
-        max_size_mb: 최대 허용 크기 (MB 단위)
-    """
-
-    if not cache_dir.exists():
-        return
-
-    # 최대 크기를 바이트 단위로 변환
-    max_size_bytes = max_size_mb * 1024 * 1024
-
-    # 현재 캐시 디렉토리 크기 계산
-    total_size = sum(f.stat().st_size for f in cache_dir.glob("**/*") if f.is_file())
-    logger.debug("현재 캐시 크기: %.2fMB / 최대 %dMB", total_size / (1024 * 1024), max_size_mb)
-
-    # 최대 크기를 초과하지 않으면 아무 작업도 하지 않음
-    if total_size <= max_size_bytes:
-        return
-    else:
-        # 파일 목록을 수정 시간 기준으로 정렬 (오래된 것부터)
-        files = [(f, f.stat().st_mtime) for f in cache_dir.glob("**/*") if f.is_file()]
-        files.sort(key=lambda x: x[1])  # 수정 시간 기준 정렬
-        logger.info("캐시 정리 시작: %d개 파일 중 오래된 파일부터 삭제합니다.", len(files))
-
-        # 필요한 만큼 오래된 파일부터 삭제
-        deleted_count = 0
-        deleted_size = 0
-
-        for file_path, __ in files:
-            if total_size <= max_size_bytes:
-                break
-
-            file_size = file_path.stat().st_size
-            try:
-                file_path.unlink()
-                total_size -= file_size
-                deleted_size += file_size
-                deleted_count += 1
-                logger.debug("캐시 파일 삭제: %s (%.1fKB)", file_path.name, file_size / 1024)
-            except (PermissionError, OSError) as e:
-                # 파일 삭제 실패 시 계속 진행
-                logger.warning("캐시 파일 삭제 실패: %s - %s", file_path, str(e))
-                continue
-
-        if deleted_count > 0:
-            logger.info("캐시 정리 완료: %d개 파일 삭제, %.2fMB 확보됨", deleted_count, deleted_size / (1024 * 1024))

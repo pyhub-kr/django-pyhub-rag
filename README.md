@@ -50,13 +50,22 @@ pyhub.parser upstage --help
 uv run -m pyhub.parser upstage --help
 ```
 
-변환할 PDF 파일을 하나 준비해주세요. PDF 파일 경로를 지정하시면 즉시 PDF 문서 파싱이 수행되고 `./output/` 경로에 jsonl 파일 및 추출된 이미지 파일이 저장됩니다.
+변환할 PDF 파일을 하나 준비해주세요.
+
+[Argus Bitumen](https://www.argusmedia.com/en/solutions/products/argus-bitumen)는
+전 세계 비트멘(아스팔트) 시장에 대한 가격 평가, 뉴스, 시장 분석을 제공하는 주간 서비스입니다
+사이트의 Related documents 메뉴에서 Sample Report, Download now 링크를 통해 샘플 보고서를 다운받으실 수 있는 데요.
+매 페이지마다 상하단에 header/footer가 있고 **2단 컬럼** 구조이며, 표와 이미지가 포함된 복잡한 PDF 문서입니다.
+
+PDF 파일 경로를 지정하시면 즉시 PDF 문서 파싱이 수행되고 `./output/` 경로에 jsonl 파일 및 추출된 이미지 파일이 저장됩니다.
 
 ```
 pyhub.parser upstage ./argus-bitumen.pdf
 ```
 
 이때 `UPSTAGE_API_KEY`에 문제가 있다면 다음의 에러 메시지를 만나시게 됩니다.
+`~/.pyhub.env` 파일에서 `UPSTAGE_API_KEY` 설정을 확인해주세요. 등호 `=` 앞 뒤로 절대 띄워쓰기를 쓰시면 안 됩니다.
+혹은 `upstage` 명령에서 `--upstage-api-key` 인자로 API Key를 지정하실 수도 있습니다.
 
 ```
 문서 파싱 실패: 401 - {"error":{"message":"API key is invalid, please check out our API reference page
@@ -109,6 +118,17 @@ class TaxlawDocument(SQLiteVectorDocument):
 물론 `bulk_create`를 통한 저장에서도 `embedding` 필드가 자동 생성/저장됩니다.
 
 레코드 생성 이후에 쿼리셋의 `.similarity_search(검색어, k=4)` 메서드를 통해 유사 문서를 검색할 수 있습니다.
+
+## 사용한 주요 라이브러리
+
++ `django`
+    - 요청 유효성 검사
+    - 장고 템플릿을 활용한 프롬프트 관리 및 생성
+    - 로거 시스템을 통한 debug/info/error 로그 출력
+    - 캐시 시스템을 통한 API 요청 캐시 (디폴트: 로컬 파일 시스템) - 캐시 백엔드를 Re
++ LLM 요청 라이브러리 : `openai`, `anthropic`, `google-genai`, `ollama`, `tiktoken`, `httpx`
++ CLI : `rich`, `typer`
++ PDF 파일 : `pypdf2` (PDF 파일여부 검증, 페이지 수 읽기, 페이지 나누기)
 
 ## 관련 튜토리얼
 

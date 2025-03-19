@@ -13,15 +13,14 @@ from rich.console import Console
 from rich.table import Table
 
 from pyhub import get_version, init
+from pyhub.caches import cache_clear
 from pyhub.llm.types import LanguageEnum, LLMChatModelEnum, LLMVendorEnum
 from pyhub.parser.json import json_dumps
 from pyhub.parser.upstage import UpstageDocumentParseParser
 from pyhub.parser.upstage.parser import ImageDescriptor
 from pyhub.parser.upstage.settings import (
-    CACHE_DIR_PATH,
     # DEFAULT_BATCH_PAGE_SIZE,
     # MAX_BATCH_PAGE_SIZE,
-    MAX_CACHE_SIZE_MB,
     SUPPORTED_FILE_EXTENSIONS,
 )
 from pyhub.parser.upstage.types import (
@@ -31,7 +30,6 @@ from pyhub.parser.upstage.types import (
     ElementCategoryType,
     OCRModeEnum,
 )
-from pyhub.parser.utils import manage_cache_directory
 from pyhub.rag.utils import get_literal_values
 
 app = typer.Typer()
@@ -365,13 +363,8 @@ def upstage(
     )
 
     try:
-        if is_cache_clear and CACHE_DIR_PATH.exists():
-            if is_verbose:
-                console.print(f"[yellow]캐시 폴더 삭제 : {CACHE_DIR_PATH}[/yellow]")
-            rmtree(CACHE_DIR_PATH, ignore_errors=True)
-
-        CACHE_DIR_PATH.mkdir(exist_ok=True)
-        manage_cache_directory(CACHE_DIR_PATH, MAX_CACHE_SIZE_MB)
+        if is_cache_clear:
+            cache_clear()
 
         with input_path.open("rb") as file:
             django_file = File(file)
@@ -409,15 +402,6 @@ def upstage(
                 if unified_document_paths:
                     for _, output_path in unified_document_paths:
                         console.print(f"[green]성공:[/green] {output_path} 경로에 통합 문서를 생성했습니다.")
-    # except FileNotFoundError as e:
-    #     console.print(f"[red]{e}[/red]")
-    #     raise typer.Exit(code=1)
-    # except PermissionError as e:
-    #     console.print(f"[red]{e}[/red]")
-    #     raise typer.Exit(code=1)
-    # except ValidationError as e:
-    #     console.print(f"[red]{e}[/red]")
-    #     raise typer.Exit(code=1)
     except Exception as e:
         console.print(f"[red]{e}[/red]")
 

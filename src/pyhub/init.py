@@ -1,5 +1,6 @@
 import logging
 import sys
+import tempfile
 from io import StringIO
 from pathlib import Path
 from typing import Optional
@@ -63,6 +64,21 @@ def init_django(debug: bool = False, log_level: int = logging.INFO):
                     },
                 },
             ],
+            # https://docs.djangoproject.com/en/dev/topics/cache/
+            CACHES={
+                "default": {
+                    # file system
+                    "BACKEND": "django.core.cache.backends.filebased.FileBasedCache",
+                    "LOCATION": f"{tempfile.gettempdir()}/pyhub_cache",
+                    "TIMEOUT": None,
+                    # 개당 200KB 기준 * 5,000개 = 1GB
+                    "OPTIONS": {"MAX_ENTRIES": 5_000},
+                },
+                "locmem": {
+                    "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+                    "LOCATION": "pyhub_cache",
+                },
+            },
             LOGGING={
                 "version": 1,
                 "disable_existing_loggers": True,

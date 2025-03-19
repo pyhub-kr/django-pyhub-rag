@@ -2,13 +2,10 @@ import asyncio
 import io
 import json
 import logging
-import os.path
 from dataclasses import dataclass
 from functools import reduce
-from hashlib import md5
 from typing import Any, AsyncGenerator, Generator, Optional, cast
 
-import httpx
 from django.core.exceptions import ValidationError
 from django.core.files import File
 from PyPDF2 import PdfReader, PdfWriter
@@ -23,10 +20,11 @@ from pyhub.llm.types import (
     OpenAIChatModelType,
     Reply,
 )
+
+from pyhub.http import cached_http_async
 from pyhub.parser.documents import Document
 
 from .settings import (
-    CACHE_DIR_PATH,
     DEFAULT_TIMEOUT,
     DOCUMENT_PARSE_API_URL,
     DOCUMENT_PARSE_DEFAULT_MODEL,
@@ -412,7 +410,6 @@ class UpstageDocumentParseParser:
         Raises:
             ValueError: API 호출에 오류가 있는 경우 발생합니다.
         """
-
         headers = {
             "Authorization": f"Bearer {self.upstage_api_key}",
         }
@@ -424,56 +421,19 @@ class UpstageDocumentParseParser:
             "base64_encoding": f"{'[' + ",".join(f"'{el}'" for el in self.base64_encoding_category_list) + ']'}",
         }
 
-        if self.ignore_cache:
-            cache_path = None
-
-        else:
-            # create hash
-            hasher = md5()
-
-            for file_key in sorted(files.keys()):
-                file_obj = files[file_key]
-                hasher.update(file_obj.read())
-                file_obj.seek(0)
-
-            for key, value in sorted(data.items()):
-                hasher.update(f"{key}={value}".encode("utf-8"))
-
-            md5_hash_value: str = hasher.hexdigest()
-
-            logger.debug(f"요청에 대한 MD5 해시 생성: {md5_hash_value}")
-
-            cache_path = CACHE_DIR_PATH / f"cache-response-{md5_hash_value}.json"
-            if os.path.exists(cache_path):
-                logger.debug("캐싱된 API 응답이 있습니다. Upstage API를 호출하지 않고 캐싱된 API 응답을 재활용합니다.")
-                json_string = open(cache_path, "rt", encoding="utf-8").read()
-                return json.loads(json_string)
-
         try:
-            async with httpx.AsyncClient() as client:
-                response = await client.post(
-                    self.api_url,
-                    headers=headers,
-                    data=data,
-                    files=files,
-                    timeout=timeout,
-                )
-                if response.status_code == 200:
-                    response_obj = response.json()
-
-                    if cache_path is not None:
-                        logger.debug(f"API 응답을 캐싱합니다. 캐싱된 용량 = {len(response.text)} bytes")
-                        open(cache_path, "wt", encoding="utf-8").write(response.text)
-
-                    return response_obj
-                else:
-                    raise ValueError(f"문서 파싱 실패: {response.status_code} - {response.text}")
-        except httpx.RequestError as e:
-            raise ValueError(f"요청 전송 실패: {e}")
-        except httpx.HTTPError as e:
-            raise ValueError(f"HTTP 오류: {e}")
+            response_data: bytes = await cached_http_async(
+                self.api_url,
+                method="POST",
+                headers=headers,
+                data=data,
+                files=files,
+                timeout=timeout,
+                ignore_cache=self.ignore_cache,
+            )
+            return json.loads(response_data)
         except json.JSONDecodeError as e:
-            raise ValueError(f"JSON 응답 디코딩 실패: {e}")
+            raise ValueError(f"Failed json decode : {e}") from e
         except Exception as e:
             raise ValueError(str(e)) from e
 
