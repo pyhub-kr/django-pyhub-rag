@@ -203,6 +203,9 @@ class Element:
             f"Invalid document_format : {document_format}",
         )
 
+        if self.coordinates:
+            kwargs["coordinates"] = self.coordinates
+
         if self.image_descriptions:
             kwargs["image_descriptions"] = self.image_descriptions
 
@@ -213,7 +216,6 @@ class Element:
                 "page": self.page,
                 "total_pages": self.total_pages,
                 "category": self.category,
-                "coordinates": self.coordinates,
                 "api": self.api,
                 "model": self.model,
                 **kwargs,
