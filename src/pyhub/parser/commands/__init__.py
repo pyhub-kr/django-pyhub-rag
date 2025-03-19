@@ -1,5 +1,6 @@
 import logging
 import os
+import re
 from datetime import datetime
 from pathlib import Path
 from shutil import rmtree
@@ -27,6 +28,7 @@ from pyhub.parser.upstage.types import (
     DocumentSplitStrategyEnum,
     ElementCategoryType,
     OCRModeEnum,
+    Element,
 )
 from pyhub.rag.utils import get_literal_values
 
@@ -386,10 +388,28 @@ def upstage(
                                     uf.write("\n\n")
                                 uf.write(variant_page_content)
 
-                        for name, _file in document.files.items():
-                            output_path = output_dir_path / name
-                            output_path.parent.mkdir(parents=True, exist_ok=True)
-                            output_path.open("wb").write(_file.read())
+                        el: Element
+                        for el in document.elements:
+                            if el.files:
+                                html: str = el.image_descriptions
+
+                                matches = re.findall(r"(<image\s+name=[\'\"](.*?)[\'\"]>.*?</image>)", html, re.DOTALL)
+                                image_dict = {name: full_tag.strip() for full_tag, name in matches}
+
+                                for name, _file in el.files.items():
+                                    output_path = output_dir_path / name
+                                    output_path.parent.mkdir(parents=True, exist_ok=True)
+                                    output_path.open("wb").write(_file.read())
+
+                                    if name in image_dict:
+                                        desc = image_dict[name]
+                                        output_path.with_suffix(".txt").write_text(desc)
+
+                        # for name, _file in document.files.items():
+                        #     print("name :", repr(name))
+                        #     output_path = output_dir_path / name
+                        #     output_path.parent.mkdir(parents=True, exist_ok=True)
+                        #     output_path.open("wb").write(_file.read())
 
                     document_count += 1
 

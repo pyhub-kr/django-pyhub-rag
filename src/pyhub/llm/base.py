@@ -28,6 +28,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class DescribeImageRequest:
     image: Union[str, Path, File]
+    image_path: str
     system_prompt: Union[str, Template]
     user_prompt: Union[str, Template]
     temperature: Optional[float] = None
@@ -445,7 +446,7 @@ class BaseLLM(abc.ABC):
             idx: int,
             total: int,
         ) -> Reply:
-            logger.info("describe_images [%d/%d] : %s", idx + 1, total, task_request.image.name)
+            logger.info("request describe_images [%d/%d] : %s", idx + 1, total, task_request.image_path)
 
             if is_supported_max_tokens:
                 llm = cls(
@@ -469,6 +470,7 @@ class BaseLLM(abc.ABC):
                 context=task_request.prompt_context,
                 raise_errors=raise_errors,
             )
+            logger.debug("image description for %s : %s", task_request.image_path, repr(reply.text))
             return reply
 
         async def process_with_semaphore(request_item, idx, total):
@@ -479,9 +481,11 @@ class BaseLLM(abc.ABC):
         tasks = [process_with_semaphore(request, idx, len(request_list)) for idx, request in enumerate(request_list)]
         reply_list = await asyncio.gather(*tasks)
 
-        for request in request_list:
-            if hasattr(request.image, "seek"):
-                request.image.seek(0)
+        assert len(request_list) == len(reply_list)
+
+        for _request in request_list:
+            if hasattr(_request.image, "seek"):
+                _request.image.seek(0)
 
         if isinstance(request, (list, tuple)):
             return reply_list

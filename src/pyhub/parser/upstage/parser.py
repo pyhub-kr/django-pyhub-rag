@@ -486,18 +486,20 @@ class UpstageDocumentParseParser:
                 system_prompt = self.image_descriptor.get_system_prompt(element.category)
                 user_prompt = self.image_descriptor.get_user_prompt(element.category)
 
-                for __, file in element.files.items():
+                for file_path, file in element.files.items():
+                    logger.debug("file path : %s", file_path)
                     context = prompt_context.copy()
                     context["context"] = None  # 맥락이 있다면 추가
 
                     request_list.append(
                         DescribeImageRequest(
                             image=file,
+                            image_path=file_path,
                             system_prompt=system_prompt,
                             user_prompt=user_prompt,
                             temperature=self.image_descriptor.temperature,
                             max_tokens=self.image_descriptor.max_tokens,
-                            prompt_context=prompt_context,
+                            prompt_context=context,
                         )
                     )
 
@@ -517,17 +519,19 @@ class UpstageDocumentParseParser:
             if not isinstance(llm_reply_list, list):
                 llm_reply_list = [llm_reply_list]  # noqa
 
+            assert len(request_list) == len(llm_reply_list)
+
             # 이미지 설명을 각 element에 매핑
             current_idx = 0
             for element in element_list:
                 if element.files:
                     num_files = len(element.files)
 
-                    for file_name, reply in zip(
+                    for file_path, reply in zip(
                         element.files.keys(),
                         llm_reply_list[current_idx : current_idx + num_files],
                     ):
-                        element.image_descriptions += f"<image name='{file_name}'>" + reply.text + "</image>" + "\n"
+                        element.image_descriptions += f"<image name='{file_path}'>" + reply.text + "</image>" + "\n"
                         if reply.usage:
                             logger.debug("Image description token : %s", reply.usage)
 
