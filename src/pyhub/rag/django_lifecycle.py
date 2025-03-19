@@ -1,6 +1,12 @@
 from typing import Any, Dict
 
-import numpy as np
+from django.core.exceptions import ImproperlyConfigured
+
+try:
+    import numpy as np
+except ImportError:
+    np = None
+
 from django_lifecycle import model_state as orig_model_state
 
 
@@ -13,6 +19,10 @@ class NewModelState(orig_model_state.ModelState):
         # 그래서 bool 판단을 지원하는 tuple로 변환을 합니다.
         for k in self.initial_state:
             v = self.initial_state[k]
+
+            if np is None:
+                raise ImproperlyConfigured("Please install the numpy package")
+
             if isinstance(v, np.ndarray):
                 self.initial_state[k] = tuple(v)
 
