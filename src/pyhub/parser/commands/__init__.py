@@ -14,12 +14,14 @@ from rich.console import Console
 from rich.table import Table
 
 from pyhub import get_version, init
-from pyhub.caches import cache_clear, cache_clear_all
+from pyhub.caches import cache_clear_all
 from pyhub.llm.types import LanguageEnum, LLMChatModelEnum, LLMVendorEnum
 from pyhub.parser.json import json_dumps
 from pyhub.parser.upstage import UpstageDocumentParseParser
 from pyhub.parser.upstage.parser import ImageDescriptor
-from pyhub.parser.upstage.settings import (  # DEFAULT_BATCH_PAGE_SIZE,; MAX_BATCH_PAGE_SIZE,
+from pyhub.parser.upstage.settings import (
+    DEFAULT_BATCH_PAGE_SIZE,
+    MAX_BATCH_PAGE_SIZE,
     SUPPORTED_FILE_EXTENSIONS,
 )
 from pyhub.parser.upstage.types import (
@@ -104,18 +106,18 @@ def upstage(
             "(3) none: 파일 전체를 하나의 Document로 생성"
         ),
     ),
-    # batch_page_size: int = typer.Option(
-    #     DEFAULT_BATCH_PAGE_SIZE,
-    #     "--batch-page-size",
-    #     "-b",
-    #     min=1,
-    #     max=MAX_BATCH_PAGE_SIZE,
-    #     help=(
-    #         f"한 번의 API 호출에서 처리할 PDF 페이지 수입니다. Upstage Document Parse API는 "
-    #         f"하나의 API 호출당 최대 {MAX_BATCH_PAGE_SIZE} 페이지까지 지원합니다. "
-    #         f"{MAX_BATCH_PAGE_SIZE}페이지를 초과하는 PDF 파일에는 이 설정이 꼭 필요합니다."
-    #     ),
-    # ),
+    batch_page_size: int = typer.Option(
+        DEFAULT_BATCH_PAGE_SIZE,
+        "--batch-page-size",
+        "-b",
+        min=1,
+        max=MAX_BATCH_PAGE_SIZE,
+        help=(
+            f"한 번의 API 호출에서 처리할 PDF 페이지 수입니다. Upstage Document Parse API는 "
+            f"하나의 API 호출당 최대 {MAX_BATCH_PAGE_SIZE} 페이지까지 지원합니다. "
+            f"{MAX_BATCH_PAGE_SIZE}페이지를 초과하는 PDF 파일에는 이 설정이 꼭 필요합니다."
+        ),
+    ),
     start_page: int = typer.Option(
         1,
         min=1,
@@ -220,8 +222,6 @@ def upstage(
     is_print_version: bool = typer.Option(False, "--version", help="현재 패키지 버전 출력"),
     is_debug: bool = typer.Option(False, "--debug"),
 ):
-    batch_page_size = 1  # API 캐싱을 위해서는 Page 단위 API 요청이 필요합니다.
-
     if is_print_version:
         console.print(get_version())
         raise typer.Exit()
@@ -253,7 +253,7 @@ def upstage(
         )
         raise typer.Exit(1)
 
-    # is_pdf = input_path.suffix.lower() == ".pdf"
+    is_pdf = input_path.suffix.lower() == ".pdf"
 
     extract_element_category_list = cast(list[ElementCategoryType], extract_element_types)
     ignore_element_category_list = cast(list[ElementCategoryType], ignore_element_category)
@@ -305,10 +305,10 @@ def upstage(
         # table.add_row("통합 문서 생성 여부", "예" if is_create_unified_output else "아니오")
 
         # Add batch size with warning if needed
-        # batch_size_str = str(batch_page_size)
-        # if not is_pdf and batch_page_size == DEFAULT_BATCH_PAGE_SIZE:
-        #     batch_size_str += " [yellow](경고: PDF 파일에서만 사용됩니다.)[/yellow]"
-        # table.add_row("배치 크기", batch_size_str)
+        batch_size_str = str(batch_page_size)
+        if not is_pdf and batch_page_size == DEFAULT_BATCH_PAGE_SIZE:
+            batch_size_str += " [yellow](경고: PDF 파일에서만 사용됩니다.)[/yellow]"
+        table.add_row("배치 크기", batch_size_str)
 
         end_page_label = "끝" if max_page is None else f"{start_page + max_page}"
         table.add_row("페이지 범위", f"{start_page} ~ {end_page_label}")
@@ -334,8 +334,8 @@ def upstage(
         console.print(table)
 
     # Check if input file is a PDF. Warn if batch_size is specified but file is not a PDF
-    # if not is_pdf and batch_page_size != DEFAULT_BATCH_PAGE_SIZE and not is_verbose:
-    #     console.print(f"[yellow]경고: 배치 크기 매개변수({batch_page_size})는 PDF가 아닌 파일에는 무시됩니다.[/yellow]")
+    if not is_pdf and batch_page_size != DEFAULT_BATCH_PAGE_SIZE and not is_verbose:
+        console.print(f"[yellow]경고: 배치 크기 매개변수({batch_page_size})는 PDF가 아닌 파일에는 무시됩니다.[/yellow]")
 
     if is_enable_image_descriptor:
         image_descriptor = ImageDescriptor(
