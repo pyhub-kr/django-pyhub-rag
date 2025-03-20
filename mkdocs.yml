@@ -16,12 +16,12 @@ plugins:
   # TODO: https://squidfunk.github.io/mkdocs-material/setup/changing-the-colors/
   - blog:
       enabled: false
-# - search
+  - search
 
 theme:
   name: material
   language: ko
-# custom_dir: docs-overrides
+  custom_dir: docs-overrides
   font:
     # text: Merriweather Sans
     code: Ubuntu Mono
@@ -44,20 +44,16 @@ theme:
     - content.code.annotate
     - content.code.copy
     - content.code.select
+    - navigation.footer
     - navigation.instant
     - navigation.instant.progress
     - navigation.path
-#    - navigation.prune
-#    - navigation.sections
-#    - navigation.top
-#   - navigation.tabs
-#   - navigation.tabs.sticky
-#    - navigation.tracking
+    - navigation.prune
+    - navigation.tracking
     - toc.follow
-#   - toc.integrate
-#   - search.highlight
-#   - search.share
-#   - search.suggest
+    - search.highlight
+    - search.share
+    - search.suggest
 
 markdown_extensions:
   - admonition
@@ -98,4 +94,4 @@ extra:
 #   - icon: fontawesome/brands/discord
 #     link: https://discord.gg/gAVRhkpY
 
-copyright: Copyright &copy; 2025 파이썬사랑방
+copyright: Copyright &copy; 2025 파이썬사랑방 (<a href="mailto:me@pyhub.kr">me@pyhub.kr</a>)
