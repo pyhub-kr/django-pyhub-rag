@@ -65,11 +65,9 @@ OPENAI_API_KEY=sk-...
 
 ![](./docs/assets/02_venv.png)
 
-`django-pyhub-rag[parser]` 라이브러리를 설치해주세요. 
-
 ### 라이브러리 설치
 
-윈도우/맥/리눅스에서 `django-pyhub-rag[parser]`
+가상환경에 `django-pyhub-rag[parser]` 라이브러리만 설치해주시면 됩니다.
 
 ```
 python -m pip install --upgrade 'django-pyhub-rag[parser]'
