@@ -16,15 +16,7 @@ plugins:
   # TODO: https://squidfunk.github.io/mkdocs-material/setup/changing-the-colors/
   - blog:
       enabled: false
-  - search
-  - rss:
-      enabled: !ENV [CI, false]
-      match_path: blog/posts/.*
-      date_from_meta:
-        as_creation: date
-      categories:
-        - categories
-        - tags
+# - search
 
 theme:
   name: material
@@ -63,9 +55,9 @@ theme:
 #    - navigation.tracking
     - toc.follow
 #   - toc.integrate
-    - search.highlight
-    - search.share
-    - search.suggest
+#   - search.highlight
+#   - search.share
+#   - search.suggest
 
 markdown_extensions:
   - admonition
