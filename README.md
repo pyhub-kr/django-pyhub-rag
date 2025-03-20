@@ -6,7 +6,8 @@
 > `pyhub.parser upstage 파일명.pdf` 명령 하나 만으로 PDF 파일을 파싱하여, 이미지 설명까지 한 번에 생성하실 수 있습니다.
 > Upstage Document Parse API와 디폴트로 OpenAI gpt-4o-mini 모델을 사용합니다. 
 
-[공식문서 보러가기](https://rag.pyhub.kr)
++ [공식문서](https://rag.pyhub.kr)
++ [릴리즈 노트](https://rag.pyhub.kr/release-notes)
 
 
 ## 관련 튜토리얼

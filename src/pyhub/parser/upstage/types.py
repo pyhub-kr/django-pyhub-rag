@@ -152,11 +152,11 @@ class Element:
     def __post_init__(self):
         if self.b64_str:
             try:
-                file = base64_to_file(self.b64_str, filename=str(self.id))
+                file = base64_to_file(self.b64_str, filename=f"{self.id:02}-{self.category}")
             except ValueError as e:
                 logger.error(f"Base64 데이터를 파일로 변환하는 중 오류 발생: {e}")
             else:
-                rel_path = f"{self.category}/{file.name}"
+                rel_path = f"p{self.page:03}/{file.name}"
                 self.files[rel_path] = file
 
                 # HTML: img 태그에 src 속성 추가하고 파일 상대경로 지정

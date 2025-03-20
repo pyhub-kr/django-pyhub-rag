@@ -1,5 +1,13 @@
 # 릴리즈 노트
 
+## 1.0.3
+
++ 이미지 파일명 패턴 변경
+    - 기존 : `category/id.jpg`
+    - 변경 : `p페이지번호/id-category.jpg`
+
+![](./assets/1.0.3.png)
+
 ## 1.0.2
 
 + `--batch-page-size` 옵션(`-b`)을 다시 살려서, PDF 파일을 지정 단위로 끊어서 업스테이지 Document Parse API를 호출합니다.
