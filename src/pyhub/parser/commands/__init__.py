@@ -89,12 +89,12 @@ def upstage(
         "-d",
         help="생성할 문서 포맷",
     ),
-    is_create_unified_output: bool = typer.Option(
-        False,
-        "--create-unified-file",
-        "-c",
-        help="통합 파일 생성 여부",
-    ),
+    # is_create_unified_output: bool = typer.Option(
+    #     False,
+    #     "--create-unified-file",
+    #     "-c",
+    #     help="통합 파일 생성 여부",
+    # ),
     document_split_strategy: DocumentSplitStrategyEnum = typer.Option(
         DocumentSplitStrategyEnum.PAGE,
         "--document-split-strategy",
@@ -300,7 +300,7 @@ def upstage(
         table.add_row("OCR 모드", ocr_mode.value)
         table.add_row("Elements to Document 분할 전략", document_split_strategy.value)
         table.add_row("생성할 Document 포맷", document_format.value)
-        table.add_row("통합 문서 생성 여부", "예" if is_create_unified_output else "아니오")
+        # table.add_row("통합 문서 생성 여부", "예" if is_create_unified_output else "아니오")
 
         # Add batch size with warning if needed
         # batch_size_str = str(batch_page_size)
