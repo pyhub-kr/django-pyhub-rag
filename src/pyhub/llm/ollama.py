@@ -198,7 +198,6 @@ class OllamaLLM(BaseLLM):
 
         cache_key, cached_value = cache_make_key_and_get(
             "ollama",
-            sync_client,
             request_params,
             cache_alias="ollama",
         )
@@ -239,7 +238,6 @@ class OllamaLLM(BaseLLM):
 
         cache_key, cached_value = await cache_make_key_and_get_async(
             "ollama",
-            async_client,
             request_params,
             cache_alias="ollama",
         )
@@ -281,7 +279,6 @@ class OllamaLLM(BaseLLM):
 
         cache_key, cached_value = cache_make_key_and_get(
             "ollama",
-            sync_client,
             request_params,
             cache_alias="ollama",
         )
@@ -324,7 +321,6 @@ class OllamaLLM(BaseLLM):
 
         cache_key, cached_value = await cache_make_key_and_get_async(
             "ollama",
-            async_client,
             request_params,
             cache_alias="ollama",
         )
@@ -363,7 +359,6 @@ class OllamaLLM(BaseLLM):
 
         cache_key, cached_value = cache_make_key_and_get(
             "ollama",
-            sync_client,
             request_params,
             cache_alias="ollama",
         )
@@ -403,7 +398,6 @@ class OllamaLLM(BaseLLM):
 
         cache_key, cached_value = await cache_make_key_and_get_async(
             "ollama",
-            async_client,
             request_params,
             cache_alias="ollama",
         )

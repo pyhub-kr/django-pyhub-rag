@@ -3,13 +3,9 @@ from hashlib import md5
 from io import IOBase
 from typing import Any, Optional, Union
 
-import anthropic
-import ollama
-import openai
 from django.core.cache import caches
 from django.core.cache.backends.base import DEFAULT_TIMEOUT
 from django.core.files import File
-from google import genai
 
 logger = logging.getLogger(__name__)
 
@@ -155,15 +151,6 @@ async def cache_set_async(key, value, timeout=DEFAULT_TIMEOUT, version=None, ali
 
 async def cache_make_key_and_get_async(
     type: str,
-    client: Union[
-        openai.AsyncClient,
-        openai.Client,
-        anthropic.AsyncClient,
-        anthropic.Client,
-        genai.Client,
-        ollama.AsyncClient,
-        ollama.Client,
-    ],
     kwargs: dict[
         str,
         Union[
@@ -180,32 +167,16 @@ async def cache_make_key_and_get_async(
     cache_key = cache_make_key(key_args)
     cached_value = await cache_get_async(cache_key, alias=cache_alias)
 
-    if isinstance(client, (openai.AsyncClient, openai.Client)):  # noqa
-        url = client.base_url
-    elif isinstance(client, (ollama.AsyncClient, ollama.Client)):
-        url = client._client.base_url  # noqa
-    else:
-        url = None
-
     if cached_value is None:
-        logger.debug("cache[%s] miss : %s - sending request to URL", cache_alias, url)
+        logger.debug("cache[%s] miss : sending api request", cache_alias)
     else:
-        logger.debug("cache[%s] hit : %s - not sending request to URL", cache_alias, url)
+        logger.debug("cache[%s] hit : not sending api request", cache_alias)
 
     return cache_key, cached_value
 
 
 def cache_make_key_and_get(
     type: str,
-    client: Union[
-        openai.AsyncClient,
-        openai.Client,
-        anthropic.AsyncClient,
-        anthropic.Client,
-        genai.Client,
-        ollama.AsyncClient,
-        ollama.Client,
-    ],
     kwargs: dict[
         str,
         Union[
@@ -221,17 +192,10 @@ def cache_make_key_and_get(
     cache_key = cache_make_key(key_args)
     cached_value = cache_get(cache_key, alias=cache_alias)
 
-    if isinstance(client, (openai.AsyncClient, openai.Client)):  # noqa
-        url = client.base_url
-    elif isinstance(client, (ollama.AsyncClient, ollama.Client)):
-        url = client._client.base_url  # noqa
-    else:
-        url = None
-
     if cached_value is None:
-        logger.debug("cache[%s] miss : %s - sending request to URL", cache_alias, url)
+        logger.debug("cache[%s] miss : sending api request", cache_alias)
     else:
-        logger.debug("cache[%s] hit : %s - not sending request to URL", cache_alias, url)
+        logger.debug("cache[%s] hit : not sending api request", cache_alias)
 
     return cache_key, cached_value
 

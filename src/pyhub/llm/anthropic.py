@@ -142,7 +142,6 @@ class AnthropicLLM(BaseLLM):
 
         cache_key, cached_value = cache_make_key_and_get(
             "anthropic",
-            sync_client,
             request_params,
             cache_alias="anthropic",
         )
@@ -180,7 +179,6 @@ class AnthropicLLM(BaseLLM):
 
         cache_key, cached_value = await cache_make_key_and_get_async(
             "anthropic",
-            async_client,
             request_params,
             cache_alias="anthropic",
         )
@@ -220,7 +218,6 @@ class AnthropicLLM(BaseLLM):
 
         cache_key, cached_value = cache_make_key_and_get(
             "anthropic",
-            sync_client,
             request_params,
             cache_alias="anthropic",
         )
@@ -284,7 +281,6 @@ class AnthropicLLM(BaseLLM):
 
         cache_key, cached_value = await cache_make_key_and_get_async(
             "anthropic",
-            async_client,
             request_params,
             cache_alias="anthropic",
         )

@@ -116,7 +116,6 @@ class OpenAIMixin:
 
         cache_key, cached_value = cache_make_key_and_get(
             "openai",
-            sync_client,
             request_params,
             cache_alias=self.cache_alias,
         )
@@ -160,7 +159,6 @@ class OpenAIMixin:
 
         cache_key, cached_value = await cache_make_key_and_get_async(
             "openai",
-            async_client,
             request_params,
             cache_alias=self.cache_alias,
         )
@@ -205,7 +203,6 @@ class OpenAIMixin:
 
         cache_key, cached_value = cache_make_key_and_get(
             "openai",
-            sync_client,
             request_params,
             cache_alias=self.cache_alias,
         )
@@ -258,7 +255,6 @@ class OpenAIMixin:
 
         cache_key, cached_value = await cache_make_key_and_get_async(
             "openai",
-            async_client,
             request_params,
             cache_alias=self.cache_alias,
         )
@@ -345,7 +341,6 @@ class OpenAIMixin:
 
         cache_key, cached_value = cache_make_key_and_get(
             "openai",
-            sync_client,
             request_params,
             cache_alias=self.cache_alias,
         )
@@ -378,7 +373,6 @@ class OpenAIMixin:
 
         cache_key, cached_value = await cache_make_key_and_get_async(
             "openai",
-            async_client,
             request_params,
             cache_alias=self.cache_alias,
         )

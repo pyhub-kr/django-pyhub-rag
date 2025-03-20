@@ -162,7 +162,6 @@ class GoogleLLM(BaseLLM):
 
         cache_key, cached_value = cache_make_key_and_get(
             "google",
-            client,
             request_params,
             cache_alias="google",
         )
@@ -201,7 +200,6 @@ class GoogleLLM(BaseLLM):
 
         cache_key, cached_value = await cache_make_key_and_get_async(
             "google",
-            client,
             request_params,
             cache_alias="google",
         )
@@ -240,7 +238,6 @@ class GoogleLLM(BaseLLM):
 
         cache_key, cached_value = cache_make_key_and_get(
             "google",
-            client,
             dict(stream=True, **request_params),
             cache_alias="google",
         )
@@ -285,7 +282,6 @@ class GoogleLLM(BaseLLM):
 
         cache_key, cached_value = await cache_make_key_and_get_async(
             "google",
-            client,
             dict(stream=True, **request_params),
             cache_alias="google",
         )
@@ -378,7 +374,6 @@ class GoogleLLM(BaseLLM):
 
         cache_key, cached_value = cache_make_key_and_get(
             "google",
-            client,
             request_params,
             cache_alias="google",
         )
@@ -416,7 +411,6 @@ class GoogleLLM(BaseLLM):
 
         cache_key, cached_value = await cache_make_key_and_get_async(
             "google",
-            client,
             request_params,
             cache_alias="google",
         )
