@@ -1,0 +1,4 @@
+<image name='figure/11.jpg'><title>데이터 분석 대시보드</title>
+<details>노트북 화면에 데이터 분석 대시보드가 표시되어 있으며, 다양한 데이터 표와 통계가 포함되어 있습니다. 사용자는 데이터에 대한 통찰력을 얻고 분석을 수행할 수 있는 인터페이스를 보고 있습니다.</details>
+<entities>노트북, 데이터 대시보드, 통계 표</entities>
+<hypothetical_questions>이 데이터 대시보드는 어떤 종류의 데이터를 분석하고 있을까요? 사용자는 이 정보를 어떻게 활용할 수 있을까요? 데이터 분석 결과가 비즈니스 결정에 어떤 영향을 미칠까요?</hypothetical_questions></image>

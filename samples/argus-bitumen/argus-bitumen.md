@@ -1,0 +1,2192 @@
+Ⓡ
+
+# argus
+
+# Argus Bitumen
+
+Europe, Africa, Middle East and Asia-Pacific prices and commentary
+Incorporating Argus Asphalt Report
+
+argusmedia.com
+
+Issue 24-12 I Friday 22 March 2024
+
+SUMMARY
+
+Bitumen prices rose across much of Europe, as supply
+tightened in the north and fuel oil values firmed, while in
+Asia weak demand continued to weigh on the market, with
+Singapore and South Korean prices both down on the week.
+
+Disruptions at two French refineries continued to
+squeeze bitumen supply in northwest Europe, helping to
+push up Rotterdam and Baltic cargo differentials to fob Rot-
+terdam high-sulphur fuel oil (HSFO) barges.
+
+Mediterranean bitumen market activity and demand lev-
+els were starting to rise with warmer weather in many Euro-
+pean markets, a factor that along with rising regional HSFO
+prices, pushed up domestic truck prices in some markets.
+
+Price levels in most sub-Saharan African markets were
+broadly stable, although cargo values into west African ter-
+minals rose sharply, while there were some freight rate falls
+for container shipping movements into east Africa.
+
+Singapore bitumen prices edged lower, as the southeast
+Asian market continued to see a lack of demand outlets,
+with only limited buyers seeking out April-loading cargoes.
+Several oil majors were still holding on to unsold April-load-
+ing volumes and some emerged on the Argus Open Markets
+(AOM) platform to seek out buyers.
+
+PRICES
+
+| Bitumen prices at key locations, 16-22 Mar | Bitumen prices at key locations, 16-22 Mar | Bitumen prices at key locations, 16-22 Mar | Bitumen prices at key locations, 16-22 Mar | $/t ± |
+| --- | --- | --- | --- | --- |
+|  |  | Low | High | $/t ± |
+| Export cargo prices fob | Export cargo prices fob |  |  |  |
+| Mediterranean |  | 445.43 | 449.77 | +29.05 |
+| Rotterdam |  | 482.15 | 487.15 | +26.00 |
+| Baltic |  | 470.15 | 474.15 | +26.00 |
+| Singapore |  | 383.00 | 408.60 | -6.70 |
+| South Korea |  | 400.00 | 407.00 | -5.00 |
+| Mideast Gulf |  | 283.50 | 380.00 | +9.75 |
+| Delivered cargo prices cfr | Delivered cargo prices cfr |  |  |  |
+| North Africa | Alexandria, bulk | 491.00 | 501.00 | +32.00 |
+| East Africa | Mombasa, drum | 430.00 | 440.00 | +2.00 |
+| West Africa | Lagos, bulk | 633.00 | 643.00 | +29.00 |
+| East China coast |  | 435.00 | 450.00 | +5.00 |
+| Domestic prices |  |  |  |  |
+| Antwerp | ex-works | 576 | 587 | +2.00 |
+| Southern Germany | ex-works | 522 | 533 | -3.00 |
+| Hungary | ex-works | 571 | 582 | -3.00 |
+| Italy | ex-works inc tax | 549 | 560 | +8.00 |
+| Indonesia | ex-works | 587.00 | 587.00 | -3.00 |
+| Mumbai | bulk | 499.00 | 502.00 | -8.50 |
+
+
+North Sea Dated VS Rotterdam domestic
+
+$/bl
+
+![image](chart/16.jpg)
+- Chart Type: line
+|  | Jul 7 | Jul 29 | Sep 29 | Dec 22 | Mar 22 | North Sea Dated 10 | Rotterdam domestic |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| item_01 | 80% | 90% | 100% | 80% | 90% | 85% | 90% |
+
+
+CONTENTS
+
+| Key bitumen prices | 1 |
+| --- | --- |
+| Map of waterborne bitumen prices | 2 |
+| Northwest and central Europe | 3-5 |
+| Mediterranean | 6-8 |
+| Sub-Saharan Africa | 9-11 |
+| Asia-Pacific and Middle East | 12-16 |
+| Vessel tracking indications | 17 |
+| Bitumen news | 18-20 |
+
+
+Argus Bitumen
+
+Issue 24-12  Friday 22 March 2024
+
+# WATERBORNE BITUMEN PRICES, FOB
+
+![image](figure/3.jpg)
+Rotterdam
+$485/t Italy Baltic
+$456/t $472/t
+Greece
+Spain
+$456/t South Korea
+$459/t
+$404/t
+Taiwan
+Turkey
+$456/t $395/t
+Iran
+$284/t
+Thailand
+Bahrain
+$378/t
+lvory Coast $380/t
+$564/t
+Singapore
+$396/t
+
+CARGO FLOWS
+
+The 37,000 dwt White Pearl, loaded at Tarragona, Spain, was
+moving a cargo to Portsmouth, New Hampshire, on the US
+east coast, for 30 March arrival.
+
+The 6,175 dwt Iver Beauty, also loaded at Tarragona, is
+on route to Takoradi, Ghana for 3 April arrival.
+The 12,000 dwt Kemaman, Malaysia-loaded Tasco Tara is
+moving a cargo to Tauranga, New Zealand for 4 April arrival.
+
+| Europe and Africa cargo export differentials to HSFO | Europe and Africa cargo export differentials to HSFO | Europe and Africa cargo export differentials to HSFO | $/t |
+| --- | --- | --- | --- |
+|  | Low | High | ± |
+| Mediterranean, basis Augusta | -20.67 | -16.33 | nc |
+| Rotterdam, Netherlands | +15.00 | +20.00 | +7.50 |
+| Baltic | +3.00 | +7.00 | +7.50 |
+| Spain | -10.00 | -5.00 | nc |
+| Italy | -12.00 | -8.00 | nc |
+| Greece | -12.00 | -8.00 | nc |
+| Turkey | -12.00 | -8.00 | nc |
+| Ivory Coast | +95.00 | +100.00 | nc |
+
+
+Waterborne markets, differential to HSFO
+
+$/t
+
+![image](chart/10.jpg)
+- Chart Type: bar
+|  | 14 Apr 23 | 4 Aug 23 | 24 Nov 23 | 22 Mar 24 | Rotterdam | Italy | Spain | Greece | Ivory Coast |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| item_01 | 0 | 50 | 75 | 100 | 75 | 50 | 25 | 0 | 50 |
+
+
+| Europe and Africa cargo export differentials to crude | Europe and Africa cargo export differentials to crude | Europe and Africa cargo export differentials to crude | Europe and Africa cargo export differentials to crude |
+| --- | --- | --- | --- |
+|  | Differential to Ice Brent $/t | Differential to Ice Brent $/bl | ± |
+| Mediterranean, basis Augusta | -200.94 | -13.58 | +2.40 |
+| Rotterdam, Netherlands | -163.89 | -7.58 | +1.90 |
+| Baltic | -176.39 | -9.60 | +1.90 |
+| Spain | -189.94 | -11.80 | +2.40 |
+| Italy | -192.44 | -12.206 | +2.40 |
+| Greece | -192.44 | -12.21 | +2.40 |
+| Turkey | -192.44 | -12.21 | +2.40 |
+| Ivory Coast | -84.94 | 5.22 | +2.40 |
+| Bitumen conversion factor t/bl 6.17 Ice Brent conversion bl/t 7.53 | Bitumen conversion factor t/bl 6.17 Ice Brent conversion bl/t 7.53 | Bitumen conversion factor t/bl 6.17 Ice Brent conversion bl/t 7.53 | Bitumen conversion factor t/bl 6.17 Ice Brent conversion bl/t 7.53 |
+
+
+Argus Bitumen
+
+Issue 24-12  Friday 22 March 2024
+
+NORTH AND CENTRAL EUROPE MARKET COMMENTARY
+
+# Summary
+
+Disruption at two French refineries continued to squeeze
+overall bitumen supply in northwest Europe (see news),
+pushing up Rotterdam and Baltic cargo differentials to fob
+Rotterdam high-sulphur fuel oil (HSFO) barges.
+
+The halt to bitumen truck loadings at ExxonMobil's Port
+Jerome refinery in northern France mid-March ratcheted
+up regional supply restrictions, given the existing issues at
+TotalEnergies' Donges refinery on the French Atlantic coast.
+
+ExxonMobil is also understood to have declared force
+majeure on at least two bitumen cargoes that were due
+to be loaded at Port Jerome in the late-March/early-April
+period, although the firm did manage to load one cargo
+onto the 6,165 dwt An Hai Wan, with that shipment head-
+ing to Antwerp, potentially to feed ExxonMobil's coker at its
+refinery there that has no bitumen production units, market
+participants said.
+
+While the Donges refinery as a whole is not expected
+to restart before early-April, some bitumen production has
+gradually resumed, allowing a cargo to be loaded there
+on the 6,189 dwt Iver Blessing for shipments towards the
+Nordics.
+
+While Shell's Pernis refinery turnaround through to mid-
+April was still not seen impacting bitumen production units
+there, the firm's significant commitment to term deals into
+Nordic buyers meant spot cargo availability remained scarce,
+forcing up assessed Rotterdam and Baltic fob cargo differen-
+tials to fob Rotterdam HSFO barges $7-8/t higher to $15-20/t
+and around $5/t premiums respectively.
+
+The regional supply restrictions also pushed up spot
+prices for some inland sales, with domestic truck prices in
+France and Benelux markets assessed slightly firmer.
+
+Recent drone strikes on Russian refineries were badly
+
+Rotterdam V Baltic V Med (outright waterborne) $/t
+
+![image](chart/12.jpg)
+- Chart Type: line
+|  | 20 Oct | 8 Dec | 2 Feb | 22 Mar |
+| --- | --- | --- | --- | --- |
+| item_01 | 520 | 470 | 400 | 450 |
+
+
+North and central Europe bitumen prices, 16-22 Mar
+
+|  | €/t | €/t | €/t | $/t | $/t | $/t |
+| --- | --- | --- | --- | --- | --- | --- |
+| Low | High | ± | Low | High | ± |  |
+| Domestic prices, ex-works |  |  |  |  |  |  |
+| Rotterdam, Netherlands | 530 | 540 | +5.00 | 576 | 587 | +2.00 |
+| Antwerp, Belgium | 530 | 540 | +5.00 | 576 | 587 | +2.00 |
+| Northern Germany | 490 | 500 | nc | 533 | 543 | -3.00 |
+| Northeast Germany | 480 | 490 | nc | 522 | 533 | -3.00 |
+| Southern Germany | 480 | 490 | nc | 522 | 533 | -3.00 |
+| Southwest Germany | 485 | 495 | nc | 527 | 538 | -3.00 |
+| Western Germany | 490 | 500 | nc | 533 | 543 | -3.00 |
+| Hungary | 525 | 535 | nc | 571 | 582 | -3.00 |
+| Romania | 545 | 555 | +55.00 | 592 | 603 | +56.50 |
+| Poland | 500 | 510 | nc | 543 | 554 | -3.00 |
+| Czech Republic | 435 | 450 | -10.00 | 473 | 489 | -13.50 |
+| Germany PMB (diff to Germany) | +140 | +150 | nc | +152 | +163 | -0.87 |
+| Germany PMB | 625 | 645 | na | 679 | 701 | -3.87 |
+| Export prices, ex-works |  |  |  |  |  |  |
+| Central Europe bitumen index | 468 | 478 | +1.00 | 509 | 520 | -1.00 |
+| Poland-Romania (truck) | 465 | 475 | +5.00 | 505 | 516 | +2.00 |
+| Hungary-Romania (truck) | 525 | 535 | +5.00 | 571 | 582 | +3.00 |
+| Serbia-Romania (truck) | 435 | 445 | nc | 473 | 484 | -2.00 |
+| Austria-Romania (truck) | 445 | 455 | nc | 484 | 495 | -2.00 |
+| Germany-Poland (truck) | 470 | 480 | nc | 511 | 522 | -3.00 |
+| Hungary-Slovakia (truck) | 470 | 480 | nc | 511 | 522 | -3.00 |
+| Poland-Germany (truck) | 445 | 455 | nc | 484 | 495 | -2.00 |
+| Czech Republic-Germany (truck) | 405 | 415 | -45.00 | 440 | 451 | -52.00 |
+| Rotterdam (cargo) |  |  |  | 482.15 | 487.15 | +26.00 |
+| Baltic (cargo) |  |  |  | 470.15 | 474.15 | +26.00 |
+| Domestic prices, delivered |  |  |  |  |  |  |
+| Southern UK £/t | 465 | 475 | nc | 591 | 604 | -4.00 |
+| Northern France | 510 | 525 | +2.50 | 554 | 571 | nc |
+| Central France Volyn/Lviv region, Ukraine ( | 510 | 525 | +2.50 | 554 | 571 | nc |
+
+
+truck ) hryvnia/t
+
+26,000 26,500 +750.00 667.98 680.82 +15.24
+
+Crude and refined products, 16-22 Mar
+
+|  | Low | High | Average | ± |
+| --- | --- | --- | --- | --- |
+| Ice Brent minute marker week range $/bl | 85.50 | 87.31 | 86.128 | +2.31 |
+| Fuel oil 3.5%S, fob RMG barge S/t | 461.00 | 476.25 | 467.150 | +18.50 |
+| Argus Brent Sour $/bl | 82.64 | 82.70 |  | -0.14 |
+| Vacuum gasoil 0.5%S cif cargo $/t | 701.00 | 716.75 |  | +18.88 |
+
+
+| Northern Europe cargo freight rates |  |  | $/t |
+| --- | --- | --- | --- |
+|  | Low | High | ± |
+| Rotterdam-Thames | 30 | 35 | nc |
+| Hamburg-Thames | 36 | 41 | nc |
+| Klaipeda-Thames | 60 | 65 | nc |
+| La Coruna-Thames | 49 | 54 | nc |
+
+
+Argus Bitumen
+
+Issue 24-12  Friday 22 March 2024
+
+NORTH AND CENTRAL EUROPE MARKET COMMENTARY
+
+affecting some such facilities, especially Lukoil's Volgograd
+refinery, which have impacted domestic supply.
+
+# UK/Ireland
+
+Real-term cuts in local authority road maintenance budgets
+in England and Wales have caused a further deterioration in
+their road surfaces, UK asphalt industry body AIA said on 19
+March (see news).
+
+The steady deterioration of the road network contrib-
+uted to a 43pc annual increase in the number of potholes
+reported by local authorities to have been filled in England
+and Wales during 2023-24, to an eight-year high of 2mn. In
+its survey conclusions, the AIA also said the "one-time catch-
+up cost" of bringing roads in England and Wales up to the
+standard enabling the network to be managed cost-effective-
+ly had jumped by 16pc to a new record high of £16.3bn.
+
+Market participants said bitumen demand was starting to
+improve in the UK and Ireland as the weather has continued
+to get warmer, with second half March UK activity sharply up
+from the first half of the month.
+
+UK delivered truck assessed at £465-475/t.
+
+prices stayed
+Two cargoes arrived at terminals on the Thames aboard
+the 6,314 dwt Bithav and 4,995 dwt San Bacco that were
+loaded at Rotterdam and Brunsbuettel respectively.
+
+# France
+
+Warm and dry weather supported paving activity across
+France, while refinery disruptions limited supply, pushing
+delivered truck assessments in northern and central France
+€2-3/t higher to €510-525/t.
+
+Delivered truck prices in southern France stayed assessed
+at €480-490/t as there remains plentiful Mediterranean bitu-
+men supply.
+
+Germany: North VS South
+
+![image](chart/14.jpg)
+- Chart Type: line
+|  | 7 Jul | 29 Sep | 22 Dec | 22 Mar |
+| --- | --- | --- | --- | --- |
+| item_01 | 500 | 575 | 525 | 500 |
+
+
+$/t
+
+The fire at the Port Jerome refinery and the subsequent
+halt to truck loadings of most grades of bitumen led one
+buyer to re-route term deal supplies from the south of the
+country to the north in order to avoid purchasing bitumen
+trucks on a spot basis.
+
+Bitumen availability at TotalEnergies' Gonfreville refinery
+was also constrained, buyers said, indicating the refinery
+has yet to resume spot sales following the end of bitumen-
+focused planned maintenance there in mid-March.
+
+According to CPDP data, French bitumen consumption
+in the first two months of the year was 135,000t, down 9pc
+from the same period of 2023, market participants said.
+
+# Benelux
+
+Domestic truck prices across the Benelux region were as-
+sessed €5/t higher at €530-540/t ex-Antwerp and ex-Rotter-
+dam as intra-month spot values rose with buyers looking to
+making up for supply shortfalls caused by issues at French
+refineries.
+
+Enquiries for Benelux bitumen supplies into the French
+market continued to be strong for the same reason.
+
+The 36,771dwt Asphalt Synergy was set to load a second
+large cargo at Agioi Theodoroi, Greece, for likely shipment
+to Antwerp, having delivered its first cargo of the year into
+Vitol's Antwerp terminal. The tanker left Antwerp in 18
+March and was set to reach Gibraltar on 23 March on its way
+to Greece. Those flows have been helping to fill north Euro-
+pean supply shortfalls, including in Benelux markets.
+
+Germany
+
+No week-on-week truck price changes emerged in Germany
+or for its exports to Poland.
+
+Market participants said two out of three of Miro's
+shareholders did not have volumes of pen 70/100 available
+for loading at its Karlsruhe refinery, while truck queues were
+seen outside Shell's Godorf refinery after a technical issue
+briefly paused bitumen output there.
+
+Bayernoil's Neustadt-Vohburg refinery remained in main-
+tenance, with bitumen volumes set to resume in early April.
+One market participant said a German buyer was seeking
+a Baltic-loaded bitumen cargo for delivery into a location
+near the Kiel Canal.
+
+Czech Republic/Poland/Slovakia/Ukraine
+
+Czech truck export prices to Germany were assessed €45/t
+lower at €405-415/t ex-works as Orlen sought to sell stored
+bitumen volumes ahead of its planned Litvinov refinery turn-
+around in April, market participants said.
+
+Argus Bitumen
+
+Issue 24-12  Friday 22 March 2024
+
+NORTH AND CENTRAL EUROPE MARKET COMMENTARY
+
+Czech domestic truck prices were assessed €10/t lower
+at €435-450/t ex-works, while Polish domestic truck prices
+stayed assessed at €500-510/t ex-works. Polish farmers set
+up roadblocks across most of the country on 20 March, mak-
+ing deliveries of bitumen difficult.
+
+The first round of Slovakian presidential elections were
+set for 23 March, with some seeing the electoral process
+boosting activity and bitumen demand.
+
+Ukrainian bitumen demand continued to be lacklustre
+due to lack of governmental funding and poor weather
+conditions. Ukrainian bitumen imports in the first 17 days of
+March amounted to 1,220t, mostly from Lithuania.
+
+Orlen increased its export prices to Ukraine from its
+Plock refinery by €10/t to €460-465/t ex-works for pen 50/70
+and 70/100. Independent Polish trading company Uni-Bitu-
+men moved up its values for the Ukrainian market by €18/t
+to €521/t ex-Jaslo.
+
+Domestic Ukrainian truck prices for Polish and Lithuanian
+bitumen in the western regions of Ukraine increased by 700-
+800 hryvnia/t to 26 000-26 500 hryvnia/t (€612-624/t) fca
+given the increase in import values coupled with the recent
+devaluation of the Ukrainian currency.
+
+Prices for domestically produced bitumen in the central
+regions of Ukraine were flat on the week at 27,000-27,300
+hryvnia/t (€636-643/t) ex-works.
+
+# Romania/Hungary/Balkans/Austria
+
+Bitumen production restarted at Rompetrol's Vega refinery
+in Ploiesti, Romania, on 18 March, while market participants
+were told bitumen output would resume at the Burgas refin-
+ery in Bulgaria on 25 March.
+
+Hungary and Romania domestic
+
+![image](chart/12.jpg)
+- Chart Type: line
+|  | 7 Jul | 29 Sep | 22 Dec | 22 Mar |
+| --- | --- | --- | --- | --- |
+| item_01 | 580 | 640 | 540 | 580 |
+
+
+$/t
+
+Bulgaria has been importing cargoes of Iraqi Basrah as
+well as Libyan and Egyptian crude grades after it halted
+imports of Russian Urals due to EU sanctions.
+
+The Rompetrol restart, as well as cargo imports into
+Romanian Black Sea ports, were seen helping to build stocks
+ahead of strong anticipated activity and demand in Romania
+where multiple elections are to be be held this year. Rainy
+and cold weather for the time being restricted work in parts
+of the country, although southern Romania was busy with
+paving work.
+
+Romanian domestic truck prices were assessed €55/t
+higher at €545-555/t ex-works as Rompetrol issued its first
+prices for this season, while Hungarian domestic truck prices
+stayed assessed at €525-535/t ex-works. Hungarian exports
+to Romania were assessed €5/t higher at €525-535/t ex-
+works. Polish exports to Romania were assessed €5/t firmer
+at €465-475/t ex-works.
+
+There remained no Serbian or Austrian export flows to
+Romania, keeping those assessments unchanged.
+
+The 5,897 dwt Action arriving at Constanta, Romania,
+with an Agioi Theodoroi, Greece cargo, while the 6,065 dwt
+Fuji Lava, loaded at Taranto, Italy was set to arrive at Galati
+on 24 March.
+
+# Nordics/Baltics
+
+Suppliers pointed to a sharp rise in project activity in the
+Baltic states, drawing substantial truck volumes from Orlen
+Lietuva's Mazeikiai refinery in Lithuania, as well as regional
+storage terminals.
+
+Truck prices from the Mazeikiai refinery stayed at €500/t
+ex-works for customers in the Baltic states, while lower
+prices were offered to importers in Ukraine.
+
+The 11-25 March strike by the Central Organisation of
+Finnish Trade Unions (SAK), affecting Finnish ports, forced
+a Finnish bitumen importer to reschedule bitumen cargo
+deliveries at the country gears up for the impending start of
+its paving season (see news).
+
+The importer said it had been able to re-arrange vessels
+to arrive after the end of the strike period, but said there
+are concerns about potential further strike action.
+
+The 8,297 dwt Stella Polaris, loaded at Delfzijl, went
+on to deliver a part cargo into Norrkoping, Sweden after
+an initial delivery into Kolding, Denmark. The 4,972 dwt
+Bitland moved a cargo from Nynashamn to Sandarne, both in
+Sweden. The 4,900 dwt Bitfjord moved a Rotterdam cargo to
+Stavanger, Norway, arriving there on 20 March.
+
+Argus Bitumen
+
+Issue 24-12  Friday 22 March 2024
+
+# MEDITERRANEAN MARKET COMMENTARY
+
+Summary
+
+Mediterranean bitumen market activity and demand levels
+were starting to rise with warmer weather in many European
+markets, a factor that along with rising regional high-sulphur
+fuel oil (HSFO) prices, pushed up domestic truck prices in
+some markets.
+
+Italian domestic truck prices were assessed €10/t higher
+at €505-515/t ex-works, including the €31/t tax on the
+sale of bitumen, while those in Greece rose by €20-25/t to
+€485-490/t ex-works and Turkish refiner Tupras raised its
+posted domestic truck prices by Turkish Lira 730/t ($19/t) to
+TL16,651/t ($516/t).
+
+Spot demand for both cargoes and bitumen tankers was
+still fairly weak, keeping freight rates under pressure.
+
+Differentials to HSFO remained steady and this was in
+part linked to hefty new Mediterranean HSFO price gains
+that also dramatically narrowed the fob Rotterdam HSFO
+barge premium to fob Mediterranean cargoes to around $1/t
+from $11-12/t in the previous week. That made it difficult
+to justify spot cargo flows from south to north to help meet
+supply shortfalls into northwest European and Scandinavian
+markets caused by French refinery stoppages.
+
+Spanish fob cargo discounts to fob Mediterranean HSFO
+cargoes stayed assessed at $5-10/t, with Greek, Turkish and
+Italian exports all remaining in the same assessed range
+around $10/t fob discounts. With fob Rotterdam and Baltic
+cargo differentials to fob Rotterdam HSFO barges strength-
+ening, that at least gave some encouragement to potential
+arbitrage flows from the Mediterranean to northern Europe.
+
+But Mediterranean supply continues to far outstrip
+bitumen requirements within the region, with some tanker
+movements made to the US and west Africa, as well as
+northwest Europe.
+
+Italy domestic and Mediterranean HSFO fob cargoes $/t
+
+![image](chart/11.jpg)
+- Chart Type: line
+|  | Jul | Aug | Sep | Oct | Nov | Dec | Jan | Feb | Mar | Apr | May | Jun |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| item_01 | 340 | 360 | 380 | 400 | 420 | 440 | 600 | 550 | 480 | 400 | 380 | 360 |
+
+
+| Mediterranean price index |  |  | $/t |
+| --- | --- | --- | --- |
+|  | Low | High | ± |
+| Mediterranean fob (Augusta) | 445.43 | 449.77 | +29.05 |
+| Differential to HSFO | -20.67 | -16.33 | nc |
+
+
+Mediterranean bitumen prices, 16-22 Mar
+
+|  | Local currency/t | Local currency/t | Local currency/t | $/t | $/t | $/t |
+| --- | --- | --- | --- | --- | --- | --- |
+|  | Low | High | ± | Low | High | ± |
+| Domestic prices, ex-works |  |  |  |  |  |  |
+| Italy, including tax | 505 | 515 | +10.00 | 549 | 560 | +8.00 |
+| Southern France (delivered) | 480 | 490 | nc | 522 | 533 | -3.00 |
+| Spain | 565 | 575 | nc | 614 | 625 | -3.00 |
+| Izmit, Turkey | 16,651 | 16,651 | +730.00 | 516 | 516 | +19.00 |
+| Izmir, Turkey | 16,651 | 16,651 | +730.00 | 516 | 516 | +19.00 |
+| Batman, Turkey | 16,651 | 16,651 | +730.00 | 516 | 516 | +19.00 |
+| Kirikkale, Turkey | 16,651 | 16,651 | +730.00 | 516 | 516 | +19.00 |
+| Export prices, fob $/t | Differential to HSFO | Differential to HSFO | Differential to HSFO | Differential to HSFO | Differential to HSFO | Differential to HSFO |
+| Italy | -12.00 | -8.00 | nc | 454.10 | 458.10 | +29.05 |
+| Greece | -12.00 | -8.00 | nc | 454.10 | 458.10 | +29.05 |
+| Spain | -10.00 | -5.00 | nc | 456.10 | 461.10 | +29.05 |
+| Turkey | -12.00 | -8.00 | nc | 454.10 | 458.10 | +29.05 |
+| Delivered cargo prices, cfr |  |  |  |  |  |  |
+| Alexandria, Egypt |  |  |  | 491.00 | 501.00 | +32.00 |
+| Ghazaouet, Algeria |  |  |  | 499 | 509 | +33.00 |
+| Rades, Tunisia |  |  |  | 496 | 506 | +33.00 |
+| Economics |  |  |  | Mid |  | 土 |
+| Bitumen's value as a fuel oil blendstock S/t | Bitumen's value as a fuel oil blendstock S/t | Bitumen's value as a fuel oil blendstock S/t |  | 399.733 |  | +37.69 |
+
+
+Crude and refined products, 16-22 Mar
+
+|  | Low | High | Average | ± |
+| --- | --- | --- | --- | --- |
+| Fuel oil 3.5% 0.998 fob | 460.50 | 475.50 | 466.100 | +29.05 |
+| Basrah Heavy fob Med $/bl | 76.29 | 76.35 |  | -0.26 |
+| VGO 0.5% west Med cif $/t | 707.75 | 723.75 |  | +22.25 |
+
+
+| Mediterranean cargo freight rates | Mediterranean cargo freight rates | Mediterranean cargo freight rates | $/t |
+| --- | --- | --- | --- |
+|  | Low | High | 士 |
+| Augusta-Mohammedia | 62 | 65 | -2.00 |
+| Tarragona-Mohammedia | 43 | 46 | -2.00 |
+| Augusta-Alexandria | 48 | 51 | -0.50 |
+| Augusta-Tunis-Rades | 38 | 42 | nc |
+| Livorno-Tunis-Rades | 41 | 44 | nc |
+| Tarragona-Gazaouet | 41 | 45 | nc |
+| Aspropyrgos-Corinth-Agio Theodori-Alexandria | 37 | 39 | -0.50 |
+
+
+Argus Bitumen
+
+Issue 24-12  Friday 22 March 2024
+
+# MEDITERRANEAN MARKET COMMENTARY
+
+The 37,000 dwt White Pearl, loaded at Tarragona, Spain,
+shipped its cargo to Portsmouth, New Hampshire, on the US
+east coast, while the 6,175 dwt Iver Beauty, also loaded at
+Tarragona, moved its cargo to Takoradi, Ghana.
+
+Shipments bound for northwest Europe, in part respond-
+ing to refinery issues at ExxonMobil's Port Jerome refinery
+and TotalEnergoes' Donges refinery, included one on board
+the 6,115 dwt Ping Hai Wan that was loaded at Agioi The-
+odoroi, Greece, before sailing to Bayonne on France's Atlan-
+tic coast. The 6,118 dwt Ning Hai Wan shipped another cargo
+to Bayonne, having been loaded at Huelva, Spain.
+
+The 6,123 dwt Xing Hai Wan, loaded at Agioi Theodoroi,
+was passing Gibraltar, with its destination so far undisclosed,
+while the Izmit, Turkey, loaded 21,500 dwt Baltic Narval was
+making another regular shipment to northwest European
+import terminals. The 36,771 dwt Asphalt Synergy returned
+was expected to load another large cargo at Agioi Theodoroi
+after making a delivery into Vitol's Antwerp terminal in
+Belgium.
+
+Shipping market players said the Mediterranean region
+was still long on ships, with a lack of spot tanker require-
+ments, partly because of the Ramadan Islamic fasting month
+affecting some buying. Cross-Mediterranean freight rate as-
+sessments fell $2/t for Augusta-Mohammedia and Tarragona-
+Mohammedia routes to $62-65/t and $43-46/t respectively,
+while other regional routes were either assessed unchanged
+or with slim declines.
+
+# Algeria/Morocco/Tunisia
+
+Market participants said there were strong levels of con-
+struction activity and import demand in Algeria, with
+one estimating total March cargo imports into Algeria will
+amount to 70-80,000t, with Ramadan not causing any con-
+struction sector slowdown so far.
+
+Delivered cargo premiums to fob Mediterranean HSFO
+into Algerian and Moroccan terminals were indicated from
+the high $30s/t up to the $45/t.
+
+While Algerian state-owned Sonatrach was set to re-
+deliver the 8,021dwt Poestella back to its owners at the end
+of March when its time charter period ends, market partici-
+pants were awaiting confirmation that the firm had secured
+another bitumen tanker under a fresh time charter arrange-
+ment. Sonatrach also runs two of its own bitumen tankers,
+the Ain Zeft and the Ras Tomb, both 4,999dwt vessels.
+
+Diring the week ending 22 March, the 6,187 dwt Iver
+Best, loaded at Agioi Theodoroi, shipped a cargo to Annaba,
+Algeria, while the 8,021 dwt Augusta, Sicily, loaded Poestella
+was waiting to unload its cargo at Skikda on 22 March.
+
+The 8,353 dwt Castillo de Pambre delivered a Tarragona,
+Spain, cargo into Mohammedia, Morocco, while the 5,897
+dwt Iver Accord made a part-cargo discharge into Gabes
+after an initial delivery into Sousse, both in Tunisia.
+
+Egypt/Libya
+
+The EU announced an $8.06bn aid package and an upgraded
+relationship with Egypt on 17 March.
+
+The proposed funding includes $5.45bn in concessional
+loans and $1.96bn of investments, according to a summary
+of the plan published by the EU. The deal comes on top of
+the recent agreement between Egypt and the International
+Monetary Fund (IMF) where the terms of that $8bn loan
+stipulated lower spending on infrastructure.
+
+There was still no market optimism of any near-term
+resumption of cargo imports by state-owned EGPC into its
+Alexandria terminal.
+
+There were no fresh cargo deliveries into Libyan ports,
+with the last discharge made into Tripoli on 24 February.
+
+Spain/Portugal
+
+Spanish domestic truck prices stayed assessed at €565-575/t
+ex-works, while Spanish fob bitumen cargo differentials to
+fob Mediterranean HSFO cargoes were still assessed at dis-
+counts of $5-10/t.
+
+![image](figure/20.jpg)
+argus
+argusmedia.com
+Argus Bitumen &
+Asphalt Europe
+Conference
+13-14 May 2024  Madrid, Spain
+Book
+by Friday
+12 April
+and save
+€300
+www.argusmedia.com/euro-bitumen
+
+Argus Bitumen
+
+Issue 24-12  Friday 22 March 2024
+
+# MEDITERRANEAN MARKET COMMENTARY
+
+Numerous cargoes were exported from Tarragona,
+Huelva and La Coruna throughout the week, feeding demand
+in Morocco, Portugal, France, the US and west Africa. More
+cargoes were likely to be exported over the 23-24 March
+weekend with the 9,230 dwt Asphalt Teranga and the 7,066
+dwt Herbania both waiting on 22 March to load at Tarragona.
+
+The latest statistics from Spain's strategic reserve body
+Cores showed consumption of asphalt products was 42,824t
+in January, down nearly 10,000t from the same month last
+year.
+
+The 6,239 dwt Iver Brilliant shipped a cargo from the
+Spanish Atlantic refinery and terminal at La Coruna to Lis-
+bon, Portugal. Around 21,000t of bitumen has been exported
+from La Coruna since the flows were resumed in February,
+according to Vortexa.
+
+# Italy
+
+Italian domestic truck prices were assessed €10/t higher at
+€505-515/t ex-works, including the €31/t tax on bitumen
+sales, while Italian fob bitumen cargo discounts to fob Medi-
+terranean HSFO cargoes stayed assessed at around $10/t.
+
+Market participants pointed to gradually improving sea-
+sonal demand thanks to better weather conditions.
+
+A fluid catalytic cracker at Eni's Sannazzaro refinery
+remained offline after it was shut on 12 March due to a po-
+tential catalyst problem, according to market sources in the
+region, but bitumen production has remained strong there,
+recently being ramped up to around 1,000t/day. One market
+participant said bitumen stocks at Livorno have almost been
+exhausted after the refinery was permanently shut, but the
+6,180 dwt Iver Balance, understood to be under time charter
+with Eni, was waiting outside Livorno on 22 March.
+
+The latest data from Italian industry body Unem showed
+bitumen consumption was provisionally 101,000t in February,
+up 1,000t from February 2023. Bitumen consumption in the
+first two months of the year reached 199,000t, up 7.6pc from
+185,000t consumed in first two months of 2023.
+
+The 8,476 dwt Black Shark moved a cargo from Augusta
+to Naples, arriving 22 March, while other Augusta loading
+vessels made shipments to Algeria. The 6,065 dwt Fuji Lava
+shipped a cargo from Taranto to Galati, Romania, for 24
+March arrival, while The Amigo, a 14,911 dwt vessel, was
+waiting to load outside Taranto after returning from deliver-
+ies in South America.
+
+Greece
+
+Greek fob bitumen cargo differentials to fob Mediterranean
+HSFO cargoes stayed assessed at discounts of around $10/t,
+while domestic truck prices increased from €466/t ex-works
+at the start of the week up to €488/t ex-works by 22 March,
+according to a government website.
+
+Numerous cargoes were exported from Agioi Theodoroi,
+with the 5,897 dwt Action and 6,115 dwt Ping Hai Wan
+moving bitumen to terminals at Constanta, Romania, and
+Bayonne, France.
+
+# Turkey
+
+Tupras raised its posted domestic truck prices to Turkish Lira
+16,651/t ($516/t) with effect from 20 March, an increase of
+TL 730/t ($19/t).
+
+Turkish fob bitumen cargo discounts to fob Mediterra-
+nean HSFO cargoes stayed assessed at around $10/t.
+
+Numerous vessels were waiting to load at Izmit for ex-
+tended periods of time. The 19,928 dwt T.Aylin finished load-
+ing there on 16 March, although the tanker has largely been
+moving its cargoes between Tupras terminals with internal
+Tupras product transfers. The 21,500 dwt Baltic Narval de-
+parted from Izmit on 20 March, although its destination was
+so far undisclosed.
+
+The 45,986 dwt Bitu Atlantic was waiting to load at Izmit
+on 22 March, having arrived there two days earlier.
+
+One market participant said a resumption of bitumen
+cargo exports of Iraqi bitumen trucked into terminals in
+southern Turkey could resume quickly if export demand
+picks up, although much will also depend on on evolving
+export price levels and the state of the Turkish construction
+season and domestic bitumen requirements.
+
+Argus Bitumen
+
+Issue 24-12  Friday 22 March 2024
+
+SUB-SAHARAN AFRICA MARKET COMMENTARY
+
+# Summary
+
+Price levels in most sub-Saharan African markets were
+broadly stable, although cargo values into west African ter-
+minals rose sharply, while there were some freight rate falls
+for container shipping movements into east Africa.
+
+South African demand began to slow as local construc-
+tors started the Easter break, while there were more signs
+of a slippage in Nigerian bitumen requirements after recent
+sharp gains in domestic truck prices.
+
+West Africa
+
+A number of shipments, including spot cargo volumes,
+continued to be made into Nigeria and other regional
+destinations like Ghana and Sierra Leone, although bitumen
+requirements have eased into the key Nigerian market in
+recent weeks.
+
+A surge in cargo prices did little to encourage west
+African buying, although market participants in Nigeria said
+there had been a modest retreat in local Naira truck prices
+after huge gains following the country's devaluation of its
+currency at the end of January.
+
+Spanish cargo discounts to fob Mediterranean high-sul-
+phur fuel oil (HSFO) cargoes were assessed unchanged at $5-
+10/t on a fob basis, while Ivory Coast fob cargo premiums to
+the Mediterranean HSFO values were also assessed in an un-
+changed $95-100/t range. Freight rate assessments for Spain
+to Nigeria 5,000t cargo movements on bitumen tankers were
+assessed $5/t down at $185-195/t, after one unconfirmed
+indication around $150/t. Assessed rates from Ivory Coast to
+Nigeria and Ghana were $2/t and $1/t down respectively at
+$57-61/t and $40-45/t.
+
+The week's hefty HSFO gains however forced up indicat-
+ed values for delivered prices into Nigerian and Ghanaian im-
+
+Tanzania, cfr Dar es Salaam drums
+
+![image](chart/12.jpg)
+- Chart Type: line
+|  | 7 Jul | 29 Sep | 22 Dec | 22 Mar |
+| --- | --- | --- | --- | --- |
+| item_01 | 410 | 460 | 440 | 440 |
+
+
+$/t
+
+| Sub-Saharan Africa bitumen prices, 16-22 Mar | Sub-Saharan Africa bitumen prices, 16-22 Mar | Sub-Saharan Africa bitumen prices, 16-22 Mar | Sub-Saharan Africa bitumen prices, 16-22 Mar | Sub-Saharan Africa bitumen prices, 16-22 Mar | Sub-Saharan Africa bitumen prices, 16-22 Mar | Sub-Saharan Africa bitumen prices, 16-22 Mar |
+| --- | --- | --- | --- | --- | --- | --- |
+|  | Local currency/t | Local currency/t | Local currency/t | $/t | $/t | $/t |
+|  | Low | High | ± | Low | High | ± |
+| Domestic prices, ex-works |  |  |  |  |  |  |
+| South Africa | 12,600 | 13,000 | nc | 668 | 689 | -6.50 |
+| Import/export prices |  |  |  |  |  | $/t |
+| Ivory Coast, fob Abidjan (export, cargo) | Ivory Coast, fob Abidjan (export, cargo) | Ivory Coast, fob Abidjan (export, cargo) |  | 561.10 | 566.10 | +29.05 |
+| Nigeria, cfr Lagos (import cargo) | Nigeria, cfr Lagos (import cargo) | Nigeria, cfr Lagos (import cargo) |  | 633.00 | 643.00 | +29.00 |
+| Ghana, cfr Takoradi-Tema (import, cargo) | Ghana, cfr Takoradi-Tema (import, cargo) | Ghana, cfr Takoradi-Tema (import, cargo) |  | 603 | 613 | +31.00 |
+| Kenya, cfr Mombasa (import, drums) | Kenya, cfr Mombasa (import, drums) | Kenya, cfr Mombasa (import, drums) |  | 430.00 | 440.00 | +2.00 |
+| Tanzania, cfr Dar es Salaam (import, drums) | Tanzania, cfr Dar es Salaam (import, drums) | Tanzania, cfr Dar es Salaam (import, drums) |  | 438 | 448 | nc |
+
+
+| Africa freight rates |  |  | $/t |
+| --- | --- | --- | --- |
+|  | Low | High | ± |
+| Abidjan-Lagos-Warri-Port Harcourt (cargo) | 57 | 61 | -2.00 |
+| Abidjan-Takoradi-Tema (cargo) | 40 | 45 | -1.00 |
+| Tarragona-Lagos-Warri-Port Harcourt (cargo) | 185 | 195 | -5.00 |
+| Bandar Abbas/Jebel Ali-Mombasa (drums) | 85 | 100 | nc |
+| Bandar Abbas/Jebel Ali-Dar es Salaam (drums) | 95 | 105 | -2.50 |
+| Bandar Abbas/Jebel Ali-Djibouti (drums) | 145 | 155 | -15.00 |
+
+
+port terminals to around $635-640/t and $610/t respectively
+after trading firms had been pointing to some cfr Nigeria
+discussions around the $600/t level.
+
+One cargo bid for imports into Nigeria was as low as fob
+Mediterranean HSFO plus $40/t cfr, far below what market
+participants viewed as likely deal values for standard 5,000t
+spot cargoes.
+
+The 45,986dwt Bitu Atlantic sailed back to the Mediter-
+ranean after its latest deliveries into west African markets,
+the last of them into Dakar, Senegal, earlier in March, with
+the tanker set to load its next cargo at Turkish refiner Tupras
+export terminals at Izmir and Izmit after arriving at the lat-
+ter location on 20 March.
+
+The 11,406dwt Biskra was located off Freetown, Sierra
+Leone, after making a part-cargo discharge there following
+an earlier delivery into into Conakry, Guinea.
+
+Nigeria/Ghana/Angola
+
+Local market participants said Nigerian bitumen demand had
+waned over recent weeks after huge gains in local currency
+prices for domestic truck supplies, but those truck values
+after the Nigerian currency rebounded against the dollar.
+
+The official and parallel market rates for Naira against
+the dollar strengthened to N1,414 and N1,490 respectively on
+22 March, compared with N1,550 and N1,600 respectively on
+
+Argus Bitumen
+
+Issue 24-12  Friday 22 March 2024
+
+# SUB-SAHARAN AFRICA MARKET COMMENTARY
+
+8 March. Before a massive end-January Naira devaluation,
+the currency's official rate had stood at N890 to the dollar.
+That had helped drive up domestic ex-works truck prices to
+as high as N1.55-1.6mn/t around mid-March. Those values
+slipped in the week ending 22 March to N1.42-1.43mn/t ex-
+works, according to one market participant.
+
+The 7,444dwt Lilstella, which had been loaded at Tar-
+ragona, Spain, was waiting to discharge its cargo fully into
+a Nigerian import terminal at Port Harcourt after arriving
+there on 19-20 March, with some local players expecting
+further such journeys on the tanker into Nigeria in the com-
+ing few weeks.
+
+The 6,033dwt Jane Asphalt returned to the SMB export
+terminal at Abidjan on 17 March after a delivery into Gradi-
+ent Bitumen's 27,000t capacity terminal in Warri - the fourth
+such delivery in a row, with one those movements made on
+board SMB's own time-chartered 4,900dwt San Biagio. The
+latter vessel was understood to have delivered a separate
+cargo into another Warri terminal, leaving that facility on
+21 March and heading back to Abidjan - for 24 March arrival
+
+- to load a fresh cargo.
+
+A rare European spot cargo shipment was being made by
+an international trading firm from Tarragona, Spain, to the
+Takoradi import terminal in Ghana, with arrival likely around
+end-March. It was being made on the 6,175dwt Iver Beauty.
+
+The 15,000 dwt Bitu River, loaded in ship-to-ship (STS)
+operations off Lome, Togo, left Luanda, Angola, on 21 March
+after discharging a part-cargo there following a similar dis-
+charge into Douala, Cameroon. The vessel was due to arrive
+back off Lome around 27 March.
+
+East Africa
+
+Trading activity slowed considerably as Iranian market par-
+ticipants began their Nowruz celebrations and holiday recess
+that is set to last through into the first week of April.
+
+Export prices from the Mideast Gulf port of Bandar Abbas
+showed little change, with bulk cargoes assessed $0.50/t
+down at $280-287/t on a fob basis, while drummed exports
+were assessed $2/t up at $335-350/t. Bahraini bulk cargo
+export prices set by state-owned Bapco were raised by $20/t
+to $380/t fob Sitra after they had been held unchanged for
+several weeks.
+
+West Africa cargo cfr- Med HSFO fob cargoes
+
+![image](chart/13.jpg)
+- Chart Type: line
+|  | 7 Jul | 29 Sep | 22 Dec | 22 Mar |
+| --- | --- | --- | --- | --- |
+| item_01 | 250Numeric | 230Numeric | 220Numeric | 200Numeric |
+
+
+Freight rate assessments for container shipping move-
+ments from Bandar/Jebel Ali (UAE) to east African ports
+were steady to softer. Assessed rates for drummed flows to
+Mombasa, Kenya, were held steady at $85-100/t, while rates
+to Dar es Salaam, Tanzania were assessed $2-3/t down at
+$95-105/t. Rates to the Horn of Africa port of Djibouti, which
+mainly serves the Ethiopian market, were assessed $15/t
+down at $145-155/t as market participants reported rates for
+indirect Iranian drummed shipments to Djibouti from Jebel
+Ali had been reduced by international container shipping
+lines in March to $3,000/container ($150/t) from $3,500/con-
+tainer in both January and February after a sharp elevation
+in rates in the wake of Houthi attacked on Red Sea shipping.
+
+Kenya
+
+A tanker carrying around 3,800t of bulk bitumen, loaded in
+the Mideast Gulf, remained en route to the Skytrade Global
+import terminal in Mombasa, with scheduled arrival there on
+2 April.
+
+Suppliers continued to see regular bulk as well as
+drummed business into end-users in Kenya, as well as South
+Sudan and the Democratic Republic of Congo (DRC), with
+some bitutainer and bulk truck movements made into the
+latter market alongside drummed flows. Trade financing is-
+sues remained in the way of concluding deals into Ethiopia.
+
+In Uganda, late payments to road contractors by govern-
+ment agencies led those bitumen buyers to seek extended
+payment periods for import volumes, mainly moved by truck
+from Mombasa into the land-locked country, terms that
+didn't suit some suppliers.
+
+Southern Africa
+
+A planned May-June maintenance shutdown at the Natref
+refinery in Sasolburg, South Africa (see news) was likely to
+invite more import cargoes before winter starts to cause an
+activity and demand slowdown, mainly in South Africa.
+
+For the time being, South African constructors began
+
+Argus Bitumen
+
+Issue 24-12  Friday 22 March 2024
+
+# SUB-SAHARAN AFRICA MARKET COMMENTARY
+
+to slow work for the Easter holiday, while there continued
+to be regular truck movements from South African supply
+points into markets like Zambia, Mozambique, Zimbabwe and
+Namibia.
+
+South Africa
+
+Domestic truck prices were assessed unchanged at Rand
+12,600-13,000/t ex-works, but there remained intense com-
+petition from several cargo receivers into the country look-
+ing to sell off sizeable incoming flows to maintain or enhance
+their market share.
+
+One local truck supplier was understood to have cut its
+selling price by R100/t to R12,800/t ex-works, while another
+was offering its volumes at R12,600/t ex-works, with even
+lower prices expected for some forthcoming import vol-
+umes.
+
+An upcoming maintenance shutdown at the 108,500 b/d
+Sasol majority owned Natref refinery in Sasolburg - which
+market participants said was set to begin on 15 May and
+last until the end of June (see news) 、 was thought likely to
+invite yet more import cargoes into Durban and Cape Town,
+although bitumen use in road projects slows down for the
+southern hemisphere winter from June through to August.
+
+The immediate activity and demand picture was slow as
+construction sector firms began their Easter holiday recess
+affecting much of their road-building operations from around
+18 March through to the week commencing 1 April (Easter
+Monday), with that week itself exported to see only a slow
+return towards normal operations.
+
+Sizeable cargo volumes were meanwhile heading into the
+country, with the 5,985dwt R S G arriving at Durban on 21
+March with a cargo loaded at Sitra, Bahrain. The 21,500dwt
+Atlantic Narval was still located at Durban after arriving
+there on 17 March for a part-cargo discharge into the FFS
+Refiners/Rubis Asphalt ship-to-tank bitumen terminal there,
+having made am initial discharge into a similar set-up at
+Cape Town.
+
+The 5,261 dwt Bitumen Kosei, which was loaded at Port
+Qasim, Pakistan, was scheduled to arrive at Durban on 30
+March.
+
+South Africa
+
+$/t
+
+![image](chart/13.jpg)
+- Chart Type: line
+|  | 7 Jul | 29 Sep | 22 Dec | 22 Mar |
+| --- | --- | --- | --- | --- |
+| item_01 | 800Not specified | 850Not specified | 800Not specified | 700Not specified |
+
+
+Argus Bitumen
+
+Issue 24-12  Friday 22 March 2024
+
+ASIA-PACIFIC AND MIDDLE EAST MARKET COMMENTARY
+
+# Singapore
+
+Singapore bitumen prices edged lower, as the southeast
+Asian market continues to see a lack of demand outlets,
+with only limited buyers seeking out April-loading cargoes.
+Several oil majors were still holding on to unsold April-load-
+ing volumes and emerged on the Argus Open Markets (AOM)
+platform to seek out buyers.
+
+Price spreads with high-sulphur fuel oil (HSFO) 380cst
+values have grown increasingly wide, with Singapore ABX 1
+currently trading at around discounts of over $70/t to that
+of HSFO 380cst. Such spreads have not been seen since late
+August 2023. While some refineries in south China have
+either cut production or temporarily shut due to increas-
+ingly squeezed margins amid firm upstream crude feedstock
+costs, oil majors in Singapore have yet to follow suit.
+
+Cargoes were discussed over a wide range during the
+week. A deal for a 3,500t cargo was done to Indonesia at
+around $375-380/t fob Singapore on a netback basis, with
+the cargo loading in the middle of April. Buying indications
+fell to around $380-385/t fob following the conclusion of
+the deal, with importers unwilling to commit unless steep
+discounts were provided. A second deal for a 3,000-3,500t
+cargo loading in first-half April was also done towards the
+end of the week, at around $379-385/t fob Singapore on
+a netback basis. A third deal was done to Indonesia, for a
+3,000-4,000t cargo loading in April at around $403-408/t fob
+Singapore on a netback basis.
+
+Two deals were initiated on the AOM platform during the
+week. Puma Energy placed a bid for a 3,500t cargo loading
+over 2-5 April at $400/t fob Singapore on AOM, which was
+raised to $410/t fob Singapore, before a deal was initiated by
+PetroChina. Puma Energy also bid for a 3,000t cargo loading
+over 9-13 April at $400/t fob Singapore. The bid was raised
+
+Asia bitumen prices, 16-22 Mar
+
+|  | Local currency/t | Local currency/t | Local currency/t | $/t | $/t | $/t |
+| --- | --- | --- | --- | --- | --- | --- |
+|  | Low | High | ± | Low | High | ± |
+| Domestic prices, ex-works | Domestic prices, ex-works |  |  |  |  |  |
+| Mumbai, India | 41,430 | 41,730 | -570.00 | 499.00 | 502.00 | -8.50 |
+| Mumbai, India (drums) | 50,730 | 51,630 | -570.00 | 611 | 622 | -8.00 |
+| Indonesia | 9,200,000 | 9,200,000 | nc | 587.00 | 587.00 | -3.00 |
+| Singapore | 617 | 646 | +3.50 | 460 | 482 | nc |
+| Singapore-Malaysia ex-ref | 540 | 558 | -10.00 | 403 | 416 | -10.00 |
+| Japan | 86,000 | 86,000 | nc | 572 | 572 | -11.00 |
+| East China | 3,470 | 3,770 | +70.00 | 482 | 524 | +9.00 |
+| South China | 3,400 | 3,440 | +30.00 | 472 | 478 | +3.50 |
+| Waterborne, fob |  |  |  |  |  |  |
+| Iran |  |  |  | 280.00 | 287.00 | -0.50 |
+| Iran (drums) |  |  |  | 335 | 350 | +2.00 |
+| Bahrain | 143 | 143 | +7.00 | 380 | 380 | +20.00 |
+| Singapore | 514.00 | 548.00 | -5.50 | 383.00 | 408.60 | -6.70 |
+| Thailand | 13,342 | 13,883 | -88.50 | 370 | 385 | -7.50 |
+| South Korea | 533,786 | 543,128 | +761.50 | 400.00 | 407.00 | -5.00 |
+| Taiwan | 12,397 | 12,715 | -35.50 | 390 | 400 | -5.00 |
+| Waterborne, cfr |  |  |  |  |  |  |
+| East China coast | 3,131 | 3,239 | +41.00 | 435.00 | 450.00 | +5.00 |
+| South China coast | 3,095 | 3,239 | +58.50 | 430 | 450 | +7.50 |
+| Economics |  |  |  |  | Mid | 土 |
+| Bitumen's value as fuel oil blendstock, Singapore | Bitumen's value as fuel oil blendstock, Singapore | Bitumen's value as fuel oil blendstock, Singapore | Bitumen's value as fuel oil blendstock, Singapore | Bitumen's value as fuel oil blendstock, Singapore | 435.035 | +20.65 |
+
+
+Singapore pen 60/70 and HSFO cargoes
+
+![image](chart/11.jpg)
+- Chart Type: line
+|  | Jul | Sep | Dec | Mar |
+| --- | --- | --- | --- | --- |
+| item_01 | 425 | 500 | 475 | 450 |
+
+
+$/t
+
+| Asian Bitumen Price Index | Asian Bitumen Price Index | Asian Bitumen Price Index | Asian Bitumen Price Index |
+| --- | --- | --- | --- |
+|  |  | Index | ± |
+| ABX 1 fob Singapore |  | 395.80 | -6.70 |
+| ABX 2 fob South Korea |  | 403.50 | -5.00 |
+| Monthly Average (contract) | Monthly Average (contract) | Monthly Average (contract) | Monthly Average (contract) |
+| Contract |  | Feb 24 | Jan 24 |
+| ABX 1 |  | 412.13 | 424.18 |
+| ABX 2 |  | 416.13 | 401.27 |
+| Fob Mideast Gulf Price | Fob Mideast Gulf Price | Fob Mideast Gulf Price | Fob Mideast Gulf Price |
+|  | Low | High | ± |
+| Mideast Gulf fob ($/t) | 283.50 | 380.00 | +9.75 |
+| Bitumen Vessel Demurrage Rate | Bitumen Vessel Demurrage Rate | Bitumen Vessel Demurrage Rate | Bitumen Vessel Demurrage Rate |
+|  | Low | High | ± |
+| Singapore, 5,000 dwt vessel per day | 10,000 | 13,000 | nc |
+| Singapore, 5,000 dwt vessel per tonne | 4.00 | 5.20 | nc |
+| Crude and refined products, 16-22 Mar | Crude and refined products, 16-22 Mar | Crude and refined products, 16-22 Mar | Crude and refined products, 16-22 Mar |
+|  | Low | High | ± |
+| Dubai fob Dubai $/bl | 85.23 | 86.61 | +2.39 |
+| Banoco Arab Medium $/bl | 85.39 | 86.74 | +2.45 |
+| Fuel oil HS 180cst fob Singapore $/t | 484.50 | 495.25 | +19.75 |
+| Fuel oil HS 380cst fob Singapore $/t | 470.00 | 476.75 | +17.75 |
+| Gasoil 0.5% fob Singapore $/bl | 101.40 | 105.10 | +2.40 |
+
+
+Argus Bitumen
+
+Issue 24-12  Friday 22 March 2024
+
+ASIA-PACIFIC AND MIDDLE EAST MARKET COMMENTARY
+
+to $415/t fob Singapore and a deal was once again initiated
+by PetroChina.
+
+At least two suppliers were no longer looking to offer
+April-loading cargoes to south China due to unattractive
+pricing there, given the lower-cost of local products. Some
+offers to south China were at $430-460/t cfr and higher, but
+these attracted muted buying interest. Buying indications
+were as low as $360/t fob Singapore, though these remain
+completely unworkable for Singapore exporters.
+
+Competitive domestic prices in Malaysia also kept inter-
+est for truck cargoes at bay. Prices for Singapore tank trucks
+sold into Malaysia fell again to $403-416/t ex-refinery from
+$415-424/t ex-refinery last week, in line with higher supplies
+relative to demand.
+
+# Malaysia
+
+Singapore refiners continued to redirect supplies towards
+trucked bitumen exports to Malaysia. They also consecutive-
+ly lowered offer prices again to remain competitive against
+each other. The export quotas of trucked bitumen were
+stable at around 6-7 truckloads per buyer daily.
+
+Lifting of bitumen material was mixed, with some Sin-
+gapore refiners experiencing slower lifting compared with
+domestic sellers. This is likely because of location advantag-
+es that domestic sellers have, on top of competitive pricing
+against Singapore offers.
+
+Ex-Malacca listed prices fell further to 1,860-2,050
+ringgit/t ($392.59-432.57/t) from 2,070-2,120 ringgit/t last
+week. Ex-Tanjung Langsat trucks were offered at between
+$422-425/t, depending on the timing of delivery. Trucks
+delivered into Johor fell to 2,040 ringgit/t, from 2,155
+ringgit/t. Ex-Port Klang prices also fell to 2,040-2,080
+ringgit/t, from 2,080-2,140 ringgit/t last week.
+
+India domestic V drum
+
+$/t
+
+![image](chart/12.jpg)
+- Chart Type: line
+|  | Jul 7 | Jul 29 | Sep 22 | Dec 22 | Mar 22 | Mumbai domestic |
+| --- | --- | --- | --- | --- | --- | --- |
+| item_01 | 500 | 550 | 675 | 600 | 600 | 600 |
+
+
+| Bitumen freight, 16-22 Mar |  |  | $/t |
+| --- | --- | --- | --- |
+| Singapore-east Australia | 160 | 180 | nc |
+| Singapore-west Australia | 120 | 130 | nc |
+| Singapore-Gresik, Indonesia | 40 | 45 | nc |
+| Singapore-north Vietnam | 55 | 60 | +0.50 |
+| Singapore-south Vietnam | 38 | 43 | nc |
+| Singapore-south China | 50 | 60 | nc |
+| Thailand-south China | 50 | 60 | nc |
+| Thailand-east Australia | 160 | 180 | nc |
+| Thailand-west Australia | 125 | 130 | nc |
+| Taiwan-Haiphong, Vietnam | 45 | 50 | nc |
+| South Korea-east China | 30 | 39 | nc |
+| South China-Haiphong, Vietnam | 30 | 35 | nc |
+
+
+# Indonesia
+
+Consumption in the country during this year's Ramadan
+period has been much slower than expected, especially
+compared with the previous year, because of a lack of ongo-
+ing road-paving projects.
+
+Participants attribute this to a delay in the release of
+new road-paving tenders due to elections in February and a
+lack of funding.
+
+Accumulated inventories from cargoes imported in late
+2023 and early this year were also sufficient for contractors
+to cater to any remaining multi-year road-paving projects
+ahead of Ramadan. This contrasts with late 2022, when a
+vessel shortage situation caused a supply shortage in Indone-
+sia, subsequently prolonging roadworks.
+
+At least two 3,000-4,000t, Singapore-origin cargo loading
+over first-half April was procured at around $425-440/t cfr,
+which market participants estimated to net back to around
+$375-385/t fob Singapore. A 3,000-4,000t April laycan cargo
+was sold at around $450/t cfr toward the end of the week,
+with freight estimated to be around $40-45/t.
+
+Most buying indications fell to $380-390/t fob Singapore,
+on the back of ample supplies and lacklustre demand. An
+offer was made at around $405-415/t fob Singapore to be
+loaded during April, which was counter bid at around $390-
+410/t fob Singapore.
+
+Thailand
+
+Domestic consumption remained slow, pushing domestic re-
+finers to continue offering unsold stocks in the export mar-
+ket. Domestic demand will likely only return in May, once
+Songkran is over in April. This will reduce exports - as well
+as supply pressures - to the wider southeast Asian region.
+
+A 3,000t second-half April, Thai-origin cargo was sold
+
+Argus Bitumen
+
+Issue 24-12  Friday 22 March 2024
+
+ASIA-PACIFIC AND MIDDLE EAST MARKET COMMENTARY
+
+to a southeast Asian destination at around $365-370/t fob
+Thailand.
+
+Offers were otherwise around $370-380/t fob Thailand,
+while some buying indications were located around $360/t
+fob Thailand.
+
+# Vietnam
+
+Consumption in Vietnam continued to be lacklustre on the
+back of unseasonal inclement weather, especially in the key
+northern region. This, along with weakness in Vietnamese
+dong against the US dollar, pressured domestic selling prices
+and kept inventories at higher levels.
+
+Enquiries for seaborne April laycan cargoes were minimal
+because of ullage issues in the region, which also weighed
+on buying indications. A 3,000t southeast Asia origin,
+second-half April laycan cargo was sold at $430-435/t cfr
+Haiphong, with freight estimated to be around $60-65/t.
+
+Buying indications for Singapore and Thailand origin car-
+goes were few and at around $380-385/t fob Singapore and
+around $360/t fob Thailand.
+
+Meanwhile, market participants said that domestic selling
+prices were at 11,800 dongs/kg, mostly unchanged from last
+week. But domestic prices on a US dollar basis fell to around
+$468-470/t ex-tank from $483-488/t ex-tank last week,
+thanks to weakness in the Vietnamese dong. At least one
+importer noted that cargoes currently being discharged or
+scheduled to be discharged this month were dealt at around
+$465/t cfr Haiphong or $445/t cfr south Vietnam, and profit
+margins are likely to be squeezed.
+
+South Korea
+
+South Korean export pricing inched lower on weak demand
+from the east China market. An Onsan-based refiner con-
+
+Singapore and Rayong waterborne
+
+![image](chart/13.jpg)
+- Chart Type: bar
+|  | 7 Jul | 29 Sep | 22 Dec | 22 Mar |
+| --- | --- | --- | --- | --- |
+| Singapore pen 60/70 waterborne | 484 | 490 | 470 | 410 |
+| Thailand pen 60/70 waterborne | 445 | 490 | 495 | 410 |
+
+
+$/t
+
+| Australia import cargo prices, 16-22 Mar |  |  | $/t |
+| --- | --- | --- | --- |
+|  | Low | High | ± |
+| Thailand fob (Class 170) | 406 | 416 | -7.00 |
+| Thailand fob (Class 320) | 411 | 421 | -7.00 |
+| Singapore fob (Class 170) | 409 | 419 | -7.00 |
+| Singapore fob (Class 320) | 411 | 421 | -7.00 |
+
+
+| Mideast Gulf to India freight rates |  |  | $/t |
+| --- | --- | --- | --- |
+|  | Low | High | 士 |
+| Bandar Abbas-Nhava Sheva (drums) | 23 | 28 | nc |
+| Bandar Abbas-Mundra (drums) | 23 | 28 | nc |
+| Bandar Abbas-Mundra (bulk) | 70 | 75 | nc |
+| Bandar Abbas-Karwar (bulk) | 80 | 90 | nc |
+| Bandar Abbas-Haldia (bulk) | 105 | 115 | nc |
+| Bandar Abbas-Mumbai (bulk) | 75 | 85 | nc |
+| Bandar Abbas-Mangalore (bulk) | 90 | 95 | nc |
+
+
+cluded a tender to sell fourteen 5,000t cargoes loading over
+April on 21 March. Most of the volumes are understood to
+have been settled at discounts of around $60-70/t to HSFO
+380 values. This is equivalent to around $400-410/t fob
+South Korea. Some smaller volumes were also settled at
+discounts of around $50/t to that of HSFO 380.
+
+Despite gains on the Shanghai Futures Exchange, buying
+indications from some east China importers were initially
+maintained at around $400/t fob South Korea, as domestic
+prices still remain lower in comparison to that of imports.
+
+China
+
+The domestic market in China drew support from higher
+costs resulting from firmer crude values. Domestic prices in
+the eastern and southern regions rose to 3,470-3,770 yuan/t
+($479.99-521.49/t) and Yn3,400-3,440/t, respectively.
+
+Clearer and warmer weather in most of the country's
+south and east encouraged some lifting, although overall
+trading activity was thin. Most buyers were on the sidelines
+this week, given volatile upstream crude values and an un-
+certain market outlook.
+
+Reduced production across the country in April will
+likely keep prices afloat in the short term despite sluggish
+demand. Participants also say that any further reduction in
+domestic prices is highly unlikely, given some refineries were
+already incurring steep losses due to firm feedstock costs.
+Some refineries have also remained shut because of poor
+profit margins and demand, keeping spot supply limited.
+
+Argus Bitumen
+
+Issue 24-12  Friday 22 March 2024
+
+ASIA-PACIFIC AND MIDDLE EAST MARKET COMMENTARY
+
+| Iranian export sales through the IME, 16-21 Mar | Iranian export sales through the IME, 16-21 Mar | Iranian export sales through the IME, 16-21 Mar | Iranian export sales through the IME, 16-21 Mar | Iranian export sales through the IME, 16-21 Mar | Iranian export sales through the IME, 16-21 Mar |
+| --- | --- | --- | --- | --- | --- |
+| Grade | Seller | volume | Packing | Price rials/kg | Destination |
+| Pen 60/70 | Jey Oil | 2,000 | Drum | 164,500 | Export by truck ex-Esfahan |
+| Pen 60/70 | Jey Oil | 11,000 | Bulk | 131,500 | Export by truck ex-Esfahan |
+
+
+An approaching warmer spring season might uplift
+domestic consumption slightly in the short-term before the
+rainy season starts in the eastern regions during April-May.
+Funding constraints could continue to limit roading projects,
+though some market participants say demand could pick up
+in May or June, when the government issues fresh road-pav-
+ing tenders for contractors.
+
+Cargoes for import into east China were discussed at
+around $430-440/t cfr basis early in the week. But buying
+indications inched higher to around $440-445/t cfr, following
+the conclusion of the most recent South Korean export ten-
+der. This was against offers for April-loadings at $450-460/t
+cfr levels.
+
+Import interest from south China remained lacklustre, as
+the region continues to grapple with slow consumption and
+higher inventory levels. Offers were around $440-450/t cfr
+south China, but this attracted little buying interest.
+
+Some April-loading exports from south China were sold at
+prices well above $400/t fob, higher than current Singapore
+export prices.
+
+# Taiwan
+
+Taiwan export prices were pressured lower, tracking losses
+in the wider Asia-Pacific region. Some offers and selling in-
+dications were at around $405/t fob Taiwan, but these were
+met with no buying interest from southeast Asian importers.
+Buying indications from the key consuming southeast Asian
+
+Bandar Abbas: drums and bulk
+
+![image](chart/11.jpg)
+- Chart Type: line
+|  | 7 Jul | 29 Sep | 22 Dec | 22 Mar |
+| --- | --- | --- | --- | --- |
+| item_01 | 280arums | 410arums | 350arums | 280arums |
+
+
+$/t
+
+markets were at around $390/t fob, as the lack of available
+ullage curbed demand for imports.
+
+Australia & New Zealand
+
+Domestic consumption is gradually waning ahead of Easter
+holidays. Participants said demand could fall significantly
+thereafter and the slow market momentum may last through
+April before picking up again in May-June, albeit not signifi-
+cantly, when contractors start wrapping up roadwork proj-
+ects ahead of the end of the current financial year in June.
+
+India
+
+Consumption in some parts of country picked up as many
+contractors were trying to wrap up projects ahead of the
+end of the current financial year ending this month. But
+importers and dealers noted that demand was still below
+normal because of a funding crunch, which induced a slow-
+down in state-government linked works.
+
+Demand for imported cargoes at Mangalore and Karwar
+port were robust, and this increased enquiries for seaborne
+cargoes for discharge into these ports. But demand was rela-
+tively lacklustre at Mumbai and some ports of Gujarat.
+
+At least 9,000-10,000t of forward loading bulk bitumen
+was purchased at $280-290/t on fob basis. This was lower
+than the 33,000-38,000t transacted last week as most of the
+suppliers in the Middle East took to the sidelines to cel-
+ebrate a regional new year, limiting market activity.
+
+Although bids and indications were below $280/t on
+fob basis, limited prompt laycan supply kept the discus-
+sion and transaction range at $280-290/t fob, little changed
+from last week's $283-290/t fob. Importers also mentioned
+that despite improvement in domestic sales, profit margins
+continued to be squeezed also because of the additional
+demurrage incurred on the back of the port congestions
+in the Middle East. Meanwhile, market participants expect
+consumption to falter next week because of holidays linked
+to the Hindu Holi festival.
+
+State-controlled refiners in Mumbai reduced listed VG10
+and VG30 bulk and drummed bitumen prices by 570 rupees/t
+($6.85/t) for the current fortnight, from the previous two-
+week period. Listed VG40 cargo prices were reduced by
+Rs660/t.
+
+Argus Bitumen
+
+Issue 24-12  Friday 22 March 2024
+
+ASIA-PACIFIC AND MIDDLE EAST MARKET COMMENTARY
+
+# Bahrain
+
+Listed seaborne bitumen prices in Bahrain increased by
+$20/t from the previous week to $380/t fob Sitra, supported
+by firm crude and fuel oil values, even though demand for
+Bahraini origin cargoes continued to be weak. News of any
+export activities were slow to emerge.
+
+# Iran
+
+The Iranian export market was mostly silent for the Nowruz
+holidays. But exporters raised concerns over uncertainties in
+exchange rate volatility and supply-demand fundamentals.
+
+Most producers and suppliers were on the sidelines and
+did not offer any fresh cargoes, as they were waiting for the
+fortnightly revision of vacuum bottom (VB) feedstock listed
+prices, which are expected to increase by more than 7pc
+from the previous fortnight.
+
+Bids for prompt and forward laycan bulk were located at
+$280-285/t fob Iran, with some deals concluded into south
+Asia at $280-290/t fob Iran. Most suppliers were busy deliv-
+ering previously sold cargoes.
+
+Exporters expect an increase in seaborne prices in the
+coming week on the back of strong upstream crude and
+HSFO values. Given the slowdown in delivery of feedstock
+from the national refineries to private producers, the ongo-
+ing supply tightness is likely to prolong, providing further
+expected support to seaborne offers.
+
+Drums were offered at $340-360/t fob Iran, but no fresh
+deals emerged at these prices with prices falling in the
+south Asia consuming market. Demand was strong for jumbo
+bags, but some suppliers were fully booked up to May deliv-
+eries. Bids were at $335-345/t fob this week.
+
+No cargoes were offered on the Iran Mercantile Exchange
+(IME).
+
+On the IME, export sales rose to 7.59mn t in the last fi-
+nancial year ended earlier this month, from 5.04mn t during
+the previous financial year. One of the largest bitumen ex-
+porters in Iran over the past Iranian financial year was state-
+owned Jey Oil, with the refiner selling a total of 1.02mn t of
+bitumen, according to official data.
+
+State-owned Pasargad Oil sold 918,550t, while private
+producer Black Gold and White Gold sold a total of 879,000t.
+Private supplier, Spadana Bitumen Pasargadis, sold a total of
+675,000t, while Parsian Energy sold a total of 600,119t.
+
+The Pars Behin Qeshm Oil Refining Company, the sole
+refinery in the Qeshm island, exported 590,000t of bitumen
+on fob Qeshm basis in the last financial year.
+
+Iranian Vacuum Bottom prices from NIOC*, 16-21 Mar
+
+| Refinery | Volume t | Rials/kg | Rials/kg | $/t | $/t |
+| --- | --- | --- | --- | --- | --- |
+|  |  | Low | High | Low | High |
+| Bandar Abbas | no supply |  |  | 0 | 0 |
+| Esfahan | no supply |  |  | 0 | 0 |
+| Shiraz | no supply |  |  | 0 | 0 |
+| Tehran | no supply |  |  | 0 | 0 |
+| Tabriz | no supply |  |  | 0 | 0 |
+| Abadan | no supply |  |  | 0 | 0 |
+| Arak | no supply |  |  | 0 | 0 |
+
+
+· Exclusive of the 9pc tax for domestic sales and 14pc duty for export sales
+
+| Iranian domestic sales through the IME, 16-21 Mar | Iranian domestic sales through the IME, 16-21 Mar | Iranian domestic sales through the IME, 16-21 Mar |
+| --- | --- | --- |
+| Grade | Volume | Price |
+| 60/70 | 100 | 131,462 |
+| 40/50 | No Supply |  |
+| 85/100 | No Supply |  |
+| Emulsion | No Supply |  |
+| PG6422 | No Supply |  |
+| MC250 | No Supply |  |
+
+
+Iran domestic market
+
+Trading activities on the IME was muted because of Nowruz.
+During the last financial year, VB feedstock sales on the IME
+increased to around 7.33mn t, up from 4.67mm t in the prior
+year. This volume does not include feedstocks sold in the
+domestic market.
+
+Refineries delivered around 1.5-2.2mn t of complementa-
+ry VB for rural contractors, based on the annual budget for
+domestic road paving projects in the previous financial year.
+
+Iraq
+
+Iraqi suppliers increased prices by about $5-7/t due to higher
+crude values and offered drums at $325-335/t fob Bandar Ab-
+bas. But demand was weak and no deals were reported.
+
+Argus Bitumen
+
+Issue 24-12  Friday 22 March 2024
+
+# VESSEL TRACKING INDICATIONS
+
+| Bitumen freight movements | Bitumen freight movements | Bitumen freight movements | Bitumen freight movements | Bitumen freight movements | Bitumen freight movements | Bitumen freight movements |
+| --- | --- | --- | --- | --- | --- | --- |
+| Vessel name | Owner | Tonnage | Loading port | Discharge port | Current position | ETA |
+| Bithav | Cassiopeia | 6,384 | Rotterdam | Thames, UK | English Channel | 20-Mar |
+| An Hai Wan | COSCOSAS | 6,165 | Port Jerome | Antwerp, Belgium | English Channel | 21-Mar |
+| Ping Hai Wan | COSCOSAS | 6,115 | Agioi Theodoroi | Bayonne, France | North Atlantic | 19-Mar |
+| Bitfjord | ABC Maritime | 4,900 | Rotterdam | Stavanger, Norway | North Sea | 20-Mar |
+| San Bacco | ABC Maritime | 4,995 | Brunsbuttel | Thames, UK | English Channel | 23-Mar |
+| Stella Polaris | Tarbit Shipping | 8,297 | Delfzijl | Kolding, Denmark & Norrkoping, | Gulf of Bothnia | 19-Mar |
+| Fuji Lava | Asphaltos | 6,065 | Taranto | Galati, Romania | Black Sea | 24-Mar |
+| Action | Alliance Maritime | 5,897 | Agioi Theodoroi | Constanta, Ro- mania | Black Sea | 22-Mar |
+| Iver Accord | Iver Ships BV | 5,897 | Agioi Theodoroi | Sousse and Gabes, Tunisia | Med | 21-Mar |
+| Baltic Narval | Continental Bitumen | 21,500 | Izmit | Thames, UK | Med | 2-Apr |
+| Black Shark | Mediterranea di Navigazione | 8,476 | Augusta | Naples, Italy | Med | 22-Mar |
+| Ning Hai Wan | Ninghaiwan Maritime Co Ltd | 6,118 | Huelva | Bayonne, France | North Atlantic | 23-Mar |
+| Iver Brilliant | Iver Ships BV | 6,239 | La Coruna | Lisbon, Portugal | North Atlantic | 20-Mar |
+| Castillo de Pambre | Ojeda Shipping | 8,353 | Tarragona | Mohammedia, Morocco | North Atlantic | 21-Mar |
+| Iver Beauty | Iver Ships BV | 6,175 | Tarragona | Takoradi, Ghana | North Atlantic | 3-Apr |
+| White Pearl | Gunvor | 37,000 | Tarragona | Portsmouth, New Hampshire, US | North Atlantic | 30-Mar |
+| Poestella | Bilsea | 8,021 | Augusta | Skikda, Algeria | Med | 23-Mar |
+| Iver Best | Iver Ships BV | 6,187 | Agioi Theodoroi | Annaba, Algeria | Med | 21-Mar |
+| Lilstella | Bilsea | 7,944 | Tarragona | Port Harcourt, Nigeria | WAF | 23-Mar |
+| Fang Cheng Gang | United Rich Maritime | 6,193 | Singapore | Dongguan, Humen, China | Malaysia | 27-Mar |
+| JS Onsan | Jisung Shipping Co., Ltd. | 5,881 | Ulsan, Onsan | Nanjing, China | Shanghai Province | 22-Mar |
+| Palanca Miami | Puma | 37,000 | Tanjung Langsat | Brisbane, Australia | Indonesia | 3-Apr |
+| Pusaka Abadi | Arkville Corp | 6,033 | Singapore | Tanjung Manis, Malaysia | Indonesia | 23-Mar |
+| Pusaka Prima | May Maritime Services | 4,147 | Singapore | Dumai, Indonesia | Singapore | 23-Mar |
+| Sidra Qatar | Woqod Marine Services Co | 4,020 | Singapore | Nha Be, Vietnam | Singapore | 26-Mar |
+| Tasco Amata | Tipco Asphalt | 6,035 | Rayong | Geelong, Australia | Cambodia | 6-Apr |
+| Tasco Anan | Tipco Asphalt | 3,525 | Singapore | Haiphong, Vietnam | Vietnam | 25-Mar |
+| Tasco Sakorn | Retalink | 3,619 | Singapore | Bangkok, Thailand | Indonesia | 27-Mar |
+| Transko Bima | Nanjing Petroleum T'ptn | 4,999 | Cilacap | Surabaya, Indo- nesia | Indonesia | 22-Mar |
+| VP Asphalt 2 | VP Petrochemical | 3,095 | Singapore | Vung Tau, Vietnam | Vietnam | 23-Mar |
+
+
+Argus Bitumen
+
+Issue 24-12  Friday 22 March 2024
+
+# NEWS
+
+French refinery fire squeezes regional supply
+
+Disruptions at two French refineries have squeezed bitumen
+supply in northwest Europe just as the region's spring road
+paving season gets underway.
+
+ExxonMobil halted bitumen truck loadings from its
+236,000 b/d Port Jerome refinery in northern France last
+week after a fire hit a crude distillation unit on 11 March,
+compounding problems at TotalEnergies' 219,300 b/d Donges
+refinery.
+
+In a letter sent to Port Jerome customers, ExxonMobil
+said it could not "confirm with certainty the date on which
+bitumen deliveries will become fully operational again and
+cannot advance any date on which sales of our products
+could resume normally".
+
+The company is also understood to have declared force
+majeure on two bitumen cargoes that were due to be loaded
+from Port Jerome in the next few weeks, although it did
+manage to load one cargo onto the 6,165 dwt An Hai Wan,
+according to a market participant. That cargo was due to
+arrive at Antwerp 20 March.
+
+The disruption at Port Jerome coincides with an ongo-
+ing shutdown at the Donges refinery linked to inspections
+by local authorities. Although TotalEnergies said it does not
+expect a full restart until the start of April, bitumen produc-
+tion appears to have resumed already, with tracking data
+from Kpler and Vortexa showing the 6,189dwt Iver Blessing
+loading a bitumen cargo from Donges on 20 March.
+
+Bitumen availability at TotalEnergies' 246,000 b/d Gon-
+freville refinery in northern France's Normandy region is also
+constrained. Some buyers say the refinery has yet to resume
+spot sales following the end of maintenance last week.
+
+The squeeze on French bitumen has led to a sharp
+increase in demand for alternative supply from elsewhere in
+northwest Europe, which has pushed up Rotterdam and Bal-
+tic fob cargo premiums to high-sulphur fuel oil (HSFO) barges
+in recent weeks.
+
+Shell's 404,000 b/d Pernis plant, Europe's biggest re-
+finery, is undergoing a rolling turnaround until mid-April.
+Although most regional market players say the work has
+had a minimal impact on Pernis' bitumen supplies, Shell's
+significant commitment to term deals with Nordic buyers
+has restricted surpluses available for the spot market. Some
+inland buyers in northwest Europe have reported limited
+availability of truck supplies from Pernis.
+
+The French refinery outages have also increased demand
+for Mediterranean bitumen imports to northwest Europe.
+A large bitumen cargo that was loaded at Greece's Agioi
+Theodoroi export terminal arrived at trading firm Vitol's
+
+Antwerp terminal last week on board the company's 36,771
+dwt Asphalt Synergy. It was a timely delivery and the first of
+its kind this year.
+
+Bitumen cargoes are regularly moved from the Mediter-
+ranean to northern Europe as part of term supply deals. But
+even though the Mediterranean currently holds sizeable bitu-
+men surpluses, the price gap between northwest European
+and Mediterranean bitumen prices is still too narrow to trig-
+ger significant south to north spot cargo flows.
+
+This is partly because tight fuel oil supply and strong
+Mediterranean bunker demand have triggered a fresh spike
+in fob Mediterranean HSFO cargo prices, which reached a
+discount of just $0.75/t to fob Rotterdam HSFO barge values
+on 19 March, compared with a $17.25/t discount on 11 March
+and a $27/t discount on 19 January. Mediterranean and
+northwest European bitumen cargoes are mainly traded as
+differentials to HSFO prices in the respective regions.
+
+UK inflation erodes real-term highway spending
+
+Real-term cuts in local authority road maintenance budgets
+in England and Wales have caused a further deterioration in
+their road surfaces, UK asphalt industry body AIA said. UK
+bitumen consumption fell to a seven year low in 2023.
+
+In its latest Annual Local Authority Road Maintenance
+(Alarm) survey of local government highways departments,
+
+![image](figure/19.jpg)
+argus
+argusmedia.com
+Argus Bitumen &
+Asphalt Europe
+Conference
+13-14 May 2024 I Madrid, Spain
+Book
+by Friday
+12 April
+and save
+€300
+
+www.argusmedia.com/euro-bitumen
+
+Argus Bitumen
+
+Issue 24-12  Friday 22 March 2024
+
+# NEWS
+
+the AIA said local authorities in England and Wales had in
+their financial year ending 31 March "experienced a real-
+term [spending] cut due to the impact of rising costs due
+to inflation". That was "despite average [road] maintenance
+budgets increasing by 2.3pc to £26.4mm per authority", the
+AIA said, finding that 45pc of local authorities reported a cut
+or freeze in their highway maintenance budgets even before
+inflation was taken into account.
+
+The steady deterioration of the road network contrib-
+uted to a 43pc annual increase in the number of potholes
+reported by local authorities to have been filled in England
+and Wales during 2023-24, to an eight-year high of 2mn.
+
+UK bitumen consumption fell in 2023 to 1.54mn t, the
+lowest since 2016, according to provisional government data
+released earlier this month.
+
+In its survey conclusions, the AIA also said today the
+"one-time catch-up cost" of bringing roads in England and
+Wales up to the standard enabling the network to be man-
+aged cost-effectively had jumped by 16pc to a new record
+high of £16.3bn, and that the work needed to address the
+shortfall would take a decade to complete. It said the ad-
+ditional funds English and Welsh local authorities would have
+needed to maintain their networks in accordance with their
+own targets is £1.22bn, meaning the average shortfall in
+their 2023-24 carriageway budget was £7.2mm per authority.
+
+# Argus Asia Bitumen Daily
+
+Argus launches daily price assessments for fob
+Singapore and fob South Korea from 1 November 2021,
+adding to the existing weekly benchmark prices.
+
+The new Argus assessments will highlight daily price
+movements in the Asian bitumen market, enabling
+industry participants to make more timely decisions on
+whether to buy or sell.
+
+Argus Asia Bitumen Daily will be provided to Argus Bitumen
+report subscribers.
+
+![image](figure/11.jpg)
+
+
+For more information, please contact
+singapore@argusmedia.com "
+
+In its Alarm survey this time last year, the AIA had re-
+ported local authority road maintenance catch-up costs had
+in the 2022-23 year increased by nearly 11pc to £14.02bn, at
+that time the highest on record, with the association pre-
+dicting further cost increases.
+
+SA Natref refinery to shut for May-June work
+
+The 108,500 b/d Natref refinery at Sasolburg, South Africa,
+will be fully shut for planned maintenance from mid-May
+until the end of June.
+
+While the halt will hit production and supply of oil prod-
+ucts as a whole, bitumen market participants have also been
+notified that there will be no supply of the product during
+the whole of May and June.
+
+The refinery, South Africa's only remaining bitumen-pro-
+ducing refinery with typical output of the product estimated
+at 150,000-200,000 t/yr, is majority owned by South African
+integrated energy firm Sasol with a 63.64pc stake. TotalEn-
+ergies agreed late last year to sell its 36.36pc minority stake
+in the refinery to UK-based Prax for an undisclosed sum.
+
+South Africa and the wider southern Africa region are
+now largely reliant on bitumen imports.
+
+A total of almost 180,000t of bitumen was delivered
+into Durban and Cape Town by specialised tankers last year,
+according to Vortexa, compared with around 100,000t in
+2022 and negligible amounts in 2021 - before several South
+African refineries were shut or stopped producing bitumen.
+Several international trading and supply firms compete to
+supply cargoes from the Mideast Gulf, Pakistan, Europe and
+west Africa to local importers.
+
+Smaller quantities of bitumen are also imported into
+South Africa using heated bitumen containers - bitutainers
+- as well as drums and bags.
+
+TotalEnergies sees Donges restart in early April
+
+TotalEnergies has said its 219,000 b/d Donges oil refinery on
+the French Atlantic coast will not resume operations until
+the start of April.
+
+The refinery has been shut since February, the second
+time in three months it had to halt operations. There have
+been a number of issues connected with inspections by local
+authorities, which started last year.
+
+The refinery's catalytic cracker (FCC) has been offline
+since December. It was scheduled to resume operations at
+the end of March, but this now appears to have been pushed
+back. A worker said the early April restart could be optimis-
+tic. "This is what has been planned. But right now it is not
+possible to say we will make that."
+
+Argus Bitumen
+
+Issue 24-12  Friday 22 March 2024
+
+# NEWS
+
+The closure of Donges has prompted a number of short
+haul oil products cargoes to be imported at the refinery
+terminal in March. Two crude cargoes are signalling arrival
+at the port around the turn of the month, suggestive of a
+restart. A shipment of about 130,000t of Angolan Clov and
+90,000t of US WTI are slated to arrive on 29 March and 3
+April, respectively.
+
+Neste says Porvoo strike will not affect output
+
+Finland's Neste said production will not be affected by a
+strike underway at its 205,000 b/d Porvoo oil refinery, but
+port and terminal operations will be disrupted.
+
+The Central Organisation of Finnish Trade Unions (SAK)
+announced a two-week strike, between 11-25 March, in re-
+sponse to government plans to changes in labour laws, right
+to strike and social welfare.
+
+"Neste and the industrial union agreed that essential
+work will continue during the announced strikes," the
+company said. "This essential work enables safe operations
+at Neste's Porvoo refinery and the continuation of critical
+product deliveries, safeguarding the national security of
+supply. Despite these agreed actions the strike will cause
+disruptions to the distribution of fuels."
+
+An importer to Finnish bitumen terminals said the
+schedule for bitumen cargo movements in and out of the
+country has already been affected, just as this year's Nordic
+road paving and bitumen-consuming season starts to get into
+gear.
+
+The importer said it had been able to re-arrange vessels
+to arrive after the end of the strike period, but said there
+are concerns about potential further action beyond those
+already planned by unions.
+
+Neste plans a nine-week refinery-wide maintenance
+between April-June at Porvoo. The plant has a 250,000 t/
+yr Group III base oil unit that accounts for around 28pc of
+Europe's Group III nameplate capacity.
+
+Neste will convert Porvoo into a 3mn t/yr renewables
+facility, and withdraw from crude refining. It will produce
+several renewable and circular products instead including,
+biodiesel, sustainable aviation fluid, polymers and chemicals
+as feedstocks.
+
+Colombian Ecopetrol's sales rise in 2023
+
+Colombian state-controlled oil company Ecopetrol's asphalt/
+bitumen sales increased in 2023, boosted by rising exports
+and domestic demand for several advanced road projects.
+
+Ecopetrol's sold 698,225 metric tonnes (t) of asphalt to
+the domestic and international markets last year, a 4pc rise
+from 2022.
+
+The increase helped the firm reduce scope 3 emissions,
+replace production of fuel oil and strengthen its position in
+the international market, it said.
+
+Ecopetrol sold a little more than 50pc of its asphalt
+production in the international market last year, former
+product and petrochemicals manager Felipe Trujillo had said
+previously.
+
+But the firm did not specify how much of the total sales
+were exported, saying that such information is confidential.
+Ecopetrol exported almost 270,560t of asphalt in January-
+October, up from approximately 254,900t shipped in all of
+2022, according to Trujillo.
+
+Ecopetrol exported around 342,170t of asphalt in 2023,
+according to data by trade analytics firm Kpler. That is a
+near 40pc hike from 2022.
+
+The main export destinations were the US, Puerto Rico,
+Chile, Dominican Republic, Jamaica, Mexico and Honduras,
+Ecopetrol said. Latin American asphalt buyers shifted to buy-
+ing more regionally in 2023, a source said.
+
+Ecopetrol began exporting asphalt to Chile for the first
+time in July, when it shipped 12,000t to the country.
+
+In the domestic market, Colombia moved forward with
+several road projects, according to infrastructure agency
+ANI. It inaugurated a stretch of a double-lane corridor that
+connects Bogota with towns in the capital's outskirts in Au-
+gust. The project is part of larger plan that comprises 66km
+(41 miles) in double-lane corridors demanding Ps1.87 trillion
+Colombian pesos ($477mn) in investments.
+
+Spanish construction firm Sacyr started working on a
+stretch of the Pamplona-Cucuta road in May. Colombia also
+inaugurated a 49km stretch of the Autopista al Rio Magda-
+lena 2 road, which comprises 153km, in July.
+
+Colombia's $20bn 4G infrastructure plan comprises 29
+publicly and privately funded highway projects.
+
+Last year the country also paved a section of a Bogota El
+Dorado Airport taxiway with modified asphalt that contains
+415kg of recycled plastic.
+
+Argus Bitumen
+
+Issue 24-12 I Friday 22 March 2024
+
+Early close for bitumen prices on 28 March
+
+Argus will close its Europe and Africa bitumen assess-
+ments at 12:30pm London time and its Asia bitumen
+assessments at 12:30pm Singapore time on Thursday
+28 March, when the weekly Argus Bitumen report is
+published a day earlier than usual because of a potential
+lack of representative physical market liquidity before
+the Easter holiday.
+
+The Argus Open Markets (AOM) platform will open
+at 11:30am and close at 12:30pm Singapore time on 28
+March. The AOM platform will be closed on 29 March for
+Asia bitumen markets.
+
+For any queries please contact Argus Bitumen report
+editor, Jonathan Weston, at bitumen@argusmedia.com
+or +44 (0) 20 4570 1230.
+
+![image](figure/6.jpg)
+
+
+# Argus Workspaces
+
+Workspaces is our new visualisation tool
+designed to help you harness the full power of
+...your Argus subscription.
+
+All your Argus information streams brought
+together in one dashboard:
+
+- · News
+- · Prices
+- · Commentary
+- · Data and
+- downloads
+
+
+![image](figure/11.jpg)
+
+
+Use the editorially curated 'Markets' dashboards, or
+build your own dashboards from scratch using our
+simple and intuitive workspace builder.
+
+Ⓡ
+
+| Login now to access Argus Workspaces: | Click here >> |
+| --- | --- |
+| For more information contact support@argusmedia.com | For more information contact support@argusmedia.com |
+
+
+# argus
+
+Argus Bitumen is published by Argus Media group
+
+Registered office
+Lacon House, 84 Theobald's Road,
+London, WC1X 8NL
+Tel: +44 20 7780 4200
+email: sales@argusmedia.com
+
+ISSN: 2057-6749
+
+Copyright notice
+
+Copyright Ⓒ 2024 Argus Media group
+All rights reserved
+All intellectual property rights in this publica-
+tion and the information published herein are the
+exclusive property of Argus and/or its licensors
+(including exchanges) and may only be used under
+licence from Argus. Without limiting the foregoing,
+by accessing this publication you agree that you will
+not copy or reproduce or use any part of its contents
+(including, but not limited to, single prices or any
+other individual items of data) in any form or for
+any purpose whatsoever except under valid licence
+from Argus. Further, your access to and use of data
+from exchanges may be subject to additional fees
+and/or execution of a separate agreement, whether
+directly with the exchanges or through Argus.
+
+Trademark notice
+
+ARGUS, the ARGUS logo, ARGUS MEDIA, INTEGER,
+ARGUS BITUMEN, other ARGUS publication titles
+and ARGUS index names are trademarks of Argus
+Media Limited.
+Visit www. argusmedia.com/Ft/trademarks for
+more information.
+
+Publisher
+Adrian Binks
+
+Chief operating officer
+Matthew Burkley
+
+Disclaimer
+
+Customer support and sales:
+
+Global compliance officer
+Vladas Stankevicius
+
+# Petroleum
+
+support@argusmedia.com
+sales@argusmedia.com
+
+The data and other information published herein
+(the "Data") are provided on an "as is" basis.
+Argus and its licensors (including exchanges)
+make no warranties, express or implied, as to the
+accuracy, adequacy, timeliness, or completeness
+of the Data or fitness for any particular purpose.
+Argus and its licensors (including exchanges) shall
+not be liable for any loss, claims or damage arising
+from any party's reliance on the Data and disclaim
+any and all liability related to or arising out of use
+of the Data to the full extent permissible by law.
+
+Chief commercial officer
+Jo Loudiadis
+
+London, Tel: +44 20 7780 4200
+Houston, Tel: +1 713 968 0000
+Singapore, Tel: +65 6496 9966
+
+All personal contact information is held and used
+in accordance with Argus Media's Privacy Policy
+https://www.argusmedia.com/en/privacy-policy
+
+President, Oil
+Euan Craik
+
+Global head of editorial
+Neil Fleming
+
+Editor in chief
+Jim Washer
+
+Managing editor
+Andrew Bonnington
+
+Editor
+Jonathan Weston
+Tel: +44 (0) 20 4570 1230
+bitumen@argusmedia.com
+
+# illuminating the markets�
+
+INVESTORS
+IN PEOPLE

@@ -1,0 +1,4 @@
+<image name='figure/20.jpg'><title>아르구스 비트멘 및 아스팔트 유럽 회의</title>
+<details>2024년 5월 13-14일, 스페인 마드리드에서 개최되는 아르구스 비트멘 및 아스팔트 유럽 회의에 대한 정보입니다. 4월 12일 금요일까지 예약하면 €300 할인 혜택이 제공됩니다.</details>
+<entities>아르구스, 비트멘, 아스팔트, 유럽 회의, 마드리드, 스페인</entities>
+<hypothetical_questions>이 회의에서 다룰 주요 주제는 무엇일까요? 참가자들은 어떤 네트워킹 기회를 가질 수 있을까요? 비트멘 및 아스팔트 산업의 미래는 어떻게 변화할까요?</hypothetical_questions></image>

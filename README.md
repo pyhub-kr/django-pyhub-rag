@@ -179,6 +179,10 @@ pyhub.parser upstage -i ./argus-bitumen.pdf
 방금 수행한 `pyhub.parser upstage -i ./argus-bitumen.pdf` 명령을 다시 수행해보시면
 캐싱된 내역을 사용하기에 즉시 명령이 종료되고 `output` 폴더 경로에 파일이 재생성됨을 확인하실 수 있습니다.
 
+### 생성된 파일 내역 확인하기
+
+[samples/argus-bitumen/](./samples/argus-bitumen/) 폴더에서 생성된 jsonl, md, html, text 및 이미지/설명을 확인하실 수 있습니다.
+
 ### help
 
 보다 자세한 옵션은 `--help` 도움말을 참고해주세요.
