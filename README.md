@@ -218,7 +218,7 @@ class TaxlawDocument(SQLiteVectorDocument):
     - 요청 유효성 검사
     - 장고 템플릿을 활용한 프롬프트 관리 및 생성
     - 로거 시스템을 통한 debug/info/error 로그 출력
-    - 캐시 시스템을 통한 API 요청 캐시 (디폴트: 로컬 파일 시스템) - 캐시 백엔드를 Re
+    - 캐시 시스템을 통한 API 요청 캐시 (디폴트: 로컬 파일 시스템, 지원 가능 : Redis, 데이터베이스)
 + LLM 요청 라이브러리 : `openai`, `anthropic`, `google-genai`, `ollama`, `tiktoken`, `httpx`
 + CLI : `rich`, `typer`
 + PDF 파일 : `pypdf2` (PDF 파일여부 검증, 페이지 수 읽기, 페이지 나누기)
