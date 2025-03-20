@@ -95,7 +95,7 @@ extra:
       link: https://github.com/pyhub-kr/django-pyhub-rag
     - icon: fontawesome/brands/facebook
       link: https://facebook.com/groups/askdjango
-    - icon: fontawesome/brands/discord
-      link: https://facebook.com/groups/askdjango
+#   - icon: fontawesome/brands/discord
+#     link: https://discord.gg/gAVRhkpY
 
 copyright: Copyright &copy; 2025 파이썬사랑방
