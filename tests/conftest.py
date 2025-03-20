@@ -22,6 +22,26 @@ def pytest_configure():
                 "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
                 "LOCATION": "pyhub_cache",
             },
+            "upstage": {
+                "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+                "LOCATION": "pyhub_upstage",
+            },
+            "openai": {
+                "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+                "LOCATION": "pyhub_openai",
+            },
+            "anthropic": {
+                "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+                "LOCATION": "pyhub_anthropic",
+            },
+            "google": {
+                "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+                "LOCATION": "pyhub_google",
+            },
+            "ollama": {
+                "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+                "LOCATION": "pyhub_ollama",
+            },
         },
         TEMPLATES=[
             {

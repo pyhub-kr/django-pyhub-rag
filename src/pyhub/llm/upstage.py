@@ -26,6 +26,7 @@ class UpstageLLM(OpenAIMixin, BaseLLM):
         "embedding-query": 4096,
         "embedding-passage": 4096,
     }
+    cache_alias = "upstage"
 
     def __init__(
         self,

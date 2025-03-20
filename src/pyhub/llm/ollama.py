@@ -199,6 +199,7 @@ class OllamaLLM(BaseLLM):
             "ollama",
             sync_client,
             request_params,
+            cache_alias="ollama",
         )
 
         response: Optional[ChatResponse] = None
@@ -211,7 +212,7 @@ class OllamaLLM(BaseLLM):
         if response is None:
             logger.debug("request to ollama")
             response = sync_client.chat(**request_params)
-            cache_set(cache_key, response.model_dump_json())
+            cache_set(cache_key, response.model_dump_json(), alias="ollama")
 
         assert response is not None
         return Reply(text=response.message.content)
@@ -239,6 +240,7 @@ class OllamaLLM(BaseLLM):
             "ollama",
             async_client,
             request_params,
+            cache_alias="ollama",
         )
         response: Optional[ChatResponse] = None
         if cached_value is not None:
@@ -251,7 +253,7 @@ class OllamaLLM(BaseLLM):
         if cached_value is None:
             logger.debug("request to ollama")
             response: ChatResponse = await async_client.chat(**request_params)
-            await cache_set_async(cache_key, response.model_dump_json())
+            await cache_set_async(cache_key, response.model_dump_json(), alias="ollama")
 
         assert response is not None
         return Reply(text=response.message.content)
@@ -280,6 +282,7 @@ class OllamaLLM(BaseLLM):
             "ollama",
             sync_client,
             request_params,
+            cache_alias="ollama",
         )
 
         if cached_value is not None:
@@ -297,7 +300,7 @@ class OllamaLLM(BaseLLM):
                 reply_list.append(reply)
                 yield reply
 
-            cache_set(cache_key, reply_list)
+            cache_set(cache_key, reply_list, alias="ollama")
 
     async def _make_ask_stream_async(
         self,
@@ -322,6 +325,7 @@ class OllamaLLM(BaseLLM):
             "ollama",
             async_client,
             request_params,
+            cache_alias="ollama",
         )
         if cached_value is not None:
             reply_list = cast(list[Reply], cached_value)
@@ -338,7 +342,7 @@ class OllamaLLM(BaseLLM):
                 reply_list.append(reply)
                 yield reply
 
-            await cache_set_async(cache_key, reply_list)
+            await cache_set_async(cache_key, reply_list, alias="ollama")
 
     def embed(
         self,

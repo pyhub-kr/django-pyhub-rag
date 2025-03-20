@@ -9,8 +9,8 @@ nav:
 # - LLM: llm.md
 # - Blog:
 #   - blog/index.md
-  - 핸즈온랩: handsonlab.md
-  - About: about.md
+  - 오프라인 핸즈온랩: handsonlab.md
+  - 릴리즈 노트: release-notes.md
 
 plugins:
   # TODO: https://squidfunk.github.io/mkdocs-material/setup/changing-the-colors/

@@ -14,7 +14,7 @@ from rich.console import Console
 from rich.table import Table
 
 from pyhub import get_version, init
-from pyhub.caches import cache_clear
+from pyhub.caches import cache_clear, cache_clear_all
 from pyhub.llm.types import LanguageEnum, LLMChatModelEnum, LLMVendorEnum
 from pyhub.parser.json import json_dumps
 from pyhub.parser.upstage import UpstageDocumentParseParser
@@ -26,9 +26,9 @@ from pyhub.parser.upstage.types import (
     CategoryEnum,
     DocumentFormatEnum,
     DocumentSplitStrategyEnum,
+    Element,
     ElementCategoryType,
     OCRModeEnum,
-    Element,
 )
 from pyhub.rag.utils import get_literal_values
 
@@ -204,8 +204,10 @@ def upstage(
     is_ignore_cache: bool = typer.Option(
         False, "--ignore-cache", help="API 응답 캐시를 무시하고 항상 새로운 API 요청을 보냅니다. 캐시는 유지됩니다."
     ),
-    is_cache_clear: bool = typer.Option(
-        False, "--clear-cache", help="API 응답 캐시를 초기화합니다. 이전에 저장된 API 응답을 무시하고 새로 요청합니다."
+    is_cache_clear_all: bool = typer.Option(
+        False,
+        "--cache-clear-all",
+        help="모든 캐시를 초기화합니다.",
     ),
     upstage_api_key: Optional[str] = typer.Option(
         None, help="Upstage API Key. 지정하지 않으면 UPSTAGE_API_KEY 환경 변수 사용"
@@ -363,8 +365,8 @@ def upstage(
     )
 
     try:
-        if is_cache_clear:
-            cache_clear()
+        if is_cache_clear_all:
+            cache_clear_all()
 
         with input_path.open("rb") as file:
             django_file = File(file)

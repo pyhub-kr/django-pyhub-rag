@@ -15,7 +15,14 @@ logger = logging.getLogger(__name__)
 
 
 def cache_clear(alias: str = "default") -> None:
+    logger.info("cache[%s] clear", alias)
     caches[alias].clear()
+
+
+def cache_clear_all():
+    for cache_alias in caches:
+        logger.info("cache[%s] clear", cache_alias)
+        caches[cache_alias].clear()
 
 
 async def cache_clear_async(alias: str = "default") -> None:
@@ -119,10 +126,22 @@ def cache_make_key(
 
 
 def cache_get(key, default=None, version=None, alias: str = "default"):
+    # TODO: cache 이전이 완료되었다고 판단이 될 때 제거하기
+    if alias != "default":
+        v = caches["default"].get(key, default, version)
+        if v is not None:
+            return v
+
     return caches[alias].get(key, default, version)
 
 
 async def cache_get_async(key, default=None, version=None, alias: str = "default"):
+    # TODO: cache 이전이 완료되었다고 판단이 될 때 제거하기
+    if alias != "default":
+        v = await caches["default"].aget(key, default, version)
+        if v is not None:
+            return v
+
     return await caches[alias].aget(key=key, default=default, version=version)
 
 

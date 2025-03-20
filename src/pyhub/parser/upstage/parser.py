@@ -429,6 +429,7 @@ class UpstageDocumentParseParser:
                 files=files,
                 timeout=timeout,
                 ignore_cache=self.ignore_cache,
+                cache_alias="upstage",
             )
             return json.loads(response_data)
         except json.JSONDecodeError as e:

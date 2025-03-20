@@ -66,18 +66,13 @@ def init_django(debug: bool = False, log_level: int = logging.INFO):
             ],
             # https://docs.djangoproject.com/en/dev/topics/cache/
             CACHES={
-                "default": {
-                    # file system
-                    "BACKEND": "django.core.cache.backends.filebased.FileBasedCache",
-                    "LOCATION": f"{tempfile.gettempdir()}/pyhub_cache",
-                    "TIMEOUT": None,
-                    # 개당 200KB 기준 * 5,000개 = 1GB
-                    "OPTIONS": {"MAX_ENTRIES": 5_000},
-                },
-                # "locmem": {
-                #     "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
-                #     "LOCATION": "pyhub_cache",
-                # },
+                # 개당 200KB 기준 * 5,000개 = 1GB
+                "default": make_filecache_setting("pyhub_cache", max_entries=5_000, cull_frequency=5),
+                "upstage": make_filecache_setting("pyhub_upstage", max_entries=5_000, cull_frequency=5),
+                "openai": make_filecache_setting("pyhub_openai", max_entries=5_000, cull_frequency=5),
+                "anthropic": make_filecache_setting("pyhub_anthropic", max_entries=5_000, cull_frequency=5),
+                "google": make_filecache_setting("pyhub_google", max_entries=5_000, cull_frequency=5),
+                "ollama": make_filecache_setting("pyhub_ollama", max_entries=5_000, cull_frequency=5),
             },
             LOGGING={
                 "version": 1,
@@ -120,6 +115,28 @@ def init_django(debug: bool = False, log_level: int = logging.INFO):
         django.setup()
 
         logging.debug("Django 환경이 초기화되었습니다.")
+
+
+def make_filecache_setting(
+    name: str,
+    location_path: Optional[str] = None,
+    timeout: Optional[int] = None,
+    max_entries: int = 300,
+    # 최대치에 도달했을 때 삭제하는 비율 : 3 이면 1/3 삭제, 0 이면 모두 삭제
+    cull_frequency: int = 3,
+) -> dict:
+    if location_path is None:
+        location_path = tempfile.gettempdir()
+
+    return {
+        "BACKEND": "django.core.cache.backends.filebased.FileBasedCache",
+        "LOCATION": f"{location_path}/{name}",
+        "TIMEOUT": timeout,
+        "OPTIONS": {
+            "MAX_ENTRIES": max_entries,
+            "CULL_FREQUENCY": cull_frequency,
+        },
+    }
 
 
 def load_envs(env_path: Optional[Path] = None):

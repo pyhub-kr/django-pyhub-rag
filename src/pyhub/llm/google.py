@@ -16,7 +16,12 @@ from google.genai.types import (
     Part,
 )
 
-from pyhub.caches import cache_make_key_and_get, cache_make_key_and_get_async, cache_set
+from pyhub.caches import (
+    cache_make_key_and_get,
+    cache_make_key_and_get_async,
+    cache_set,
+    cache_set_async,
+)
 from pyhub.rag.settings import rag_settings
 
 from .base import BaseLLM
@@ -158,6 +163,7 @@ class GoogleLLM(BaseLLM):
             "google",
             client,
             request_params,
+            cache_alias="google",
         )
 
         response: Optional[GenerateContentResponse] = None
@@ -170,7 +176,7 @@ class GoogleLLM(BaseLLM):
         if response is None:
             logger.debug("request to google genai")
             response = client.models.generate_content(**request_params)
-            cache_set(cache_key, response.model_dump_json())
+            cache_set(cache_key, response.model_dump_json(), alias="google")
 
         assert response is not None
 
@@ -196,6 +202,7 @@ class GoogleLLM(BaseLLM):
             "google",
             client,
             request_params,
+            cache_alias="google",
         )
 
         response: Optional[GenerateContentResponse] = None
@@ -208,6 +215,7 @@ class GoogleLLM(BaseLLM):
         if response is None:
             logger.debug("request to google genai")
             response = await client.aio.models.generate_content(**request_params)
+            await cache_set_async(cache_key, response.model_dump_json(), alias="google")
 
         assert response is not None
 
@@ -233,6 +241,7 @@ class GoogleLLM(BaseLLM):
             "google",
             client,
             dict(stream=True, **request_params),
+            cache_alias="google",
         )
 
         if cached_value is not None:
@@ -261,7 +270,7 @@ class GoogleLLM(BaseLLM):
                 reply_list.append(reply)
                 yield reply
 
-            cache_set(cache_key, reply_list)
+            cache_set(cache_key, reply_list, alias="google")
 
     async def _make_ask_stream_async(
         self,
@@ -277,6 +286,7 @@ class GoogleLLM(BaseLLM):
             "google",
             client,
             dict(stream=True, **request_params),
+            cache_alias="google",
         )
 
         if cached_value is not None:
@@ -306,6 +316,8 @@ class GoogleLLM(BaseLLM):
                 reply = Reply(text="", usage=usage)
                 reply_list.append(reply)
                 yield reply
+
+            await cache_set_async(cache_key, reply_list, alias="google")
 
     def ask(
         self,

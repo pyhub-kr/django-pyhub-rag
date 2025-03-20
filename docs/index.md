@@ -7,21 +7,23 @@
 
 ### PDF 문서 파싱
 
-`pyhub.parser upstage` 명령을 통해 손쉽게 PDF 문서를 jsonl 문서로 파싱할 수 있습니다. 이미지/표를 이미지로 추출가능하며, `--enable-image-descriptor` (`-i`) 옵션 지정 만으로 `openai`, `anthropic`, `google`, `ollama` 등의 다양한 모델을 통해 이미지 설명을 생성할 수 있습니다.
- 
-동일 `upstage`/`openai`/`anthropic`/`google`/`ollama` api 요청을 최대 5,000개까지 캐싱하여 (장고 캐시 프레임워크 활용), 동일 API 요청에 대해 캐싱하여 API 요금을 절감합니다. 디폴트 로컬에 파일로 캐싱되며, 손쉽게 설정 만으로 외부 redis/db 서버를 캐시 서버로 쓸 수 있습니다. 그러면 다른 유저와 캐싱된 API 응답을 공유할 수 있습니다. (옵션 제공 예정)
-
-[argus-bitumen.pdf](https://www.argusmedia.com/-/media/project/argusmedia/mainsite/english/documents-and-files/sample-reports/argus-bitumen.pdf?rev=7512cf07937e4e4cbb8889c87780edf7) 파일을 파싱한 [각종 jsonl, md, 이미지, 설명](https://github.com/pyhub-kr/django-pyhub-rag/tree/main/samples/argus-bitumen) 파일들을 확인해보세요.
++ [x] `pyhub.parser upstage` 명령 1번 만으로 PDF 문서 (샘플: [argus-bitumen.pdf](https://www.argusmedia.com/-/media/project/argusmedia/mainsite/english/documents-and-files/sample-reports/argus-bitumen.pdf?rev=7512cf07937e4e4cbb8889c87780edf7))를 파싱하여 Vector Store에 즉시 반영할 수 있는 형태로 [파일들](https://github.com/pyhub-kr/django-pyhub-rag/tree/main/samples/argus-bitumen)을 생성하실 수 있습니다.
++ [x] 이미지/표를 이미지로 추출가능하며, `--enable-image-descriptor` (`-i`) 옵션 지정 만으로
+  `upstage`, `openai`, `anthropic`, `google`, `ollama` 등의 다양한 모델을 통해 이미지 설명을 생성할 수 있습니다.
++ [x] 동일 `upstage`/`openai`/`anthropic`/`google`/`ollama` api 요청을 최대 5,000개까지 캐싱하여 (장고 캐시 프레임워크 활용),
+  동일 API 요청에 대해 캐싱하여 API 요금을 절감합니다. 디폴트로 로컬에 파일로 캐싱되며, 추후 옵션 설정 만으로 외부 redis/db 서버를
+  캐시 서버로 쓸 수 있습니다. 그러면 다른 유저와 캐싱된 API 응답을 공유할 수 있습니다.
 
 [명령 하나 만으로 PDF 문서 파싱하는 방법이 궁금하신가요? :wink:](./parser/upstage){ .md-button }
 
 
 ### 장고 모델에 Vector Store 통합
 
-장고 모델에 손쉽게 Vector Store 기능을 통합할 수 있습니다. 내부적으로 `pgvector` 라이브러리와 `sqlite-vec` 라이브러리를 활용합니다.
-장고 모델 기반으로 유사도 기반 조회를 지원합니다.
+별도의 Vector Store 인프라를 구축하지 않아도 Postgres 혹은 SQLite 데이터베이스에 임베딩 데이터를 저장하여 Vector Store를 구축하실 수 있습니다. 
+내부적으로 `pgvector` 라이브러리와 `sqlite-vec` 라이브러리를 활용합니다.
 
-Postgres 혹은 SQLite 데이터베이스 + 장고 기반으로 임베딩 데이터를 손쉽게 저장/생성하고 조회까지 수행하실 수 있습니다.
++ 기존의 장고 모델/View 개발방법 대로 RAG 서비스를 구축하실 수 있습니다.
++ 장고 모델 기반으로 유사도 기반 조회를 지원합니다.
 
 !!! tip
 
@@ -42,10 +44,7 @@ Postgres 혹은 SQLite 데이터베이스 + 장고 기반으로 임베딩 데이
 
 ## TODO
 
-* [x] API 캐싱 지원 (upstage, openai, anthropic, google, ollama)
-* [x] 공식 문서 사이트 개설
 * [ ] 이미지 생성 프롬프트 커스텀 지원
-* [ ] API 캐싱을 API 벤더 별로 분리
 * [ ] API 캐싱 백엔드 커스텀 지원 (Redis, DB 등)
 * [ ] 명령 자동완성 지원
 

@@ -34,6 +34,7 @@ logger = logging.getLogger(__name__)
 
 
 class OpenAIMixin:
+    cache_alias = "openai"
 
     def _make_request_params(
         self,
@@ -116,6 +117,7 @@ class OpenAIMixin:
             "openai",
             sync_client,
             request_params,
+            cache_alias=self.cache_alias,
         )
 
         response: Optional[ChatCompletion] = None
@@ -128,7 +130,7 @@ class OpenAIMixin:
         if response is None:
             logger.debug("request to openai")
             response: ChatCompletion = sync_client.chat.completions.create(**request_params)
-            cache_set(cache_key, response.model_dump_json())
+            cache_set(cache_key, response.model_dump_json(), alias=self.cache_alias)
 
         assert response is not None
 
@@ -159,6 +161,7 @@ class OpenAIMixin:
             "openai",
             async_client,
             request_params,
+            cache_alias=self.cache_alias,
         )
 
         response: Optional[ChatCompletion] = None
@@ -171,7 +174,7 @@ class OpenAIMixin:
         if response is None:
             logger.debug("request to openai")
             response = await async_client.chat.completions.create(**request_params)
-            await cache_set_async(cache_key, response.model_dump_json())
+            await cache_set_async(cache_key, response.model_dump_json(), alias=self.cache_alias)
 
         assert response is not None
 
@@ -203,6 +206,7 @@ class OpenAIMixin:
             "openai",
             sync_client,
             request_params,
+            cache_alias=self.cache_alias,
         )
 
         if cached_value is not None:
@@ -233,7 +237,7 @@ class OpenAIMixin:
                 reply_list.append(reply)
                 yield reply
 
-            cache_set(cache_key, reply_list)
+            cache_set(cache_key, reply_list, alias=self.cache_alias)
 
     async def _make_ask_stream_async(
         self,
@@ -255,6 +259,7 @@ class OpenAIMixin:
             "openai",
             async_client,
             request_params,
+            cache_alias=self.cache_alias,
         )
 
         if cached_value is not None:
@@ -285,7 +290,7 @@ class OpenAIMixin:
                 reply_list.append(reply)
                 yield reply
 
-            await cache_set_async(cache_key, reply_list)
+            await cache_set_async(cache_key, reply_list, alias=self.cache_alias)
 
     def ask(
         self,

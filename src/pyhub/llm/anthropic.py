@@ -12,7 +12,12 @@ from django.core.checks import Error
 from django.core.files import File
 from django.template import Template
 
-from pyhub.caches import cache_make_key_and_get, cache_make_key_and_get_async, cache_set
+from pyhub.caches import (
+    cache_make_key_and_get,
+    cache_make_key_and_get_async,
+    cache_set,
+    cache_set_async,
+)
 from pyhub.rag.settings import rag_settings
 
 from .base import BaseLLM
@@ -139,6 +144,7 @@ class AnthropicLLM(BaseLLM):
             "anthropic",
             sync_client,
             request_params,
+            cache_alias="anthropic",
         )
 
         response: Optional[anthropic.types.Message] = None
@@ -151,6 +157,7 @@ class AnthropicLLM(BaseLLM):
         if response is None:
             logger.debug("request to anthropic")
             response = sync_client.messages.create(**request_params)
+            cache_set(cache_key, response.model_dump_json(), alias="anthropic")
 
         assert response is not None
 
@@ -175,6 +182,7 @@ class AnthropicLLM(BaseLLM):
             "anthropic",
             async_client,
             request_params,
+            cache_alias="anthropic",
         )
 
         response: Optional[anthropic.types.Message] = None
@@ -187,6 +195,7 @@ class AnthropicLLM(BaseLLM):
         if response is None:
             logger.debug("request to anthropic")
             response = await async_client.messages.create(**request_params)
+            await cache_set_async(cache_key, response.model_dump_json(), alias="anthropic")
 
         assert response is not None
 
@@ -213,6 +222,7 @@ class AnthropicLLM(BaseLLM):
             "anthropic",
             sync_client,
             request_params,
+            cache_alias="anthropic",
         )
 
         if cached_value is not None:
@@ -256,7 +266,7 @@ class AnthropicLLM(BaseLLM):
             reply_list.append(reply)
             yield reply
 
-            cache_set(cache_key, reply_list)
+            cache_set(cache_key, reply_list, alias="anthropic")
 
     async def _make_ask_stream_async(
         self,
@@ -276,6 +286,7 @@ class AnthropicLLM(BaseLLM):
             "anthropic",
             async_client,
             request_params,
+            cache_alias="anthropic",
         )
 
         if cached_value is not None:
@@ -317,6 +328,8 @@ class AnthropicLLM(BaseLLM):
             reply = Reply(text="", usage=Usage(input_tokens, output_tokens))
             reply_list.append(reply)
             yield reply
+
+            await cache_set_async(cache_key, reply_list, alias="anthropic")
 
     def ask(
         self,
