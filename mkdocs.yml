@@ -1,0 +1,109 @@
+site_name: django-pyhub-rag
+
+nav:
+  - Home: index.md
+  - Parser:
+      - parser/upstage.md
+  - Rag:
+      - rag/vector-document.md
+# - LLM: llm.md
+# - Blog:
+#   - blog/index.md
+  - 핸즈온랩: handsonlab.md
+  - About: about.md
+
+plugins:
+  # TODO: https://squidfunk.github.io/mkdocs-material/setup/changing-the-colors/
+  - blog:
+      enabled: false
+  - search
+  - rss:
+      enabled: !ENV [CI, false]
+      match_path: blog/posts/.*
+      date_from_meta:
+        as_creation: date
+      categories:
+        - categories
+        - tags
+
+theme:
+  name: material
+  language: ko
+# custom_dir: docs-overrides
+  font:
+    # text: Merriweather Sans
+    code: Ubuntu Mono
+  logo: assets/pyhub-128.png
+  favicon: assets/pyhub.ico
+  palette:
+    - scheme: slate
+      toggle:
+        icon: material/weather-sunny
+        name: Dark mode
+      primary: green
+      accent: deep purple
+    - scheme: default
+      toggle:
+        icon: material/weather-night
+        name: Light mode
+      primary: blue
+      accent: deep orange
+  features:
+    - content.code.annotate
+    - content.code.copy
+    - content.code.select
+    - navigation.instant
+    - navigation.instant.progress
+    - navigation.path
+#    - navigation.prune
+#    - navigation.sections
+#    - navigation.top
+#   - navigation.tabs
+#   - navigation.tabs.sticky
+#    - navigation.tracking
+    - toc.follow
+#   - toc.integrate
+    - search.highlight
+    - search.share
+    - search.suggest
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - pymdownx.details
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+
+extra:
+#  analytics:
+#    provider: google
+#    property: G-XXXXXXXXXX
+  # https://squidfunk.github.io/mkdocs-material/setup/setting-up-the-footer/?h=social#social-links
+  social:
+    - icon: simple/youtube
+      link: https://youtube.com/@pyhub-kr
+    - icon: fontawesome/brands/github
+      link: https://github.com/pyhub-kr/django-pyhub-rag
+    - icon: fontawesome/brands/facebook
+      link: https://facebook.com/groups/askdjango
+    - icon: fontawesome/brands/discord
+      link: https://facebook.com/groups/askdjango
+
+copyright: Copyright &copy; 2025 파이썬사랑방

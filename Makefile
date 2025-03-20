@@ -1,4 +1,4 @@
-.PHONY: test clean build publish
+.PHONY: test clean build publish docs docs-build
 
 test:
 	uv pip install -e ".[test,postgres,sqlite]"
@@ -29,3 +29,16 @@ build: clean
 
 publish: build
 	uv run -m twine upload dist/*
+
+#
+# docs
+#
+
+docs:
+	uv pip install -e ".[docs]"
+	uv run mkdocs serve
+
+docs-build:
+	uv pip install -e ".[docs]"
+	uv run mkdocs build --clean --site-dir docs-build
+

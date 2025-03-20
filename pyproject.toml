@@ -45,6 +45,12 @@ postgres = ["psycopg2-binary", "pgvector"]
 sqlite = ["sqlite-vec", "numpy"]
 web = ["django-shinobi", "uvicorn"]
 parser = ["pypdf2", "PyCryptodome"]
+docs = [
+    "mkdocs",
+    "mkdocs-material",
+    "mkdocs-rss-plugin",
+    "pymdown-extensions",
+]
 
 all = ["django-pyhub-rag[postgres,sqlite,web,parser]"]
 
