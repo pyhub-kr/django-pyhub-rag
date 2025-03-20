@@ -8,6 +8,7 @@ from django.core.files import File
 from django.template import Template
 from openai import AsyncOpenAI
 from openai import OpenAI as SyncOpenAI
+from openai.types import CreateEmbeddingResponse
 from openai.types.chat import ChatCompletion
 
 from pyhub.caches import (
@@ -124,8 +125,8 @@ class OpenAIMixin:
         if cached_value is not None:
             try:
                 response = ChatCompletion.model_validate_json(cached_value)
-            except pydantic.ValidationError:
-                logger.error("cached value is invalid : %s", cached_value)
+            except pydantic.ValidationError as e:
+                logger.error("Invalid cached value : %s", e)
 
         if response is None:
             logger.debug("request to openai")
@@ -168,8 +169,8 @@ class OpenAIMixin:
         if cached_value is not None:
             try:
                 response = ChatCompletion.model_validate_json(cached_value)
-            except pydantic.ValidationError:
-                logger.error("cached value is invalid : %s", cached_value)
+            except pydantic.ValidationError as e:
+                logger.error("Invalid cached value : %s", e)
 
         if response is None:
             logger.debug("request to openai")
@@ -339,14 +340,29 @@ class OpenAIMixin:
     ) -> Union[Embed, EmbedList]:
         embedding_model = cast(OpenAIEmbeddingModelType, model or self.embedding_model)
 
-        client = SyncOpenAI(
-            api_key=self.api_key,
-            base_url=self.base_url,
+        sync_client = SyncOpenAI(api_key=self.api_key, base_url=self.base_url)
+        request_params = dict(input=input, model=str(embedding_model))
+
+        cache_key, cached_value = cache_make_key_and_get(
+            "openai",
+            sync_client,
+            request_params,
+            cache_alias=self.cache_alias,
         )
-        response = client.embeddings.create(
-            input=input,
-            model=embedding_model,
-        )
+
+        response: Optional[CreateEmbeddingResponse] = None
+        if cached_value is not None:
+            response = cast(CreateEmbeddingResponse, cached_value)
+            response.usage.prompt_tokens = 0  # 캐싱된 응답이기에 clear usage
+            response.usage.completion_tokens = 0
+
+        if response is None:
+            logger.debug("request to openai")
+            response = sync_client.embeddings.create(**request_params)
+            cache_set(cache_key, response, alias=self.cache_alias)
+
+        assert response is not None
+
         usage = Usage(input=response.usage.prompt_tokens or 0, output=0)
         if isinstance(input, str):
             return Embed(response.data[0].embedding, usage=usage)
@@ -357,14 +373,29 @@ class OpenAIMixin:
     ) -> Union[Embed, EmbedList]:
         embedding_model = cast(OpenAIEmbeddingModelType, model or self.embedding_model)
 
-        client = AsyncOpenAI(
-            api_key=self.api_key,
-            base_url=self.base_url,
+        async_client = AsyncOpenAI(api_key=self.api_key, base_url=self.base_url)
+        request_params = dict(input=input, model=str(embedding_model))
+
+        cache_key, cached_value = await cache_make_key_and_get_async(
+            "openai",
+            async_client,
+            request_params,
+            cache_alias=self.cache_alias,
         )
-        response = await client.embeddings.create(
-            input=input,
-            model=embedding_model,
-        )
+
+        response: Optional[CreateEmbeddingResponse] = None
+        if cached_value is not None:
+            response = cast(CreateEmbeddingResponse, cached_value)
+            response.usage.prompt_tokens = 0  # 캐싱된 응답이기에 clear usage
+            response.usage.completion_tokens = 0
+
+        if response is None:
+            logger.debug("request to openai")
+            response = await async_client.embeddings.create(**request_params)
+            await cache_set_async(cache_key, response, alias=self.cache_alias)
+
+        assert response is not None
+
         usage = Usage(input=response.usage.prompt_tokens or 0, output=0)
         if isinstance(input, str):
             return Embed(response.data[0].embedding, usage=usage)

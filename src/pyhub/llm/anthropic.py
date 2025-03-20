@@ -151,8 +151,8 @@ class AnthropicLLM(BaseLLM):
         if cached_value is not None:
             try:
                 response = anthropic.types.Message.model_validate_json(cached_value)
-            except pydantic.ValidationError:
-                logger.error("cached_value is valid : %s", cached_value)
+            except pydantic.ValidationError as e:
+                logger.error("cached_value is valid : %s", e)
 
         if response is None:
             logger.debug("request to anthropic")
@@ -189,8 +189,8 @@ class AnthropicLLM(BaseLLM):
         if cached_value is not None:
             try:
                 response = anthropic.types.Message.model_validate_json(cached_value)
-            except pydantic.ValidationError:
-                logger.error("cached_value is valid : %s", cached_value)
+            except pydantic.ValidationError as e:
+                logger.error("cached_value is valid : %s", e)
 
         if response is None:
             logger.debug("request to anthropic")

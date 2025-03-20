@@ -11,6 +11,7 @@ from django.template import Template
 from google import genai
 from google.genai.types import (
     Content,
+    EmbedContentResponse,
     GenerateContentConfig,
     GenerateContentResponse,
     Part,
@@ -170,8 +171,8 @@ class GoogleLLM(BaseLLM):
         if cached_value is not None:
             try:
                 response = GenerateContentResponse.model_validate_json(cached_value)
-            except pydantic.ValidationError:
-                logger.error("cached value is invalid : %s", cached_value)
+            except pydantic.ValidationError as e:
+                logger.error("Invalid cached value : %s", e)
 
         if response is None:
             logger.debug("request to google genai")
@@ -209,8 +210,8 @@ class GoogleLLM(BaseLLM):
         if cached_value is not None:
             try:
                 response = GenerateContentResponse.model_validate_json(cached_value)
-            except pydantic.ValidationError:
-                logger.error("cached value is invalid : %s", cached_value)
+            except pydantic.ValidationError as e:
+                logger.error("Invalid cached value : %s", e)
 
         if response is None:
             logger.debug("request to google genai")
@@ -369,11 +370,31 @@ class GoogleLLM(BaseLLM):
         embedding_model = cast(GoogleEmbeddingModelType, model or self.embedding_model)
 
         client = genai.Client(api_key=self.api_key)
-        response = client.models.embed_content(
-            model=embedding_model,
+        request_params = dict(
+            model=str(embedding_model),
             contents=input,
             # config=EmbedContentConfig(output_dimensionality=10),
         )
+
+        cache_key, cached_value = cache_make_key_and_get(
+            "google",
+            client,
+            request_params,
+            cache_alias="google",
+        )
+
+        response: Optional[EmbedContentResponse] = None
+        if cached_value is not None:
+            try:
+                response = EmbedContentResponse.model_validate_json(cached_value)
+            except pydantic.ValidationError as e:
+                logger.error("Invalid cached value : %s", e)
+
+        if response is None:
+            logger.debug("request to google embed")
+            response = client.models.embed_content(**request_params)
+            cache_set(cache_key, response.model_dump_json(), alias="google")
+
         usage = None  # TODO: response에 usage_metadata가 없음
         if isinstance(input, str):
             return Embed(response.embeddings[0].values, usage=usage)
@@ -387,11 +408,30 @@ class GoogleLLM(BaseLLM):
         embedding_model = cast(GoogleEmbeddingModelType, model or self.embedding_model)
 
         client = genai.Client(api_key=self.api_key)
-        response = await client.aio.models.embed_content(
-            model=embedding_model,
+        request_params = dict(
+            model=str(embedding_model),
             contents=input,
             # config=EmbedContentConfig(output_dimensionality=10),
         )
+
+        cache_key, cached_value = await cache_make_key_and_get_async(
+            "google",
+            client,
+            request_params,
+            cache_alias="google",
+        )
+
+        response: Optional[EmbedContentResponse] = None
+        if cached_value is not None:
+            try:
+                response = EmbedContentResponse.model_validate_json(cached_value)
+            except pydantic.ValidationError as e:
+                logger.error("Invalid cached value : %s", e)
+
+        if response is None:
+            response = await client.aio.models.embed_content(**request_params)
+            await cache_set_async(cache_key, response.model_dump_json(), alias="google")
+
         usage = None  # TODO: response에 usage_metadata가 없음
         if isinstance(input, str):
             return Embed(response.embeddings[0].values, usage=usage)

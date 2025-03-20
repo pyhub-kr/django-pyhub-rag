@@ -2,11 +2,12 @@ import logging
 import re
 from typing import Any, AsyncGenerator, Generator, Optional, Union, cast
 
+import pydantic
 from django.core.checks import Error
 from django.template import Template
 from ollama import AsyncClient, ChatResponse
 from ollama import Client as SyncClient
-from ollama import ListResponse
+from ollama import EmbedResponse, ListResponse
 from pydantic import ValidationError
 
 from pyhub.caches import (
@@ -207,7 +208,7 @@ class OllamaLLM(BaseLLM):
             try:
                 response = ChatResponse.model_validate_json(cached_value)
             except ValidationError:
-                logger.error("cached value is invalid : %s", cached_value)
+                logger.error("Invalid cached value : %s", cached_value)
 
         if response is None:
             logger.debug("request to ollama")
@@ -247,7 +248,7 @@ class OllamaLLM(BaseLLM):
             try:
                 response = ChatResponse.model_validate_json(cached_value)
             except ValidationError:
-                logger.error("cached value is invalid : %s", cached_value)
+                logger.error("Invalid cached value : %s", cached_value)
                 cached_value = None
 
         if cached_value is None:
@@ -354,11 +355,31 @@ class OllamaLLM(BaseLLM):
         """
         embedding_model = model or self.embedding_model
 
-        client = SyncClient(host=self.base_url)
-        response = client.embed(
+        sync_client = SyncClient(host=self.base_url)
+        request_params = dict(
             model=cast(str, embedding_model),
             input=input,
         )
+
+        cache_key, cached_value = cache_make_key_and_get(
+            "ollama",
+            sync_client,
+            request_params,
+            cache_alias="ollama",
+        )
+
+        response: Optional[EmbedResponse] = None
+        if cached_value is not None:
+            try:
+                response = EmbedResponse.model_validate_json(cached_value)
+            except pydantic.ValidationError as e:
+                logger.error("Invalid cached value : %s", e)
+
+        if response is None:
+            logger.debug("request to ollama")
+            response = sync_client.embed(**request_params)
+            cache_set(cache_key, response.model_dump_json(), alias="ollama")
+
         if isinstance(input, str):
             return Embed(list(response.embeddings[0]))
         return EmbedList([Embed(list(e)) for e in response.embeddings])
@@ -374,11 +395,31 @@ class OllamaLLM(BaseLLM):
 
         embedding_model = model or self.embedding_model
 
-        client = AsyncClient(host=self.base_url)
-        response = await client.embed(
+        async_client = AsyncClient(host=self.base_url)
+        request_params = dict(
             model=cast(str, embedding_model),
             input=input,
         )
+
+        cache_key, cached_value = await cache_make_key_and_get_async(
+            "ollama",
+            async_client,
+            request_params,
+            cache_alias="ollama",
+        )
+
+        response: Optional[EmbedResponse] = None
+        if cached_value is not None:
+            try:
+                response = EmbedResponse.model_validate_json(cached_value)
+            except pydantic.ValidationError as e:
+                logger.error("Invalid cached value : %s", e)
+
+        if response is None:
+            logger.debug("request to ollama")
+            response = await async_client.embed(**request_params)
+            await cache_set_async(cache_key, response.model_dump_json(), alias="ollama")
+
         if isinstance(input, str):
             return Embed(list(response.embeddings[0]))
         return EmbedList([Embed(list(e)) for e in response.embeddings])
