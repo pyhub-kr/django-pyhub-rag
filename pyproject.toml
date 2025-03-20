@@ -55,7 +55,7 @@ all = ["django-pyhub-rag[postgres,sqlite,web,parser]"]
 
 [project.urls]
 Homepage = "https://github.com/pyhub-kr/django-pyhub-rag"
-Documentation = "https://ai.pyhub.kr"
+Documentation = "https://rag.pyhub.kr"
 Repository = "https://github.com/pyhub-kr/django-pyhub-rag"
 Issues = "https://github.com/pyhub-kr/django-pyhub-rag/issues"
 # Changelog = "https://github.com/pyhub-kr/django-pyhub-rag/blob/main/CHANGELOG.md"
