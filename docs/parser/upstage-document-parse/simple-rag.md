@@ -263,30 +263,45 @@ FAISS는 기본적으로 벡터 색인(index)만 저장합니다. 즉, 원본 �
 
 ## 검색된 유사 문서 기반으로 RAG 수행하기
 
-``` py linenums="1" hl_lines="8"
+``` py linenums="1"
 from langchain.chains import RetrievalQA
 from langchain_openai import ChatOpenAI
 
 # ...
 
 def main():
-    # ...
-    doc_list: list[Document] = ...  # 위에서 검색된 문서 리스트
+    index_folder_path = Path("faiss_index")
 
-    # 검색된 문서 내용 출력
-    print(f"쿼리: {query}\n")
-    print("검색된 관련 문서:")
-    for i, (doc, score) in enumerate(doc_list, 1):
-        print(f"\n문서 {i} (유사도 점수: {score:.4f})")
-        print(f"내용: {repr(doc.page_content[:200])} ...")
-        print(f"출처: {doc.metadata.get('source', '정보 없음')}")
-    
-    # RAG 수행: 검색된 문서를 기반으로 응답 생성
+    vectorstore = create_if_not_exist(index_folder_path)
+
+    # 사용자 쿼리
+    query = "비트멘 가격 트렌드"
+
+    # 유사 문서 검색를 미리 수행하지 않았습니다.
+    # doc_list = search(vectorstore, query)
+    #
+    # # 검색된 문서 내용 출력
+    # print(f"쿼리: {query}\n")
+    # print("검색된 관련 문서:")
+    # for i, (doc, score) in enumerate(doc_list, 1):
+    #     print(f"\n문서 {i} (유사도 점수: {score:.4f})")
+    #     print(f"내용: {repr(doc.page_content[:200])} ...")
+    #     print(f"출처: {doc.metadata.get('source', '정보 없음')}")
+
+    retriever = vectorstore.as_retriever()
+
+    # retriever를 통해서도 유사 문서를 검색할 수 있습니다.
+    # doc_list: list[Document] = retriever.invoke(query)
+
+    # RetrievalQA는 retriever를 인자로 받아 유사 문서 검색을 내부에서 수행합니다.
     llm = ChatOpenAI(model="gpt-4o-mini")
     qa_chain = RetrievalQA.from_chain_type(
-        llm=llm, chain_type="stuff", retriever=vectorstore.as_retriever(), return_source_documents=True
+        llm=llm,
+        chain_type="stuff",
+        retriever=retriever,
+        return_source_documents=True,
     )
-    
+
     # RAG 응답 생성 및 출력
     result = qa_chain.invoke({"query": query})
     print("\n=== RAG 응답 ===")
@@ -307,11 +322,11 @@ def main():
     문서 1 (유사도 점수: 1.5359)
     내용: 'Argus Bitumen\n\nIssue 24-12  Friday 22 March 2024\n\n# WATERBORNE BITUMEN PRICES, FOB\n\n![image](p002/24-figure.jpg)\nRotterdam\n$485/t Italy Baltic\n$456/t $472/t\nGreece\nSpain\n$456/t South Korea\n$459/t\n$404' ...
     출처: argus-bitumen.pdf
-    
+
     문서 2 (유사도 점수: 1.5468)
     내용: 'Ⓡ\n\n# argus\n\n# Argus Bitumen\n\nEurope, Africa, Middle East and Asia-Pacific prices and commentary\nIncorporating Argus Asphalt Report\n\nargusmedia.com\n\nIssue 24-12 I Friday 22 March 2024\n\nSUMMARY\n\nBitumen' ...
     출처: argus-bitumen.pdf
-    
+
     문서 3 (유사도 점수: 1.5844)
     내용: 'Argus Bitumen\n\nIssue 24-12  Friday 22 March 2024\n\nNORTH AND CENTRAL EUROPE MARKET COMMENTARY\n\n# Summary\n\nDisruption at two French refineries continued to squeeze\noverall bitumen supply in northwest Eu' ...
     출처: argus-bitumen.pdf
@@ -329,3 +344,145 @@ def main():
     
     참조 3: argus-bitumen.pdf
     ```
+
+
+## RAG 직접 구현해보기
+
+### RetrievalQA의 디폴트 프롬프트
+
+`RetrievalQA`에서는 `prompt` 인자를 지원하며, 미지정 시에는 아래의 프롬프트로 수행됩니다.
+
+``` py title="langchain/chains/retrieval_qa/prompt.py"
+prompt_template = """
+Use the following pieces of context to answer the question at the end.
+If you don't know the answer, just say that you don't know, don't try to make up an answer.
+
+{context}
+
+Question: {question}
+Helpful Answer:
+"""
+```
+
+!!! note "출처"
+
+    [https://github.com/langchain-ai/langchain/blob/master/libs/langchain/langchain/chains/retrieval_qa/prompt.py](https://github.com/langchain-ai/langchain/blob/master/libs/langchain/langchain/chains/retrieval_qa/prompt.py)
+
+
+### 직접 프롬프트 구성하여 RAG 수행해보기
+
+랭체인은 프롬프트 문자열 구성을 추상화하여 개발자의 편의성을 높인 라이브러리입니다. 그러나 프롬프트를 직접 구성하여 LLM에 요청하는 방식으로도 동일한 결과를 얻을 수 있습니다.
+랭체인을 사용하더라도 프롬프트 문자열을 직접 구성하는 능력은 여전히 중요합니다:
+
+- 추상화 라이브러리가 제공하지 않는 세밀한 제어가 필요할 때
+- 특정 사용 사례에 맞춤형 프롬프트가 필요할 때
+- 기본 원리를 이해함으로써 문제 해결 능력과 디버깅 능력을 향상시킬 때
+
+`RetrievalQA`에서는 벡터스토어에서 유사문서를 찾고, 프롬프트를 구성하고, LLM에 요청하는 과정이 블랙박스처럼 감춰져 있습니다.
+각 부분을 분리하여 직접 구현할 수 있다면, 랭체인 외의 다른 라이브러리와 서비스와의 연동성을 더욱 높일 수 있습니다.
+
+``` py
+import openai
+
+# ...
+
+def main():
+    index_folder_path = Path("faiss_index")
+
+    vectorstore = create_if_not_exist(index_folder_path)
+
+    # 사용자 쿼리
+    query = "비트멘 가격 트렌드"
+
+    # 유사 문서 검색
+    doc_list = search(vectorstore, query)
+
+    # 검색된 문서 내용 출력
+    print(f"쿼리: {query}\n")
+    print("검색된 관련 문서:")
+    for i, (doc, score) in enumerate(doc_list, 1):
+        print(f"\n문서 {i} (유사도 점수: {score:.4f})")
+        print(f"내용: {repr(doc.page_content[:200])} ...")
+        print(f"출처: {doc.metadata.get('source', '정보 없음')}")
+
+    context = str(doc_list)
+    # print("context :", repr(context))
+
+    prompt_template = """
+Use the following pieces of context to answer the question at the end.
+If you don't know the answer, just say that you don't know, don't try to make up an answer.
+
+{context}
+
+Question: {question}
+Helpful Answer:
+    """
+
+    human_prompt = prompt_template.format(context=context, question=query)
+
+    client = openai.Client()
+    res = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[
+            {
+                "role": "user",
+                "content": human_prompt,
+            }
+        ],
+    )
+    print(res.choices[0].message.content)
+```
+
+??? 실행결과
+
+    index already exists, loading...
+    쿼리: 비트멘 가격 트렌드
+
+    검색된 관련 문서:
+
+    문서 1 (유사도 점수: 1.5359)
+    내용: 'Argus Bitumen\n\nIssue 24-12  Friday 22 March 2024\n\n# WATERBORNE BITUMEN PRICES, FOB\n\n![image](p002/24-figure.jpg)\nRotterdam\n$485/t Italy Baltic\n$456/t $472/t\nGreece\nSpain\n$456/t South Korea\n$459/t\n$404' ...
+    출처: argus-bitumen.pdf
+
+    문서 2 (유사도 점수: 1.5468)
+    내용: 'Ⓡ\n\n# argus\n\n# Argus Bitumen\n\nEurope, Africa, Middle East and Asia-Pacific prices and commentary\nIncorporating Argus Asphalt Report\n\nargusmedia.com\n\nIssue 24-12 I Friday 22 March 2024\n\nSUMMARY\n\nBitumen' ...
+    출처: argus-bitumen.pdf
+
+    문서 3 (유사도 점수: 1.5844)
+    내용: 'Argus Bitumen\n\nIssue 24-12  Friday 22 March 2024\n\nNORTH AND CENTRAL EUROPE MARKET COMMENTARY\n\n# Summary\n\nDisruption at two French refineries continued to squeeze\noverall bitumen supply in northwest Eu' ...
+    출처: argus-bitumen.pdf
+
+    비트멘 가격은 최근 유럽 지역에서 상승세를 보이고 있습니다. 이는 북서 유럽에서 공급 긴축이 발생하고, 연료유 가격이 상승한 것이 원인입니다. 특히, 프랑스의 두 개 정유시설에서의 운영 중단이 비트멘 공급에 영향을 미쳤고, 이로 인해 로테르담과 발틱 화물의 가격 차별화가 증가했습니다. 반면, 아시아에서는 수요가 약해지면서 싱가포르와 한국의 가격은 하락세를 보였습니다.
+
+    구체적으로 2023년 3월 16일부터 22일 사이의 비트멘 가격은 다음과 같았습니다:
+    - 로테르담: $482.15 - $487.15
+    - 지중해: $445.43 - $449.77
+    - 발틱: $470.15 - $474.15
+    - 싱가포르: $398.30 - $408.60
+    - 한국: $400.00 - $407.00
+
+    가격 상승의 주요 원인으로는 유럽 내 따뜻한 날씨로 인해 비트멘 시장의 활동과 수요가 증가하고 있다는 점이 있습니다. 또한, 서부 아프리카 지역의 수출 가격이 급등하면서 전반적인 가격 상승 현상이 나타나고 있습니다.
+
+    CompletionUsage(completion_tokens=288, prompt_tokens=7078, total_tokens=7366, completion_tokens_details=CompletionTokensDetails(accepted_prediction_tokens=0, audio_tokens=0, reasoning_tokens=0, rejected_prediction_tokens=0), prompt_tokens_details=PromptTokensDetails(audio_tokens=0, cached_tokens=7040))
+
+2개의 출력결과를 비교해보세요. 비슷하게 잘 동작하고 있음을 확인하실 수 있습니다.
+LLM은 매번 새로운 응답을 생성하기에 같은 코드라도 같은 출력을 내진 않습니다.
+
+=== "랭체인 RetrievalQA 활용"
+
+    비트멘 가격은 최근 몇 주 동안 유럽의 많은 지역에서 상승세를 보이고 있습니다. 이는 주로 북서 유럽의 공급이 조여지고, 연료유 가격이 강세를 보이기 때문입니다. 특히 로테르담과 발틱 지역의 비트멘 가격 차별이 증가했습니다. 반면 아시아에서는 수요가 약세를 보이며 싱가포르와 한국의 비트멘 가격이 하락했습니다.
+
+    유럽에서 봄 날씨가 따뜻해지면서 지중해 비트멘 시장의 활동과 수요가 증가하고 있으며, 이는 일부 시장에서 국내 화물 가격 상승으로 이어졌습니다. 전체적으로 보았을 때, 유럽 시장에서는 가격 상승세가 이어지는 반면, 아시아 시장에서는 수요 부족으로 가격이 하락하고 있는 양상을 보이고 있습니다.
+
+=== "프롬프트 직접 구성"
+
+    비트멘 가격은 최근 유럽 지역에서 상승세를 보이고 있습니다. 이는 북서 유럽에서 공급 긴축이 발생하고, 연료유 가격이 상승한 것이 원인입니다. 특히, 프랑스의 두 개 정유시설에서의 운영 중단이 비트멘 공급에 영향을 미쳤고, 이로 인해 로테르담과 발틱 화물의 가격 차별화가 증가했습니다. 반면, 아시아에서는 수요가 약해지면서 싱가포르와 한국의 가격은 하락세를 보였습니다.
+
+    구체적으로 2023년 3월 16일부터 22일 사이의 비트멘 가격은 다음과 같았습니다:
+    - 로테르담: $482.15 - $487.15
+    - 지중해: $445.43 - $449.77
+    - 발틱: $470.15 - $474.15
+    - 싱가포르: $398.30 - $408.60
+    - 한국: $400.00 - $407.00
+
+    가격 상승의 주요 원인으로는 유럽 내 따뜻한 날씨로 인해 비트멘 시장의 활동과 수요가 증가하고 있다는 점이 있습니다. 또한, 서부 아프리카 지역의 수출 가격이 급등하면서 전반적인 가격 상승 현상이 나타나고 있습니다.
