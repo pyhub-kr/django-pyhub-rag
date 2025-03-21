@@ -5,6 +5,10 @@ search:
 
 # 명령 한 방에 PDF 변환하기
 
+업스테이지의 [Document Parse API](https://console.upstage.ai/docs/capabilities/document-parse)는 어려운 PDF 파싱을 알아서 잘 처리해주지만, http 라이브러리를 활용해서 요청 인자를 직접 조합하여 API를 호출해야 하고, API 응답에서 이미지는 base64로 저장되어있고, 이미지만 따로 뽑아서 저장하고, 이미지 설명 작성을 위해서 별도로 LLM API 호출도 필요하고, 이걸 후처리하는 작업도 생각 외로 많이 필요한데요. 그래서 처음에는 좀 막막하실 수 있습니다.
+
+그런 번거로운 작업을 django-pyhub-rag 라이브러리를 통해 1번의 명령 만으로 PDF 파일을 파싱하고, 이미지에 대한 설명까지 모두 생성하고, Vector Store에 바로 저장하실 수 있도록 랭체인 Document 포맷의 jsonl 파일까지 모두 생성하실 수 있습니다. 물론 윈도우/맥/리눅스 모두 지원합니다.
+
 ## API Key 획득 및 저장
 
 PDF 파싱을 위해 Upstage API Key와 이미지 설명 생성을 위해 OpenAI API Key를 먼저 획득해주세요.
