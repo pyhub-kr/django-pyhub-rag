@@ -1,4 +1,4 @@
-<image name='p003/45-table.jpg'><title>
+<image name='p013/45-table.jpg'><title>
 비투멘 화물 운임 (16-22 마르)
 </title>
 <details>

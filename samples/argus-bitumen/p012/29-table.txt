@@ -1,4 +1,4 @@
-<image name='p002/29-table.jpg'><title>
+<image name='p012/29-table.jpg'><title>
 아시아 비트멘 가격 지수 및 관련 데이터
 </title>
 <details>

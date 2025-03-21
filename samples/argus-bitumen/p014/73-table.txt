@@ -1,4 +1,4 @@
-<image name='p004/73-table.jpg'><title>
+<image name='p014/73-table.jpg'><title>
 중동 걸프에서 인도로의 화물 요금
 </title>
 <details>

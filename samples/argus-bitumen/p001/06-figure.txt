@@ -1,4 +1,0 @@
-<image name='p001/06-figure.jpg'><title>디지털 기기에서의 데이터 분석</title>
-<details>이미지에는 손이 스타일러스를 사용하여 태블릿 화면에 데이터를 입력하고 있는 모습이 담겨 있습니다. 화면에는 다양한 데이터 시각화와 그래픽 요소가 포함되어 있어, 데이터 분석 또는 디지털 작업을 수행하고 있는 것으로 보입니다.</details>
-<entities>태블릿, 스타일러스, 데이터 시각화, 그래픽 요소</entities>
-<hypothetical_questions>이러한 디지털 도구들이 데이터 분석에 미치는 영향은 무엇일까요? 앞으로의 기술 발전이 데이터 분석의 방식에 어떤 변화를 가져올까요?</hypothetical_questions></image>

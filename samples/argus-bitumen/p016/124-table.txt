@@ -1,4 +1,4 @@
-<image name='p006/124-table.jpg'><title>
+<image name='p016/124-table.jpg'><title>
 이란 IME를 통한 국내 판매 현황 (16-21 마르스)
 </title>
 <details>

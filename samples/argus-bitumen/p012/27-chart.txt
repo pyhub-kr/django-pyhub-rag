@@ -1,4 +1,4 @@
-<image name='p002/27-chart.jpg'><title>싱가포르 유류 가격 추세</title>
+<image name='p012/27-chart.jpg'><title>싱가포르 유류 가격 추세</title>
 <details>2022년 7월부터 2023년 3월까지의 싱가포르 펜 60/70 수상 및 HSFO 180cst 가격 변동을 나타내는 그래프. 두 가격 모두 하락세를 보이며, HSFO 180cst는 비교적 안정적인 경향을 보임.</details>
 <entities>싱가포르, 펜 60/70 수상, HSFO 180cst, 가격 변동</entities>
 <hypothetical_questions>1. 가격 하락의 주요 원인은 무엇일까? 2. 향후 유류 가격은 어떻게 변동할 가능성이 있을까? 3. 이러한 가격 변동이 해양 산업에 미치는 영향은 무엇일까?</hypothetical_questions></image>

@@ -1,4 +1,4 @@
-<image name='p006/122-table.jpg'><title>
+<image name='p016/122-table.jpg'><title>
 정유소 공급 및 가격 정보
 </title>
 <details>

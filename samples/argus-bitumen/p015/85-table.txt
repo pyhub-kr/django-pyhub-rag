@@ -1,4 +1,4 @@
-<image name='p005/85-table.jpg'><title>
+<image name='p015/85-table.jpg'><title>
 이란 IME를 통한 수출 판매 현황 (16-21 마르)
 </title>
 <details>

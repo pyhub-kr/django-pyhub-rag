@@ -1,4 +1,4 @@
-<image name='p007/135-table.jpg'><title>
+<image name='p017/135-table.jpg'><title>
 비트루멘 화물 이동 현황
 </title>
 <details>

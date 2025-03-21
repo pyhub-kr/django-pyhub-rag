@@ -1,4 +1,4 @@
-<image name='p002/25-table.jpg'><title>
+<image name='p012/25-table.jpg'><title>
 아시아 비트멘 가격 (16-22 마르)
 </title>
 <details>

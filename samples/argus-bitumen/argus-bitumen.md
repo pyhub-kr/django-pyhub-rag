@@ -1103,7 +1103,7 @@ South Africa
 
 $/t
 
-![image](p001/13-chart.jpg)
+![image](p011/13-chart.jpg)
 - Chart Type: line
 |  | 7 Jul | 29 Sep | 22 Dec | 22 Mar |
 | --- | --- | --- | --- | --- |
@@ -1185,7 +1185,7 @@ Asia bitumen prices, 16-22 Mar
 
 Singapore pen 60/70 and HSFO cargoes
 
-![image](p002/27-chart.jpg)
+![image](p012/27-chart.jpg)
 - Chart Type: line
 |  | Jul | Sep | Dec | Mar |
 | --- | --- | --- | --- | --- |
@@ -1268,7 +1268,7 @@ India domestic V drum
 
 $/t
 
-![image](p003/44-chart.jpg)
+![image](p013/44-chart.jpg)
 - Chart Type: line
 |  | Jul 7 | Jul 29 | Sep 22 | Dec 22 | Mar 22 | Mumbai domestic |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -1380,7 +1380,7 @@ from the east China market. An Onsan-based refiner con-
 
 Singapore and Rayong waterborne
 
-![image](p004/70-chart.jpg)
+![image](p014/70-chart.jpg)
 - Chart Type: bar
 |  | 7 Jul | 29 Sep | 22 Dec | 22 Mar |
 | --- | --- | --- | --- | --- |
@@ -1491,7 +1491,7 @@ Buying indications from the key consuming southeast Asian
 
 Bandar Abbas: drums and bulk
 
-![image](p005/93-chart.jpg)
+![image](p015/93-chart.jpg)
 - Chart Type: line
 |  | 7 Jul | 29 Sep | 22 Dec | 22 Mar |
 | --- | --- | --- | --- | --- |
@@ -1792,7 +1792,7 @@ bitumen consumption fell to a seven year low in 2023.
 In its latest Annual Local Authority Road Maintenance
 (Alarm) survey of local government highways departments,
 
-![image](p008/157-figure.jpg)
+![image](p018/157-figure.jpg)
 argus
 argusmedia.com
 Argus Bitumen &
@@ -1856,7 +1856,7 @@ whether to buy or sell.
 Argus Asia Bitumen Daily will be provided to Argus Bitumen
 report subscribers.
 
-![image](p009/172-figure.jpg)
+![image](p019/172-figure.jpg)
 
 
 For more information, please contact
@@ -2055,7 +2055,7 @@ For any queries please contact Argus Bitumen report
 editor, Jonathan Weston, at bitumen@argusmedia.com
 or +44 (0) 20 4570 1230.
 
-![image](p001/06-figure.jpg)
+![image](p021/06-figure.jpg)
 
 
 # Argus Workspaces
@@ -2074,7 +2074,7 @@ together in one dashboard:
 - downloads
 
 
-![image](p001/11-figure.jpg)
+![image](p021/11-figure.jpg)
 
 
 Use the editorially curated 'Markets' dashboards, or

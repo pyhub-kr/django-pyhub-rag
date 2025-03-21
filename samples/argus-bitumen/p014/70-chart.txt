@@ -1,4 +1,4 @@
-<image name='p004/70-chart.jpg'><title>싱가포르와 태국의 60/70 수분 함유 펜 가격 추세</title>
+<image name='p014/70-chart.jpg'><title>싱가포르와 태국의 60/70 수분 함유 펜 가격 추세</title>
 <details>이 그래프는 2022년 7월부터 2023년 3월까지 싱가포르와 태국의 60/70 수분 함유 펜 가격 변화를 보여줍니다. 싱가포르의 가격은 500을 초과하는 반면, 태국의 가격은 400 근처에서 안정세를 보입니다.</details>
 <entities>싱가포르, 태국, 60/70 수분 함유 펜, 가격 변동</entities>
 <hypothetical_questions>1. 싱가포르와 태국의 가격 차이는 무엇에 기인할까? 2. 향후 가격 변동에 영향을 미칠 수 있는 외부 요인은 무엇일까? 3. 두 나라의 시장 상황이 서로에게 어떤 영향을 미칠 수 있을까?</hypothetical_questions></image>

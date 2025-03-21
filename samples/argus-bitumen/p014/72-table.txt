@@ -1,4 +1,4 @@
-<image name='p004/72-table.jpg'><title>
+<image name='p014/72-table.jpg'><title>
 호주 수입 화물 가격 (16-22 마르)
 </title>
 <details>
