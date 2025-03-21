@@ -379,6 +379,7 @@ def upstage(
                     batch_page_size=batch_page_size,
                     ignore_validation=True,
                 ):
+                    document.metadata.setdefault("source", input_path.name)
                     f.write(json_dumps(document) + "\n")
 
                     if unified_document_paths:
