@@ -14,7 +14,7 @@
   동일 API 요청에 대해 캐싱하여 API 요금을 절감합니다. 디폴트로 로컬에 파일로 캐싱되며, 추후 옵션 설정 만으로 외부 redis/db 서버를
   캐시 서버로 쓸 수 있습니다. 그러면 다른 유저와 캐싱된 API 응답을 공유할 수 있습니다.
 
-[명령 하나 만으로 PDF 문서 파싱하는 방법이 궁금하신가요? :wink:](./parser/upstage){ .md-button }
+[명령 하나 만으로 PDF 문서 파싱하는 방법이 궁금하신가요? :wink:](./parser/upstage-document-parse){ .md-button }
 
 
 ### 장고 모델에 Vector Store 통합

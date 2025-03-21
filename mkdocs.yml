@@ -3,7 +3,9 @@ site_name: django-pyhub-rag
 nav:
   - Home: index.md
   - Parser:
-      - parser/upstage.md
+      - 업스테이지 문서 파싱 API 활용:
+          - parser/upstage-document-parse/index.md
+          - parser/upstage-document-parse/simple-rag.md
   - Rag:
       - rag/vector-document.md
 # - LLM: llm.md
@@ -17,6 +19,9 @@ plugins:
   - blog:
       enabled: false
   - search
+
+extra_css:
+  - stylesheets/extra.css
 
 theme:
   name: material
@@ -44,6 +49,7 @@ theme:
     - content.code.annotate
     - content.code.copy
     - content.code.select
+    - content.tabs.link
     - navigation.footer
     - navigation.instant
     - navigation.instant.progress

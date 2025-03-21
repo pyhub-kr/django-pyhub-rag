@@ -36,7 +36,7 @@ publish: build
 
 docs:
 	uv pip install -e ".[docs]"
-	uv run mkdocs serve
+	uv run mkdocs serve --dev-addr localhost:8080
 
 docs-build:
 	uv pip install -e ".[docs]"
