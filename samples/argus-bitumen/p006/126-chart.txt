@@ -1,0 +1,4 @@
+<image name='p006/126-chart.jpg'><title>이탈리아 국내 연료 가격과 HSFO 중부 가격 비교</title>
+<details>이 그래프는 2022년 7월부터 2023년 3월까지의 이탈리아 국내 연료 가격과 HSFO(고유황 중유) 중부 가격의 변화를 보여줍니다. 이탈리아 국내 가격은 전반적으로 600을 넘는 수준에서 안정세를 보이고 있으며, HSFO 중부 가격은 400대에서 변동하고 있습니다.</details>
+<entities>이탈리아, HSFO(고유황 중유), 연료 가격</entities>
+<hypothetical_questions>이탈리아 국내 연료 가격의 안정성이 HSFO 중부 가격에 어떤 영향을 미칠까요? 두 가격의 차이가 향후 에너지 정책에 어떤 변화를 가져올 수 있을까요?</hypothetical_questions></image>

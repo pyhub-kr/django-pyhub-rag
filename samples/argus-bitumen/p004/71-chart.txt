@@ -1,0 +1,4 @@
+<image name='p004/71-chart.jpg'><title>독일 북부와 남부의 데이터 변화</title>
+<details>그래프는 7월부터 3월까지의 기간 동안 독일 북부와 남부의 데이터 변화를 보여줍니다. 북부 독일은 29일 9월에 최고점을 기록한 후 변동이 있었고, 남부 독일은 상대적으로 낮은 수치를 유지하고 있습니다.</details>
+<entities>독일, 북부 독일, 남부 독일, 날짜, 데이터 수치</entities>
+<hypothetical_questions>이 데이터 변화의 원인은 무엇일까요? 북부와 남부 독일의 경제적 차이는 이 그래프에 어떤 영향을 미쳤을까요? 향후 데이터 추세는 어떻게 변할 가능성이 있을까요?</hypothetical_questions></image>

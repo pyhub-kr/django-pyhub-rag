@@ -1,0 +1,14 @@
+<image name='p004/72-table.jpg'><title>
+호주 수입 화물 가격 (16-22 마르)
+</title>
+<details>
+표는 2023년 3월 16일부터 22일까지의 호주 수입 화물 가격을 보여줍니다. 태국 fob (Class 170)의 가격은 406~416달러, 태국 fob (Class 320)은 411~421달러, 싱가포르 fob (Class 170)은 409~419달러, 싱가포르 fob (Class 320)은 411~421달러입니다. 모든 항목의 변동폭은 -7.00달러입니다.
+</details>
+<entities>
+호주, 수입 화물 가격, 태국 fob, 싱가포르 fob, Class 170, Class 320, 저가, 고가, 변동폭
+</entities>
+<hypothetical_questions>
+- 태국과 싱가포르의 화물 가격 차이는 호주 시장에 어떤 영향을 미칠까요?
+- 가격 변동폭이 -7.00달러인 이유는 무엇일까요?
+- 향후 수입 화물 가격이 어떻게 변동할 가능성이 있나요?
+</hypothetical_questions></image>

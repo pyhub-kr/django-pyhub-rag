@@ -1,0 +1,13 @@
+<image name='p001/14-table.jpg'><title>
+Argus Workspaces 로그인 안내
+</title>
+<details>
+이 안내는 Argus Workspaces에 로그인하기 위한 정보를 제공합니다. 사용자는 "Click here" 버튼을 클릭하여 로그인할 수 있으며, 추가 정보가 필요할 경우 support@argusmedia.com으로 연락할 수 있습니다.
+</details>
+<entities>
+Argus Workspaces, 로그인, 지원 이메일, 추가 정보
+</entities>
+<hypothetical_questions>
+- Argus Workspaces에 로그인하는 과정에서 발생할 수 있는 일반적인 문제는 무엇인가요?
+- 사용자가 Argus Workspaces를 통해 얻을 수 있는 주요 이점은 무엇인가요?
+</hypothetical_questions></image>

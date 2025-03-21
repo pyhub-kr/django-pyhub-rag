@@ -1,0 +1,13 @@
+<image name='p006/132-table.jpg'><title>
+지중해 화물 운임 요율
+</title>
+<details>
+이 표는 지중해 지역의 화물 운임 요율을 보여줍니다. 최저 요율은 37$/t에서 62$/t 사이이며, 최고 요율은 39$/t에서 65$/t 사이입니다. 일부 항로에서는 요율 변동이 없거나(nc) 특정 금액이 감소했습니다.
+</details>
+<entities>
+화물 운임, 최저 요율, 최고 요율, Augusta-Mohammedia, Tarragona-Mohammedia, Augusta-Alexandria, Augusta-Tunis-Rades, Livorno-Tunis-Rades, Tarragona-Gazaouet, Asproyros-Corinth-Agio Theodori-Alexandria
+</entities>
+<hypothetical_questions>
+- 특정 항로의 운임이 감소한 이유는 무엇일까요?
+- 향후 화물 운임에 영향을 미칠 수 있는 외부 요인은 무엇일까요?
+</hypothetical_questions></image>

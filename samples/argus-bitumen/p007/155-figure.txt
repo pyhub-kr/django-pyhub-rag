@@ -1,0 +1,4 @@
+<image name='p007/155-figure.jpg'><title>아르구스 비투멘 및 아스팔트 유럽 컨퍼런스</title>
+<details>2024년 5월 13-14일, 스페인 마드리드에서 개최됩니다. 등록 마감일은 4월 12일이며, 조기 등록 시 €300 할인 혜택이 제공됩니다.</details>
+<entities>아르구스, 비투멘, 아스팔트, 유럽, 마드리드, 컨퍼런스, 등록 마감일, 할인 혜택</entities>
+<hypothetical_questions>이 컨퍼런스에서 다룰 주요 주제는 무엇일까요? 참석자들은 어떤 네트워킹 기회를 가질 수 있을까요? 비투멘 및 아스팔트 산업의 미래는 어떻게 변화할까요?</hypothetical_questions></image>

@@ -1,0 +1,4 @@
+<image name='p010/219-chart.jpg'><title>주가 변동 추세</title>
+<details>이 그래프는 7월 7일부터 3월 22일까지의 주가 변동을 나타내며, 전반적으로 하락세를 보이고 있다. 최고점은 약 260에서 시작하여, 최저점은 200 근처에 도달한다.</details>
+<entities>주가, 날짜, 하락세</entities>
+<hypothetical_questions>이 주가 하락의 주요 원인은 무엇일까? 향후 주가는 어떻게 변동할 가능성이 있을까? 이 데이터를 기반으로 투자 결정을 내릴 때 어떤 요소를 고려해야 할까?</hypothetical_questions></image>

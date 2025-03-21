@@ -1,0 +1,13 @@
+<image name='p006/122-table.jpg'><title>
+정유소 공급 및 가격 정보
+</title>
+<details>
+표는 여러 정유소의 공급 상태와 가격 정보를 보여줍니다. 모든 정유소에서 공급이 없으며, 가격은 모두 0 리얄/kg 및 0 $/t입니다.
+</details>
+<entities>
+정유소, 공급, 리얄/kg, $/t, Bandar Abbas, Esfahan, Shiraz, Tehran, Tabriz, Abadan, Arak
+</entities>
+<hypothetical_questions>
+- 공급이 없는 이유는 무엇일까요?
+- 향후 공급이 재개될 경우 가격 변동은 어떻게 될까요?
+</hypothetical_questions></image>

@@ -1,4 +1,0 @@
-<image name='chart/16.jpg'><title>북해 및 로테르담 국내 가격 추세</title>
-<details>이 그래프는 7월부터 3월까지의 북해 가격과 로테르담 국내 가격의 변화를 보여줍니다. 북해 가격은 전반적으로 상승세를 보였으며, 로테르담 가격은 상대적으로 안정적인 흐름을 유지했습니다.</details>
-<entities>북해, 로테르담, 가격 추세</entities>
-<hypothetical_questions>1. 북해 가격 상승의 주요 원인은 무엇일까요? 2. 로테르담 가격이 안정적인 이유는 무엇일까요? 3. 향후 가격 변동이 시장에 미치는 영향은 어떻게 될까요?</hypothetical_questions></image>

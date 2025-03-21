@@ -1,0 +1,13 @@
+<image name='p006/124-table.jpg'><title>
+이란 IME를 통한 국내 판매 현황 (16-21 마르스)
+</title>
+<details>
+표는 이란 IME를 통한 2023년 3월 16일부터 21일까지의 국내 판매 현황을 보여줍니다. 60/70 등급의 판매량은 100이며, 가격은 131,462입니다. 나머지 등급은 공급이 없습니다.
+</details>
+<entities>
+60/70, 40/50, 85/100, Emulsion, PG6422, MC250, Volume, Price
+</entities>
+<hypothetical_questions>
+- 60/70 등급의 판매량이 향후 어떻게 변화할 가능성이 있는가?
+- 공급이 없는 다른 등급의 제품들은 어떤 이유로 시장에서 부족할까?
+</hypothetical_questions></image>

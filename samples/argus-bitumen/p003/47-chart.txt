@@ -1,0 +1,4 @@
+<image name='p003/47-chart.jpg'><title>유럽 주요 항구의 FOB 가격 변화</title>
+<details>2022년 10월 20일부터 2023년 3월 22일까지의 기간 동안 로테르담, 발틱, 지중해의 FOB 가격 변화를 나타내는 그래프입니다. 로테르담 FOB 가격이 가장 높고, 발틱과 지중해 FOB 가격은 상대적으로 낮은 수준을 유지하고 있습니다.</details>
+<entities>로테르담, 발틱, 지중해, FOB 가격</entities>
+<hypothetical_questions>1. 로테르담의 FOB 가격 상승 원인은 무엇일까? 2. 발틱과 지중해의 FOB 가격이 낮은 이유는 무엇일까? 3. 향후 FOB 가격 변화가 유럽의 무역에 미치는 영향은 무엇일까?</hypothetical_questions></image>

@@ -1,0 +1,4 @@
+<image name='p001/13-chart.jpg'><title>연간 데이터 추세 그래프</title>
+<details>이 그래프는 특정 기간 동안의 수치 변화를 나타내며, 7월부터 3월까지의 데이터가 포함되어 있습니다. 수치는 650에서 900 사이에서 변동하며, 전반적으로 하락세를 보이고 있습니다.</details>
+<entities>수치 데이터, 시간 축, 그래프</entities>
+<hypothetical_questions>이 데이터의 변화는 어떤 외부 요인에 의해 영향을 받았을까요? 이 추세가 계속된다면 향후 어떤 결과를 초래할 수 있을까요?</hypothetical_questions></image>

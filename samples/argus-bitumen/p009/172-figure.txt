@@ -1,0 +1,4 @@
+<image name='p009/172-figure.jpg'><title>구불구불한 도로와 일몰</title>
+<details>이 이미지는 구불구불한 도로와 그 주위의 나무들, 그리고 일몰의 아름다운 경관을 보여줍니다. 도로는 부드럽게 휘어져 있으며, 따뜻한 색조의 하늘이 인상적입니다.</details>
+<entities>도로, 나무, 일몰, 구름</entities>
+<hypothetical_questions>이 도로는 어떤 장소로 이어질까요? 이 경치를 감상하는 사람들은 어떤 감정을 느낄까요? 이 지역의 생태계는 어떻게 유지되고 있을까요?</hypothetical_questions></image>

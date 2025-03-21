@@ -1,0 +1,13 @@
+<image name='p003/53-table.jpg'><title>
+주간 에너지 가격 지표
+</title>
+<details>
+표는 주간 에너지 가격 지표를 나타냅니다. Ice Brent의 주간 범위는 $85.50에서 $87.31 사이이며 평균은 $86.128입니다. 3.5% 연료유는 $461.00에서 $476.25 사이로 평균 $467.150입니다. Argus Brent Sour는 $82.64에서 $82.70 사이이며, Vacuum gasoil은 $701.00에서 $716.75 사이로 평균 $708.875입니다.
+</details>
+<entities>
+Ice Brent, 연료유 3.5%, Argus Brent Sour, Vacuum gasoil, 가격 범위, 평균 가격
+</entities>
+<hypothetical_questions>
+- 에너지 가격의 변동성이 시장에 미치는 영향은 무엇인가요?
+- 향후 몇 주간 가격이 상승할 가능성은 얼마나 될까요?
+</hypothetical_questions></image>

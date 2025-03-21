@@ -66,11 +66,11 @@ PRICES
 | Mumbai | bulk | 499.00 | 502.00 | -8.50 |
 
 
-North Sea Dated VS Rotterdam domestic
+North Sea Dated vs Rotterdam domestic
 
 $/bl
 
-![image](chart/16.jpg)
+![image](p001/16-chart.jpg)
 - Chart Type: line
 |  | Jul 7 | Jul 29 | Sep 29 | Dec 22 | Mar 22 | North Sea Dated 10 | Rotterdam domestic |
 | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -96,7 +96,7 @@ Issue 24-12  Friday 22 March 2024
 
 # WATERBORNE BITUMEN PRICES, FOB
 
-![image](figure/3.jpg)
+![image](p002/24-figure.jpg)
 Rotterdam
 $485/t Italy Baltic
 $456/t $472/t
@@ -146,7 +146,7 @@ Waterborne markets, differential to HSFO
 
 $/t
 
-![image](chart/10.jpg)
+![image](p002/31-chart.jpg)
 - Chart Type: bar
 |  | 14 Apr 23 | 4 Aug 23 | 24 Nov 23 | 22 Mar 24 | Rotterdam | Italy | Spain | Greece | Ivory Coast |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -216,7 +216,7 @@ Recent drone strikes on Russian refineries were badly
 
 Rotterdam V Baltic V Med (outright waterborne) $/t
 
-![image](chart/12.jpg)
+![image](p003/47-chart.jpg)
 - Chart Type: line
 |  | 20 Oct | 8 Dec | 2 Feb | 22 Mar |
 | --- | --- | --- | --- | --- |
@@ -333,7 +333,7 @@ men supply.
 
 Germany: North VS South
 
-![image](chart/14.jpg)
+![image](p004/71-chart.jpg)
 - Chart Type: line
 |  | 7 Jul | 29 Sep | 22 Dec | 22 Mar |
 | --- | --- | --- | --- | --- |
@@ -446,7 +446,7 @@ ery in Bulgaria on 25 March.
 
 Hungary and Romania domestic
 
-![image](chart/12.jpg)
+![image](p005/100-chart.jpg)
 - Chart Type: line
 |  | 7 Jul | 29 Sep | 22 Dec | 22 Mar |
 | --- | --- | --- | --- | --- |
@@ -559,7 +559,7 @@ northwest Europe.
 
 Italy domestic and Mediterranean HSFO fob cargoes $/t
 
-![image](chart/11.jpg)
+![image](p006/126-chart.jpg)
 - Chart Type: line
 |  | Jul | Aug | Sep | Oct | Nov | Dec | Jan | Feb | Mar | Apr | May | Jun |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -713,7 +713,7 @@ ex-works, while Spanish fob bitumen cargo differentials to
 fob Mediterranean HSFO cargoes were still assessed at dis-
 counts of $5-10/t.
 
-![image](figure/20.jpg)
+![image](p007/155-figure.jpg)
 argus
 argusmedia.com
 Argus Bitumen &
@@ -873,7 +873,7 @@ ed values for delivered prices into Nigerian and Ghanaian im-
 
 Tanzania, cfr Dar es Salaam drums
 
-![image](chart/12.jpg)
+![image](p009/193-chart.jpg)
 - Chart Type: line
 |  | 7 Jul | 29 Sep | 22 Dec | 22 Mar |
 | --- | --- | --- | --- | --- |
@@ -996,7 +996,7 @@ several weeks.
 
 West Africa cargo cfr- Med HSFO fob cargoes
 
-![image](chart/13.jpg)
+![image](p010/219-chart.jpg)
 - Chart Type: line
 |  | 7 Jul | 29 Sep | 22 Dec | 22 Mar |
 | --- | --- | --- | --- | --- |
@@ -1103,7 +1103,7 @@ South Africa
 
 $/t
 
-![image](chart/13.jpg)
+![image](p001/13-chart.jpg)
 - Chart Type: line
 |  | 7 Jul | 29 Sep | 22 Dec | 22 Mar |
 | --- | --- | --- | --- | --- |
@@ -1185,7 +1185,7 @@ Asia bitumen prices, 16-22 Mar
 
 Singapore pen 60/70 and HSFO cargoes
 
-![image](chart/11.jpg)
+![image](p002/27-chart.jpg)
 - Chart Type: line
 |  | Jul | Sep | Dec | Mar |
 | --- | --- | --- | --- | --- |
@@ -1268,7 +1268,7 @@ India domestic V drum
 
 $/t
 
-![image](chart/12.jpg)
+![image](p003/44-chart.jpg)
 - Chart Type: line
 |  | Jul 7 | Jul 29 | Sep 22 | Dec 22 | Mar 22 | Mumbai domestic |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -1380,7 +1380,7 @@ from the east China market. An Onsan-based refiner con-
 
 Singapore and Rayong waterborne
 
-![image](chart/13.jpg)
+![image](p004/70-chart.jpg)
 - Chart Type: bar
 |  | 7 Jul | 29 Sep | 22 Dec | 22 Mar |
 | --- | --- | --- | --- | --- |
@@ -1491,7 +1491,7 @@ Buying indications from the key consuming southeast Asian
 
 Bandar Abbas: drums and bulk
 
-![image](chart/11.jpg)
+![image](p005/93-chart.jpg)
 - Chart Type: line
 |  | 7 Jul | 29 Sep | 22 Dec | 22 Mar |
 | --- | --- | --- | --- | --- |
@@ -1792,7 +1792,7 @@ bitumen consumption fell to a seven year low in 2023.
 In its latest Annual Local Authority Road Maintenance
 (Alarm) survey of local government highways departments,
 
-![image](figure/19.jpg)
+![image](p008/157-figure.jpg)
 argus
 argusmedia.com
 Argus Bitumen &
@@ -1856,7 +1856,7 @@ whether to buy or sell.
 Argus Asia Bitumen Daily will be provided to Argus Bitumen
 report subscribers.
 
-![image](figure/11.jpg)
+![image](p009/172-figure.jpg)
 
 
 For more information, please contact
@@ -2055,7 +2055,7 @@ For any queries please contact Argus Bitumen report
 editor, Jonathan Weston, at bitumen@argusmedia.com
 or +44 (0) 20 4570 1230.
 
-![image](figure/6.jpg)
+![image](p001/06-figure.jpg)
 
 
 # Argus Workspaces
@@ -2074,7 +2074,7 @@ together in one dashboard:
 - downloads
 
 
-![image](figure/11.jpg)
+![image](p001/11-figure.jpg)
 
 
 Use the editorially curated 'Markets' dashboards, or

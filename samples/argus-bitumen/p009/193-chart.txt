@@ -1,0 +1,4 @@
+<image name='p009/193-chart.jpg'><title>주가 변동 그래프</title>
+<details>이 그래프는 7월부터 3월까지의 주가 변동을 나타내며, 주가는 400에서 470 사이에서 변동하고 있습니다. 주가는 여러 차례의 상승과 하락을 겪으며, 특히 12월과 3월에 하락세를 보입니다.</details>
+<entities>주가, 날짜, 변동 추세</entities>
+<hypothetical_questions>이 주가 변동의 주요 원인은 무엇일까? 향후 주가는 어떻게 변동할 가능성이 있을까? 특정 사건이나 경제 지표가 주가에 미친 영향은 무엇일까?</hypothetical_questions></image>

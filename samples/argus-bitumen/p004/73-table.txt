@@ -1,0 +1,13 @@
+<image name='p004/73-table.jpg'><title>
+중동 걸프에서 인도로의 화물 요금
+</title>
+<details>
+표는 중동 걸프에서 인도로의 화물 요금을 보여줍니다. 드럼 화물의 요금은 23~28달러, 벌크 화물은 70~90달러로 나타납니다. 하르디아와 뭄바이의 벌크 화물 요금은 각각 105~115달러와 75~85달러입니다.
+</details>
+<entities>
+화물 요금, 드럼, 벌크, Bandar Abbas, Nhava Sheva, Mundra, Karwar, Haldia, Mumbai, Mangalore
+</entities>
+<hypothetical_questions>
+- 중동 걸프에서 인도로의 화물 요금이 증가하면 어떤 경제적 영향을 미칠까요?
+- 드럼 화물과 벌크 화물의 요금 차이는 무엇을 의미할까요?
+</hypothetical_questions></image>

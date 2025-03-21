@@ -1,0 +1,15 @@
+<image name='p005/85-table.jpg'><title>
+이란 IME를 통한 수출 판매 현황 (16-21 마르)
+</title>
+<details>
+표는 이란의 IME를 통한 수출 판매 현황을 보여줍니다. 
+- Pen 60/70 등급의 Jerry Oil이 2,000kg의 드럼 포장으로 164,500 가격에 판매되었습니다.
+- 동일 등급의 Jerry Oil이 11,000kg의 벌크 포장으로 131,300 가격에 판매되었습니다.
+</details>
+<entities>
+Pen 60/70, Jerry Oil, 2,000kg, 드럼 포장, 164,500, 11,000kg, 벌크 포장, 131,300
+</entities>
+<hypothetical_questions>
+- 드럼 포장과 벌크 포장 중 어떤 방식이 더 경제적일까요?
+- 향후 수출 가격이 어떻게 변동할 가능성이 있을까요?
+</hypothetical_questions></image>

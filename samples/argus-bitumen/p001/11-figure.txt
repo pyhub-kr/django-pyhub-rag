@@ -1,0 +1,4 @@
+<image name='p001/11-figure.jpg'><title>노트북 화면의 데이터 분석 인터페이스</title>
+<details>이 이미지는 데이터 분석 소프트웨어의 사용자 인터페이스를 보여줍니다. 화면에는 다양한 데이터 테이블과 그래프가 표시되어 있으며, 특정 데이터 항목에 대한 세부 정보가 강조되어 있습니다.</details>
+<entities>노트북, 데이터 분석 소프트웨어, 데이터 테이블, 그래프</entities>
+<hypothetical_questions>이 데이터 분석 소프트웨어는 어떤 산업에서 가장 유용할까요? 사용자가 이 데이터를 통해 어떤 인사이트를 얻을 수 있을까요? 데이터 시각화의 중요성은 무엇인가요?</hypothetical_questions></image>
