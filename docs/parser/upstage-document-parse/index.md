@@ -3,7 +3,7 @@ search:
   boost: 2
 ---
 
-# 업스테이지 Document Parse API 활용
+# 업스테이지 API 활용하여, 명령 한 방에 PDF 변환하기
 
 ## API Key 획득 및 저장
 
