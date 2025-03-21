@@ -368,7 +368,7 @@ class UpstageDocumentParseParser:
                     merger.write(buffer)
                     buffer.seek(0)
                     response_obj = await self._call_document_parse_api({"document": buffer})
-                    async for element in self._response_to_elements(response_obj, total_pages):
+                    async for element in self._response_to_elements(response_obj, total_pages, start_page_index):
                         if element.category in self.ignore_element_category_list:
                             content_s = getattr(element.content, self.document_format)
                             content_preview = content_s[:100] + ("..." if len(content_s) > 100 else "")
@@ -383,7 +383,7 @@ class UpstageDocumentParseParser:
 
         else:
             response_obj = await self._call_document_parse_api({"document": file})
-            async for element in self._response_to_elements(response_obj, total_pages):
+            async for element in self._response_to_elements(response_obj, total_pages, 0):
                 if element.category in self.ignore_element_category_list:
                     content_s = getattr(element.content, self.document_format)
                     content_preview = content_s[:100] + ("..." if len(content_s) > 100 else "")
@@ -437,7 +437,12 @@ class UpstageDocumentParseParser:
         except Exception as e:
             raise ValueError(str(e)) from e
 
-    async def _response_to_elements(self, response_obj: dict, total_pages: int) -> AsyncGenerator[Element, None]:
+    async def _response_to_elements(
+        self,
+        response_obj: dict,
+        total_pages: int,
+        start_page_index: int = 0,
+    ) -> AsyncGenerator[Element, None]:
         """
         API 응답 객체를 파싱하여 Element 객체들을 생성하는 비동기 제너레이터입니다.
 
@@ -467,7 +472,7 @@ class UpstageDocumentParseParser:
         for bare_element in bare_element_list:
             element = Element(
                 id=bare_element["id"],
-                page=bare_element["page"],
+                page=bare_element["page"] + start_page_index,
                 total_pages=total_pages,
                 category=bare_element["category"],
                 content=ElementContent(

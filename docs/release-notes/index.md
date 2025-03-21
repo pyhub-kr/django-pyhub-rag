@@ -1,5 +1,9 @@
 # 릴리즈 노트
 
+## 1.0.6
+
++ `metadata['page']`에 전체 페이지 주소를 반영
+
 ## 1.0.5
 
 + `pyhub.parser upstage` 명령 : `metadata["source"]` 항목에 PDF 파일명 추가
