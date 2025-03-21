@@ -54,13 +54,13 @@ OPENAI_API_KEY=sk-...
 
 `~/.pyhub.env` 가 아니라 시스템/유저 환경변수로 등록되어있어도 동작합니다.
 
-![](../assets/01_pyhub_env.png)
+![](../../assets/01_pyhub_env.png)
 
 ## 가상환경 생성 및 활성화 
 
 다른 라이브러리와 충돌을 막기 위해, 가상환경을 먼저 생성하시고 활성화해주세요.
 
-![](../assets/02_venv.png)
+![](../../assets/02_venv.png)
 
 ## 라이브러리 설치
 
@@ -70,7 +70,7 @@ OPENAI_API_KEY=sk-...
 python -m pip install --upgrade 'django-pyhub-rag[parser]'
 ```
 
-![](../assets/03_package_install.png)
+![](../../assets/03_package_install.png)
 
 ## 설치 확인
 
@@ -89,7 +89,7 @@ python -m pyhub.parser upstage --help
 uv run -m pyhub.parser upstage --help
 ```
 
-![](../assets/04_package_install_complete.png)
+![](../../assets/04_package_install_complete.png)
 
 그리고, 변환할 PDF 파일을 하나 준비해주세요.
 
@@ -107,11 +107,11 @@ PDF 파일 경로를 지정하시면 즉시 PDF 문서 파싱이 수행되고 `.
 pyhub.parser upstage ./argus-bitumen.pdf
 ```
 
-![](../assets/05_gen_1.png)
+![](../../assets/05_gen_1.png)
 
 명령이 성공적으로 수행되었습니다.
 
-![](../assets/06_gen_2.png)
+![](../../assets/06_gen_2.png)
 
 이때 `UPSTAGE_API_KEY`에 문제가 있다면 다음의 에러 메시지를 만나시게 됩니다.
 `~/.pyhub.env` 파일에서 `UPSTAGE_API_KEY` 설정을 확인해주세요. 등호 `=` 앞 뒤로 절대 띄워쓰기를 쓰시면 안 됩니다.
@@ -130,9 +130,9 @@ pyhub.parser upstage ./argus-bitumen.pdf
       Update Document Parse에서 생성해준 Element 단위로 `Document`가 생성됩니다.
 + 그리고, 통합문서로서 `.md`, `.html`, `.md` 문서가 자동 생성되며, `.md`, `.html` 파일에는 이미지 링크가 자동으로 걸립니다.
 
-![](../assets/07_file_list_1.png)
+![](../../assets/07_file_list_1.png)
 
-![](../assets/08_file_list_2.png)
+![](../../assets/08_file_list_2.png)
 
 생성된 `./output/argus-bitumen.jsonl` 파일의 `metadata`는 아래와 같습니다.
 
@@ -145,7 +145,7 @@ pyhub.parser upstage ./argus-bitumen.pdf
 
 `--verbose` 옵션을 적용하시면, 각종 설정 및 수행내역을 자세히 확인하실 수 있습니다.
 
-![](../assets/09_verbose.png)
+![](../../assets/09_verbose.png)
 
 
 ## 이미지 설명 생성하기
@@ -160,7 +160,7 @@ pyhub.parser upstage -i ./argus-bitumen.pdf
 아래 스크린샷에서 `-f` 옵션은 `output` 폴더가 있더라도 제거하고 강제로 재생성하는 옵션입니다. `-f` 옵션을 붙이지 않으면 `output` 폴더가 있을 경우
 진행유무를 물어봅니다.
 
-![](../assets/10_image_descriptions.png)
+![](../../assets/10_image_descriptions.png)
 
 `argus-bitumen.pdf` 파일에 대한 `Upstage Document Parse` API가 이미 호출했었기에,
 지금 다시 명령을 수행하더라도 `Upstage Document Parse` API 호출을 다시 하지 않고, 로컬에 파일로 캐싱된 API 응답을 활용합니다.
@@ -169,13 +169,13 @@ pyhub.parser upstage -i ./argus-bitumen.pdf
 각 이미지에 대해서 `OpenAI`, `gpt-4o-mini` API 호출은 처음이기에, 각 이미지 별로 `OpenAI` API 호출이 순차적으로 이뤄집니다.
 수행이 끝나면 아래와 같이 각 이미지 파일과 함께 설명 파일을 확인하실 수 있습니다.
 
-![](../assets/11_file_list_1.png)
+![](../../assets/11_file_list_1.png)
 
-![](../assets/12_file_list_2.png)
+![](../../assets/12_file_list_2.png)
 
 생성된 `.jsonl` 파일에서는 이렇게 이미지 링크가 설명이 잘 생성되어있음을 확인하실 수 있습니다.
 
-![](../assets/13_jsonl_image_descriptions.png)
+![](../../assets/13_jsonl_image_descriptions.png)
 
 디폴트로 로컬 머신에 `upstage`/`openai`/`anthropic`/`google`/`ollama` API 요청 내역을 캐싱합니다.
 방금 수행한 `pyhub.parser upstage -i ./argus-bitumen.pdf` 명령을 다시 수행해보시면
@@ -191,7 +191,7 @@ pyhub.parser upstage -i ./argus-bitumen.pdf
 
 보다 자세한 옵션은 `--help` 도움말을 참고해주세요.
 
-![](../assets/14_help.png)
+![](../../assets/14_help.png)
 
 
 ## 감사합니다. :smile:
