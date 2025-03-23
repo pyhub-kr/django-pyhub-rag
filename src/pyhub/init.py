@@ -159,9 +159,9 @@ def make_settings(
             "version": 1,
             "disable_existing_loggers": True,
             "filters": {
-                "require_debug_true": {
-                    "()": "django.utils.log.RequireDebugTrue",
-                },
+                # "require_debug_true": {
+                #     "()": "django.utils.log.RequireDebugTrue",
+                # },
             },
             "formatters": {
                 "color": {
@@ -179,7 +179,7 @@ def make_settings(
                 "debug_console": {
                     "level": "DEBUG",
                     "class": "logging.StreamHandler",
-                    "filters": ["require_debug_true"],
+                    # "filters": ["require_debug_true"],
                     "formatter": "color",
                 },
             },
@@ -301,11 +301,15 @@ def load_envs(env_path: Optional[Union[str, Path]] = None, overwrite: bool = Tru
             pass
 
 
-def init(debug: bool = False, log_level: int = logging.INFO, env_path: Optional[Path] = None):
+def init(
+    debug: bool = False,
+    log_level: Optional[int] = None,
+    env_path: Optional[Path] = None,
+):
+    load_envs(env_path)
+
     if not django.conf.settings.configured:
         pyhub_settings = make_settings(debug=debug, log_level=log_level)
         settings.configure(**pyhub_settings.to_dict())
         django.setup()
         logging.debug("Django 환경이 초기화되었습니다.")
-
-    load_envs(env_path)

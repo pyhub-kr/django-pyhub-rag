@@ -107,6 +107,7 @@ class UpstageDocumentParseParser:
         api_url: str = DOCUMENT_PARSE_API_URL,
         model: str = DOCUMENT_PARSE_DEFAULT_MODEL,
         split: DocumentSplitStrategyType = "page",
+        pages: Optional[list[int]] = None,
         start_page: int = 1,
         max_page: Optional[int] = None,
         image_descriptor: ImageDescriptor = None,
@@ -135,6 +136,7 @@ class UpstageDocumentParseParser:
                                          - "none": 분할 없음, 전체 문서를 단일 청크로 반환합니다.
                                          - "page": 문서를 페이지별로 분할합니다.
                                          - "element": 문서를 개별 요소(단락, 표 등)로 분할합니다.
+            pages (list[int], optional): 처리할 페이지 번호 리스트
             start_page (int, optional): 시작 페이지 번호
             max_page (int, optional): 처리할 최대 페이지 수.
                                       None은 모든 페이지를 처리함을 의미합니다. 기본값은 None입니다.
@@ -161,6 +163,7 @@ class UpstageDocumentParseParser:
         self.api_url = api_url
         self.model = model
         self.split = split
+        self.pages = pages
         self.start_page = start_page
         self.max_page = max_page
         self.image_descriptor = image_descriptor
@@ -343,43 +346,69 @@ class UpstageDocumentParseParser:
             )
 
         if is_pdf:
-            start_page_index = max(0, self.start_page - 1)  # self.start_page 이상 범위에서 시작
-            while start_page_index < total_pages:
-                # 실제로 처리할 페이지 수 계산 (남은 페이지와 batch_page_size 중 작은 값)
-                pages_to_process = min(batch_page_size, total_pages - start_page_index)
-                end_page_index = start_page_index + pages_to_process - 1
+            # pages 인자가 있는 경우 해당 페이지들만 처리
+            if self.pages:
+                # 유효한 페이지 번호만 필터링 (1-based 페이지 번호를 0-based 인덱스로 변환)
+                valid_pages = [p - 1 for p in self.pages if 0 <= p - 1 < total_pages]
+                logger.info("변환할 페이지 : %s", ", ".join(map(str, self.pages)))
 
-                if start_page_index == end_page_index:
-                    logger.debug("%d / %d 페이지", start_page_index + 1, total_pages)
-                else:
-                    logger.debug(
-                        "%d~%d / %d 페이지",
-                        start_page_index + 1,
-                        end_page_index + 1,
-                        total_pages,
+                for page_index in valid_pages:
+                    logger.info("%d 페이지 변환", page_index + 1)
+
+                    merger = PdfWriter()
+                    merger.append(full_docs, pages=(page_index, page_index + 1))
+                    with io.BytesIO() as buffer:
+                        merger.write(buffer)
+                        buffer.seek(0)
+                        response_obj = await self._call_document_parse_api({"document": buffer})
+                        async for element in self._response_to_elements(response_obj, total_pages, page_index):
+                            if element.category in self.ignore_element_category_list:
+                                content_s = getattr(element.content, self.document_format)
+                                content_preview = content_s[:100] + ("..." if len(content_s) > 100 else "")
+                                logger.debug(
+                                    "Ignore element category : %s, content: %s", element.category, repr(content_preview)
+                                )
+                            else:
+                                yield element
+
+            else:  # pages 인자가 없는 경우 기존 로직 수행
+                start_page_index = max(0, self.start_page - 1)
+                while start_page_index < total_pages:
+                    # 실제로 처리할 페이지 수 계산 (남은 페이지와 batch_page_size 중 작은 값)
+                    pages_to_process = min(batch_page_size, total_pages - start_page_index)
+                    end_page_index = start_page_index + pages_to_process - 1
+
+                    if start_page_index == end_page_index:
+                        logger.debug("%d / %d 페이지", start_page_index + 1, total_pages)
+                    else:
+                        logger.debug(
+                            "%d~%d / %d 페이지",
+                            start_page_index + 1,
+                            end_page_index + 1,
+                            total_pages,
+                        )
+
+                    merger = PdfWriter()
+                    merger.append(
+                        full_docs,
+                        pages=(start_page_index, min(start_page_index + pages_to_process, len(full_docs.pages))),
                     )
+                    with io.BytesIO() as buffer:
+                        merger.write(buffer)
+                        buffer.seek(0)
+                        response_obj = await self._call_document_parse_api({"document": buffer})
+                        async for element in self._response_to_elements(response_obj, total_pages, start_page_index):
+                            if element.category in self.ignore_element_category_list:
+                                content_s = getattr(element.content, self.document_format)
+                                content_preview = content_s[:100] + ("..." if len(content_s) > 100 else "")
+                                logger.debug(
+                                    "Ignore element category : %s, content: %s", element.category, repr(content_preview)
+                                )
+                            else:
+                                element.page += start_page_index
+                                yield element
 
-                merger = PdfWriter()
-                merger.append(
-                    full_docs,
-                    pages=(start_page_index, min(start_page_index + pages_to_process, len(full_docs.pages))),
-                )
-                with io.BytesIO() as buffer:
-                    merger.write(buffer)
-                    buffer.seek(0)
-                    response_obj = await self._call_document_parse_api({"document": buffer})
-                    async for element in self._response_to_elements(response_obj, total_pages, start_page_index):
-                        if element.category in self.ignore_element_category_list:
-                            content_s = getattr(element.content, self.document_format)
-                            content_preview = content_s[:100] + ("..." if len(content_s) > 100 else "")
-                            logger.debug(
-                                "Ignore element category : %s, content: %s", element.category, repr(content_preview)
-                            )
-                        else:
-                            element.page += start_page_index
-                            yield element
-
-                start_page_index += pages_to_process
+                    start_page_index += pages_to_process
 
         else:
             response_obj = await self._call_document_parse_api({"document": file})

@@ -3,7 +3,7 @@ import os
 import re
 from pathlib import Path
 from shutil import rmtree
-from typing import List, Optional, Union, cast
+from typing import Optional, Union, cast
 
 import typer
 from django.core.exceptions import ValidationError
@@ -85,6 +85,12 @@ def upstage(
             f"하나의 API 호출당 최대 {MAX_BATCH_PAGE_SIZE} 페이지까지 지원합니다. "
             f"{MAX_BATCH_PAGE_SIZE}페이지를 초과하는 PDF 파일에는 이 설정이 꼭 필요합니다."
         ),
+    ),
+    pages: Optional[str] = typer.Option(
+        None,
+        "--pages",
+        help="처리할 특정 페이지 번호들 (쉼표나 공백으로 구분). 예: '1,2,3' 또는 '1 2 3' (PDF 변환에서만 적용)",
+        callback=lambda x: validate_pages(x),
     ),
     start_page: int = typer.Option(
         1,
@@ -194,8 +200,8 @@ def upstage(
         console.print(get_version())
         raise typer.Exit()
 
-    base_dir = ""
-    init(debug=True, env_path=env_path)
+    log_level = logging.DEBUG if is_verbose else logging.INFO
+    init(debug=True, log_level=log_level, env_path=env_path)
 
     if upstage_api_key is None:
         upstage_api_key = os.environ.get("UPSTAGE_API_KEY")
@@ -318,6 +324,7 @@ def upstage(
     parser = UpstageDocumentParseParser(
         upstage_api_key=upstage_api_key,
         split=document_split_strategy.value,
+        pages=pages,
         start_page=start_page,
         max_page=max_page,
         image_descriptor=image_descriptor,
@@ -432,7 +439,7 @@ def validate_language(value: str) -> Union[LanguageEnum, str]:
         return value
 
 
-def validate_output_formats(formats_str: str) -> List[DocumentFormatEnum]:
+def validate_output_formats(formats_str: str) -> list[DocumentFormatEnum]:
     """Validates and converts comma-separated format strings to DocumentFormatEnum list."""
     if not formats_str:
         return []
@@ -470,3 +477,24 @@ def validate_url(url: Optional[str]) -> Optional[str]:
         validator(url)
     except ValidationError:
         raise typer.BadParameter(f"Invalid URL Pattern : {url}")
+
+
+def validate_pages(pages_str: Optional[str]) -> Optional[list[int]]:
+    """페이지 번호 문자열을 파싱하여 유효한 페이지 번호 리스트를 반환합니다."""
+    if not pages_str:
+        return None
+
+    # 숫자만 추출 (쉼표나 공백으로 구분된 숫자들)
+    numbers = re.findall(r"\d+", pages_str)
+
+    if not numbers:
+        raise typer.BadParameter("유효한 페이지 번호가 없습니다. 예시: '1,2,3' 또는 '1 2 3'")
+
+    # 문자열을 정수로 변환하고 중복 제거
+    pages = sorted(set(int(num) for num in numbers))
+
+    # 페이지 번호가 1 이상인지 확인
+    if any(page < 1 for page in pages):
+        raise typer.BadParameter("페이지 번호는 1 이상이어야 합니다.")
+
+    return pages
