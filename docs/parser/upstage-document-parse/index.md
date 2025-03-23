@@ -115,8 +115,6 @@ pyhub.parser upstage ./argus-bitumen.pdf
 
 명령이 성공적으로 수행되었습니다.
 
-![](../../assets/06_gen_2.png)
-
 이때 `UPSTAGE_API_KEY`에 문제가 있다면 다음의 에러 메시지를 만나시게 됩니다.
 `~/.pyhub.env` 파일에서 `UPSTAGE_API_KEY` 설정을 확인해주세요. 등호 `=` 앞 뒤로 절대 띄워쓰기를 쓰시면 안 됩니다.
 혹은 `upstage` 명령에서 `--upstage-api-key` 인자로 API Key를 지정하실 수도 있습니다.
@@ -126,24 +124,56 @@ pyhub.parser upstage ./argus-bitumen.pdf
 (https://console.upstage.ai/docs/getting-started/overview)","type":"invalid_request_error","param":"","code":"invalid_api_key"}}
 ```
 
-`output/` 폴더 경로에
+`output/` 폴더 경로에 페이지 번호의 폴더 별로 Upstage Document Parse로부터 추출된 이미지가 모두 저장되며
+`argus-bitumen.jsonl` (PDF 파일명을 따릅니다.) 경로에 Vector Store에 즉시 저장하실 수 있도록 `Document(page_content, metadata)` 포맷의 `jsonl` 파일로 생성됩니다.
+그리고, 통합문서로서 `.md`, `.html`, `.md` 문서가 자동 생성되며, `.md`, `.html` 파일에는 이미지 링크가 자동으로 걸립니다.
 
-+ `chart`, `figure`, `table` 각 폴더에 Upstage Document Parse로부터 추출된 이미지가 모두 저장되며
-+ `argus-bitumen.jsonl` (PDF 파일명을 따릅니다.) 경로에 Vector Store에 즉시 저장하실 수 있도록 `Document(page_content, metadata)` 포맷의 `jsonl` 파일로 생성되며,
-    - 디폴트로 PDF 페이지 단위로 묶어서 `Document`가 생성되며, `--document-split-strategy` (`-s`) 옵션을 `element`로 지정하시면
-      Update Document Parse에서 생성해준 Element 단위로 `Document`가 생성됩니다.
-+ 그리고, 통합문서로서 `.md`, `.html`, `.md` 문서가 자동 생성되며, `.md`, `.html` 파일에는 이미지 링크가 자동으로 걸립니다.
+!!! tip
+
+    디폴트로 PDF 페이지 단위로 묶어서 `Document`가 생성되며, `--document-split-strategy` (`-s`) 옵션을 `element`로 지정하시면
+    Update Document Parse에서 생성해준 Element 단위로 `Document`가 생성됩니다.
 
 ![](../../assets/07_file_list_1.png)
 
 ![](../../assets/08_file_list_2.png)
 
-생성된 `./output/argus-bitumen.jsonl` 파일의 `metadata`는 아래와 같습니다.
+생성된 `./output/argus-bitumen.jsonl` 파일의 한 Document 문서는 아래와 같구요.
 
 ```markdown
-{"page_content": "생략", "metadata": {"id": 0, "page": 1, "total_pages": 1, "category": "heading1", "coordinates": [], "api": "2.0", "model": "document-parse-250116"}}
+{"page_content": "생략", "metadata": {"id": 0, "page": 1, "total_pages": 21, "category": "paragraph", "api": "2.0", "model": "document-parse-250116", "source": "argus-bitumen.pdf"}}
 ```
 
+`metadata`만 뽑아보면 아래와 같습니다.
+생성된 `jsonl` 파일을 Vector Store에 저장하시기 전에 `metadata` 값을 통해 문서의 페이지 번호, 카테고리, 소스 파일 등 중요한 정보를 확인하고 필요에 따라 추가 메타데이터를 설정할 수 있습니다.
+특히 `category` 필드는 해당 문서 조각이 어떤 유형의 콘텐츠인지 나타내므로, 검색 결과 필터링이나 가중치 부여에 활용할 수 있습니다.
+
+
+```
+{
+  "id": 0,
+  "page": 1,
+  "total_pages": 21,
+  "category": "paragraph",
+  "api": "2.0",
+  "model": "document-parse-250116",
+  "source": "argus-bitumen.pdf"
+}
+```
+
+??? "업스테이지 12가지 Element Category"
+
+    1. `paragraph` : 문서에서 가장 중요한 텍스트 단락으로, 본문 내용을 구성하는 핵심적인 요소
+    2. `table` : 행과 열과 데이터를 구성해 정보를 한눈에 비교/분석하도록 정리하는 요소
+    3. `figure` : 다이어그램, 그림, 사진 등 시각 자료를 담고 있는 요소
+    4. `header` : 각 페이지 상단에 위치해, 문서 식별자나 제목 등 반복 표시가 필요한 정보를 담는 영역
+    5. `footer` : 문서 하단에 배치해 페이지 번호나 문서 제목 같은 반복 정보를 표시하는 영역
+    6. `caption` : 표나 그림 등 시각적 요소에 대한 설명을 제공하는 텍스트 영역
+    7. `equation` : 블럭 형태의 수식이나 수학적 표현을 표시하는 영역
+    8. `heading1` : 문서 내 주요 섹션이나 페이지 제목 등, 구조를 구분하기 위해 큰 제목으로 사용되는 요소
+    9. `list` : 불릿 포인트나 번호를 활용해 텍스트를 목록 형태로 구성해, 정보를 더 구조적으로 정리하고 읽기 쉽게 만드는 요소
+    10. `index` : 문서 전체의 목차나 참조 목록처럼, 특정 버로를 빠릐게 찾을 수 있도록 모아두는 요소
+    11. `footnote` : 본문과 연계되는 주석이나 참고 자료 등을 페이지 하단에 별도로 표기하는 요소
+    12. `chart` : bar, pie, line 차트 형태로 데이터를 시각화해 표현하는 요소
 
 ## 수행내역 자세히 보기
 
@@ -175,13 +205,11 @@ pyhub.parser upstage -i ./argus-bitumen.pdf
 
 ![](../../assets/11_file_list_1.png)
 
-![](../../assets/12_file_list_2.png)
-
 생성된 `.jsonl` 파일에서는 이렇게 이미지 링크가 설명이 잘 생성되어있음을 확인하실 수 있습니다.
 
 ![](../../assets/13_jsonl_image_descriptions.png)
 
-디폴트로 로컬 머신에 `upstage`/`openai`/`anthropic`/`google`/`ollama` API 요청 내역을 캐싱합니다.
+디폴트로 로컬 머신에 `upstage`/`openai`/`anthropic`/`google`/`ollama` API (chat/embed) 요청 내역을 캐싱합니다.
 방금 수행한 `pyhub.parser upstage -i ./argus-bitumen.pdf` 명령을 다시 수행해보시면
 캐싱된 내역을 사용하기에 즉시 명령이 종료되고 `output` 폴더 경로에 파일이 재생성됨을 확인하실 수 있습니다.
 
