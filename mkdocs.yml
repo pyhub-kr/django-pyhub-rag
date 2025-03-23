@@ -10,6 +10,7 @@ nav:
   - Rag:
       - rag/vector-document.md
   - toml.md
+  - cli-commands.md
 # - LLM: llm.md
 # - Blog:
 #   - blog/index.md
