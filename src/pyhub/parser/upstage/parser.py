@@ -12,6 +12,7 @@ from django.core.files import File
 from PyPDF2 import PdfReader, PdfWriter
 from PyPDF2.errors import PdfReadError
 
+from pyhub import PromptTemplates
 from pyhub.http import cached_http_async
 from pyhub.llm import AnthropicLLM, GoogleLLM, OllamaLLM, OpenAILLM
 from pyhub.llm.base import BaseLLM, DescribeImageRequest
@@ -61,23 +62,37 @@ class ImageDescriptor:
     }
     prompt_context: Optional[dict[str, Any]] = None
 
+    @classmethod
+    def get_prompts(cls, prompt_type: str, use_default_prompts: bool = True) -> PromptTemplates:
+        try:
+            return PromptTemplates(
+                system=settings.PROMPT_TEMPLATES[prompt_type]["system"],
+                user=settings.PROMPT_TEMPLATES[prompt_type]["user"],
+            )
+        except KeyError as e:
+            if use_default_prompts:
+                return PromptTemplates(
+                    system=cls.system_prompts["image"],
+                    user=cls.user_prompts["image"],
+                )
+            else:
+                raise e
+
     def __post_init__(self):
         if settings.PROMPT_TEMPLATES:
-
-            def get_value(category, t) -> str:
-                try:
-                    return settings.PROMPT_TEMPLATES[category][t]
-                except KeyError as e:
-                    raise KeyError(f"toml 설정파일에서 prompts.{category}.{t} 항목이 누락되었습니다.") from e
+            image_prompt_templates = self.get_prompts("describe_image")
+            table_prompt_templates = self.get_prompts("describe_table")
 
             self.system_prompts = {
-                "image": get_value("describe_image", "system"),
-                "table": get_value("describe_table", "system"),
+                "image": image_prompt_templates["system"],
+                "table": table_prompt_templates["system"],
             }
             self.user_prompts = {
-                "image": get_value("describe_image", "user"),
-                "table": get_value("describe_table", "user"),
+                "image": image_prompt_templates["user"],
+                "table": table_prompt_templates["user"],
             }
+
+            logger.debug("override prompts using settings.PROMPT_TEMPLATES")
 
     def __str__(self) -> str:
         """인스턴스 정보를 문자열로 반환합니다. API 키는 제외됩니다."""
