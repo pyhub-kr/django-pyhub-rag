@@ -189,6 +189,7 @@ def make_settings(
                     "()": "colorlog.ColoredFormatter",
                     "format": "%(log_color)s[%(asctime)s] %(message)s",
                     "log_colors": {
+                        "DEBUG": "blue",
                         "INFO": "green",
                         "WARNING": "yellow",
                         "ERROR": "red",
