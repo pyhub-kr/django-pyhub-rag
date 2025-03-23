@@ -1,5 +1,10 @@
 # 릴리즈 노트
 
+## 1.1.3
+
++ `pyhub.llm ask` 명령에 `--multi` 멀티턴 옵션 추가
++ `pyhub.llm embed` 명령에 `--verbose` 시에만 설정 내역 출력
+
 ## 1.1.2
 
 + 이미지 설명 작성 명령 추가 : `pyhub.llm describe 이미지파일경로`
