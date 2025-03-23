@@ -49,6 +49,7 @@ parser = ["pypdf2", "PyCryptodome"]
 docs = [
     "mkdocs",
     "mkdocs-material",
+    "mkdocs-glightbox",
     "pymdown-extensions",
 ]
 
