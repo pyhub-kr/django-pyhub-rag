@@ -333,7 +333,7 @@ class UpstageDocumentParseParser:
 
         # max_page 제한 적용 (설정된 경우)
         if (self.max_page or 0) > 0 and is_pdf:
-            total_pages = min(total_pages, self.start_page + self.max_page - 1)
+            total_pages = min(total_pages, self.start_page - 1 + self.max_page)
             logger.debug("max_page=%d 설정 : %d 페이지까지만 변환", self.max_page, total_pages)
 
         # batch_page_size가 최대 허용 페이지 수를 초과하지 않는지 검증

@@ -275,7 +275,7 @@ def upstage(
             batch_size_str += " [yellow](경고: PDF 파일에서만 사용됩니다.)[/yellow]"
         table.add_row("배치 크기", batch_size_str)
 
-        end_page_label = "끝" if max_page is None else f"{start_page + max_page}"
+        end_page_label = "끝" if max_page is None else f"{start_page - 1 + max_page}"
         table.add_row("페이지 범위", f"{start_page} ~ {end_page_label}")
 
         # Add image descriptor information if enabled
