@@ -5,6 +5,7 @@ from typing import Optional
 
 import typer
 from rich.console import Console
+from rich.prompt import Prompt
 from rich.table import Table
 
 from pyhub import get_version, init
@@ -36,6 +37,12 @@ def ask(
     ),
     temperature: float = typer.Option(0.2, help="LLM 응답의 온도 설정 (0.0-2.0, 높을수록 다양한 응답)"),
     max_tokens: int = typer.Option(1000, help="응답의 최대 토큰 수"),
+    is_multi: bool = typer.Option(
+        False,
+        "--multi",
+        "-m",
+        help="멀티 턴 대화",
+    ),
     toml_path: Optional[Path] = typer.Option(
         Path.home() / ".pyhub.toml",
         "--toml-file",
@@ -92,6 +99,9 @@ def ask(
         table.add_row("context", context)
         table.add_row("system prompt", system_prompt)
         table.add_row("user prompt", query)
+        table.add_row("temperature", str(temperature))
+        table.add_row("max_tokens", str(max_tokens))
+        table.add_row("멀티 턴 여부", "O" if is_multi else "X")
         table.add_row("toml_path", f"{toml_path.resolve()} ({"Found" if toml_path.exists() else "Not found"})")
         table.add_row("env_path", f"{env_path.resolve()} ({"Found" if env_path.exists() else "Not found"})")
         console.print(table)
@@ -104,6 +114,18 @@ def ask(
         max_tokens=max_tokens,
     )
 
-    for chunk in llm.ask(query, stream=True):
-        console.print(chunk.text, end="")
-    console.print()
+    if not is_multi:
+        for chunk in llm.ask(query, stream=True):
+            console.print(chunk.text, end="")
+        console.print()
+
+    else:
+        console.print("Human:", query)
+
+        while query:
+            console.print("AI:", end=" ")
+            for chunk in llm.ask(query, stream=True):
+                console.print(chunk.text, end="")
+            console.print()
+
+            query = Prompt.ask("Human")
