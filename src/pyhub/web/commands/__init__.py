@@ -1,29 +1,18 @@
+import os
 import sys
 from pathlib import Path
+from typing import Optional
 
 import typer
 from rich.console import Console
+
+from pyhub import get_version, print_for_main
 
 app = typer.Typer()
 console = Console()
 
 
-@app.callback(invoke_without_command=True)
-def main(ctx: typer.Context):
-    """PyHub RAG CLI tool"""
-    if ctx.invoked_subcommand is None:
-        console.print(
-            """
-        ██████╗ ██╗   ██╗██╗  ██╗██╗   ██╗██████╗     ██╗    ██╗███████╗██████╗ 
-        ██╔══██╗╚██╗ ██╔╝██║  ██║██║   ██║██╔══██╗    ██║    ██║██╔════╝██╔══██╗
-        ██████╔╝ ╚████╔╝ ███████║██║   ██║██████╔╝    ██║ █╗ ██║█████╗  ██████╔╝
-        ██╔═══╝   ╚██╔╝  ██╔══██║██║   ██║██╔══██╗    ██║███╗██║██╔══╝  ██╔══██╗
-        ██║        ██║   ██║  ██║╚██████╔╝██████╔╝    ╚███╔███╔╝███████╗██████╔╝
-        ╚═╝        ╚═╝   ╚═╝  ╚═╝ ╚═════╝ ╚═════╝      ╚══╝╚══╝ ╚══════╝╚═════╝ 
-        """,
-            style="bold white",
-        )
-        console.print("Welcome to PyHub Web CLI!", style="green")
+app.callback(invoke_without_command=True)(print_for_main)
 
 
 @app.command()
@@ -32,10 +21,25 @@ def run(
     port: int = typer.Option(8000, "--port", "-p", help="Port to bind the server to"),
     reload: bool = typer.Option(False, "--reload", "-r", help="Enable auto-reload on code changes"),
     workers: int = typer.Option(1, "--workers", "-w", help="Number of worker processes"),
-    log_level: str = typer.Option("info", "--log-level", "-l", help="Logging level"),
+    env_path: Optional[Path] = typer.Option(
+        Path.home() / ".pyhub.env",
+        "--env-file",
+        help="환경 변수 파일(.env) 경로 (디폴트: ~/.pyhub.env)",
+    ),
+    is_print_version: bool = typer.Option(False, "--version", help="현재 패키지 버전 출력"),
+    is_debug: bool = typer.Option(False, "--debug"),
 ):
     """Run the PyHub web server using uvicorn."""
     import uvicorn
+
+    if is_print_version:
+        console.print(get_version())
+        raise typer.Exit()
+
+    if env_path and env_path.exists():
+        os.environ["ENV_PATH"] = str(env_path)
+
+    os.environ["DEBUG"] = "1" if is_debug else "0"
 
     console.print(f"Starting PyHub web server on http://{host}:{port}", style="green")
 
@@ -50,5 +54,4 @@ def run(
         port=port,
         reload=reload,
         workers=workers,
-        log_level=log_level,
     )

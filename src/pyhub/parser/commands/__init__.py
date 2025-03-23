@@ -1,7 +1,6 @@
 import logging
 import os
 import re
-from datetime import datetime
 from pathlib import Path
 from shutil import rmtree
 from typing import List, Optional, Union, cast
@@ -13,7 +12,7 @@ from django.core.validators import URLValidator
 from rich.console import Console
 from rich.table import Table
 
-from pyhub import get_version, init
+from pyhub import get_version, init, print_copyright, print_for_main
 from pyhub.caches import cache_clear_all
 from pyhub.llm.types import LanguageEnum, LLMChatModelEnum, LLMVendorEnum
 from pyhub.parser.json import json_dumps
@@ -38,38 +37,7 @@ app = typer.Typer()
 console = Console()
 
 
-@app.callback(invoke_without_command=True)
-def main(
-    ctx: typer.Context,
-    is_help: bool = typer.Option(False, "--help", "-h", help="도움말 메시지 출력"),
-    is_print_version: bool = typer.Option(False, "--version", help="현재 패키지 버전 출력"),
-):
-    """PyHub RAG CLI tool"""
-    if is_print_version:
-        console.print(get_version())
-        raise typer.Exit()
-
-    if is_help:
-        print_help(ctx)
-        raise typer.Exit()
-
-    if ctx.invoked_subcommand is None:
-        console.print(
-            """
-        ██████╗ ██╗   ██╗██╗  ██╗██╗   ██╗██████╗     ██████╗  █████╗ ██████╗ ███████╗███████╗██████╗ 
-        ██╔══██╗╚██╗ ██╔╝██║  ██║██║   ██║██╔══██╗    ██╔══██╗██╔══██╗██╔══██╗██╔════╝██╔════╝██╔══██╗
-        ██████╔╝ ╚████╔╝ ███████║██║   ██║██████╔╝    ██████╔╝███████║██████╔╝███████╗█████╗  ██████╔╝
-        ██╔═══╝   ╚██╔╝  ██╔══██║██║   ██║██╔══██╗    ██╔═══╝ ██╔══██║██╔══██╗╚════██║██╔══╝  ██╔══██╗
-        ██║        ██║   ██║  ██║╚██████╔╝██████╔╝    ██║     ██║  ██║██║  ██║███████║███████╗██║  ██║
-        ╚═╝        ╚═╝   ╚═╝  ╚═╝ ╚═════╝ ╚═════╝     ╚═╝     ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝╚══════╝╚═╝  ╚═╝
-        """
-        )
-
-        console.print(f"Welcome to PyHub Parser CLI! {get_version()}")
-        console.print(
-            "\n장고와 함께 웹 기반의 PDF 지식 저장소를 손쉽게 구축하실 수 있습니다. - 파이썬사랑방 (me@pyhub.kr)",
-            style="green",
-        )
+app.callback(invoke_without_command=True)(print_for_main)
 
 
 @app.command()
@@ -505,13 +473,3 @@ def validate_url(url: Optional[str]) -> Optional[str]:
         validator(url)
     except ValidationError:
         raise typer.BadParameter(f"Invalid URL Pattern : {url}")
-
-
-def print_help(ctx: typer.Context) -> None:
-    console.print(ctx.get_help())
-    print_copyright()
-    raise typer.Exit()
-
-
-def print_copyright() -> None:
-    console.print(f"[dim] © {datetime.now().year} 파이썬사랑방 (기능 제안 및 컨설팅/교육 문의 : me@pyhub.kr)[/dim]")

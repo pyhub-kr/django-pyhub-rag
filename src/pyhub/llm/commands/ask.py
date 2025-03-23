@@ -14,7 +14,7 @@ console = Console()
 
 
 def ask(
-    query: Optional[str] = typer.Argument(None, help="유사한 문서를 검색할 텍스트"),
+    query: Optional[str] = typer.Argument(None, help="질의 내용"),
     model: LLMChatModelEnum = typer.Option(
         LLMChatModelEnum.GPT_4O,
         "--model",
