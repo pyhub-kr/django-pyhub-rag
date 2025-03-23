@@ -112,7 +112,7 @@ class BaseLLM(abc.ABC):
                     return None
             # 장고 템플릿 문법의 문자열
             elif "{{" in template or "{%" in template:
-                logger.debug("using string template render : %s ...", template.splitlines()[0][:20])
+                logger.debug("using string template render : %s ...", repr(template))
                 return Template(template).render(Context(context))
             # 일반 문자열 포맷팅
             return template.format(**context)

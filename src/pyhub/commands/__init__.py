@@ -112,6 +112,8 @@ def _get_toml_str() -> str:
 [env]
 # UPSTAGE_API_KEY = "up_xxxxx..."
 # OPENAI_API_KEY = "sk-xxxxx..."
+# ANTHROPIC_API_KEY = "sk-ant-xxxxx..."
+# GOOGLE_API_KEY = "AIxxxxx...."
 
 [prompt_templates.describe_image]
 system = """{_get_template_code("prompts/describe/image/system.md")}"""

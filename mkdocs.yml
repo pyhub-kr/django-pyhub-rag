@@ -6,13 +6,15 @@ nav:
       - 업스테이지 문서 파싱 API 활용:
           - parser/upstage-document-parse/index.md
           - parser/upstage-document-parse/simple-rag.md
+          - parser/upstage-document-parse/describe-prompts.md
   - Rag:
       - rag/vector-document.md
+  - toml.md
 # - LLM: llm.md
 # - Blog:
 #   - blog/index.md
-  - 오프라인 핸즈온랩: handsonlab.md
-  - 릴리즈 노트: release-notes/index.md
+  - handsonlab.md
+  - release-notes/index.md
 
 plugins:
   # TODO: https://squidfunk.github.io/mkdocs-material/setup/changing-the-colors/
