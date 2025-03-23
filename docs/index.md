@@ -16,6 +16,9 @@
 
 [명령 하나 만으로 PDF 문서 파싱하는 방법이 궁금하신가요? :wink:](./parser/upstage-document-parse){ .md-button }
 
+#### 생성된 파일 내역
+
+![](./assets/files.png)
 
 ### 장고 모델에 Vector Store 통합
 
