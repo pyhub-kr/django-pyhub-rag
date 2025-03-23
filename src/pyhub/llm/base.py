@@ -96,6 +96,7 @@ class BaseLLM(abc.ABC):
         """템플릿 처리를 위한 공통 메서드"""
         # Django Template 객체인 경우
         if hasattr(template, "render"):
+            logger.debug("using template render : %s", template)
             return template.render(Context(context))
 
         # 문자열인 경우
@@ -104,10 +105,15 @@ class BaseLLM(abc.ABC):
             if "prompts/" in template and template.endswith((".txt", ".md", ".yaml")):
                 try:
                     template_obj = get_template(template)
+                    logger.debug("using template render : %s", template)
                     return template_obj.render(context)
                 except TemplateDoesNotExist:
                     logger.debug("Template '%s' does not exist", template)
                     return None
+            # 장고 템플릿 문법의 문자열
+            elif "{{" in template or "{%" in template:
+                logger.debug("using string template render : %s ...", template.splitlines()[0][:20])
+                return Template(template).render(Context(context))
             # 일반 문자열 포맷팅
             return template.format(**context)
 

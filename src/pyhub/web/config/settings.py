@@ -2,12 +2,18 @@ from pathlib import Path
 
 from environ import Env
 
-from pyhub import load_envs, make_settings
+from pyhub import PromptTemplates, load_envs, load_toml, make_settings
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 env = Env()
+
+
+toml_path = env.str("TOML_PATH", default=None)
+if toml_path:
+    load_toml(toml_path)
+
 
 env_path = env.str("ENV_PATH", default=None)
 if env_path:
@@ -73,3 +79,5 @@ SERVICE_DOMAIN = PYHUB_SETTINGS.SERVICE_DOMAIN
 
 NCP_MAP_CLIENT_ID = PYHUB_SETTINGS.NCP_MAP_CLIENT_ID
 NCP_MAP_CLIENT_SECRET = PYHUB_SETTINGS.NCP_MAP_CLIENT_SECRET
+
+PROMPT_TEMPLATES: dict[str, PromptTemplates] = PYHUB_SETTINGS.PROMPT_TEMPLATES

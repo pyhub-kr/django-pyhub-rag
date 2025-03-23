@@ -81,6 +81,11 @@ def command_create_table(
         EmbeddingDimensionsEnum.D_1536, help="벡터 테이블의 임베딩 차원"
     ),
     distance_metric: DistanceMetric = typer.Option(DistanceMetric.COSINE, help="유사도 검색을 위한 거리 메트릭"),
+    toml_path: Optional[Path] = typer.Option(
+        Path.home() / ".pyhub.toml",
+        "--toml-file",
+        help="toml 설정 파일 경로 (디폴트: ~/.pyhub.toml)",
+    ),
     env_path: Optional[Path] = typer.Option(
         Path.home() / ".pyhub.env",
         "--env-file",
@@ -100,7 +105,7 @@ def command_create_table(
         log_level = logging.DEBUG
     else:
         log_level = logging.INFO
-    init(debug=True, log_level=log_level, env_path=env_path)
+    init(debug=True, log_level=log_level, toml_path=toml_path, env_path=env_path)
 
     try:
         create_virtual_table(
@@ -122,6 +127,11 @@ def command_import_jsonl(
     db_path: Path = typer.Option(Path("db.sqlite3"), "--db-path", "-d", help="SQLite DB 경로"),
     table_name: str = typer.Option(None, "--table", "-t", help="테이블 이름 (선택사항, 미지정시 자동 감지)"),
     clear: bool = typer.Option(False, "--clear", "-c", help="로딩 전 테이블의 기존 데이터 삭제"),
+    toml_path: Optional[Path] = typer.Option(
+        Path.home() / ".pyhub.toml",
+        "--toml-file",
+        help="toml 설정 파일 경로 (디폴트: ~/.pyhub.toml)",
+    ),
     env_path: Optional[Path] = typer.Option(
         Path.home() / ".pyhub.env",
         "--env-file",
@@ -137,7 +147,7 @@ def command_import_jsonl(
         log_level = logging.DEBUG
     else:
         log_level = logging.INFO
-    init(debug=True, log_level=log_level, env_path=env_path)
+    init(debug=True, log_level=log_level, toml_path=toml_path, env_path=env_path)
 
     try:
         import_jsonl(
@@ -161,6 +171,11 @@ def command_similarity_search(
     ),
     limit: int = typer.Option(4, help="반환할 최대 결과 수"),
     no_metadata: bool = typer.Option(False, help="결과에서 메타데이터 숨김"),
+    toml_path: Optional[Path] = typer.Option(
+        Path.home() / ".pyhub.toml",
+        "--toml-file",
+        help="toml 설정 파일 경로 (디폴트: ~/.pyhub.toml)",
+    ),
     env_path: Optional[Path] = typer.Option(
         Path.home() / ".pyhub.env",
         "--env-file",
@@ -176,7 +191,7 @@ def command_similarity_search(
         log_level = logging.INFO
     else:
         log_level = logging.WARNING
-    init(debug=True, log_level=log_level, env_path=env_path)
+    init(debug=True, log_level=log_level, toml_path=toml_path, env_path=env_path)
 
     try:
         doc_list = similarity_search(

@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from functools import reduce
 from typing import Any, AsyncGenerator, Generator, Optional, cast
 
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.files import File
 from PyPDF2 import PdfReader, PdfWriter
@@ -51,14 +52,32 @@ class ImageDescriptor:
     temperature: Optional[float] = None
     max_tokens: Optional[int] = None
     system_prompts = {
-        "default": "prompts/describe/image/system.md",
+        "image": "prompts/describe/image/system.md",
         "table": "prompts/describe/table/system.md",
     }
     user_prompts = {
-        "default": "prompts/describe/image/user.md",
+        "image": "prompts/describe/image/user.md",
         "table": "prompts/describe/table/user.md",
     }
     prompt_context: Optional[dict[str, Any]] = None
+
+    def __post_init__(self):
+        if settings.PROMPT_TEMPLATES:
+
+            def get_value(category, t) -> str:
+                try:
+                    return settings.PROMPT_TEMPLATES[category][t]
+                except KeyError as e:
+                    raise KeyError(f"toml 설정파일에서 prompts.{category}.{t} 항목이 누락되었습니다.") from e
+
+            self.system_prompts = {
+                "image": get_value("describe_image", "system"),
+                "table": get_value("describe_table", "system"),
+            }
+            self.user_prompts = {
+                "image": get_value("describe_image", "user"),
+                "table": get_value("describe_table", "user"),
+            }
 
     def __str__(self) -> str:
         """인스턴스 정보를 문자열로 반환합니다. API 키는 제외됩니다."""
@@ -91,13 +110,13 @@ class ImageDescriptor:
         try:
             return self.system_prompts[category]
         except KeyError:
-            return self.system_prompts["default"]
+            return self.system_prompts["image"]
 
     def get_user_prompt(self, category: ElementCategoryType) -> Optional[str]:
         try:
             return self.user_prompts[category]
         except KeyError:
-            return self.user_prompts["default"]
+            return self.user_prompts["image"]
 
 
 class UpstageDocumentParseParser:

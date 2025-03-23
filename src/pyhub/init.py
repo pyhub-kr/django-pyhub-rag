@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any, Literal, Optional, TypedDict, Union
 
 import django
+import toml
 from django.conf import settings
 from environ import Env
 
@@ -17,6 +18,17 @@ logger = logging.getLogger(__name__)
 src_path = Path(__file__).resolve().parent.parent
 if src_path.name == "src":
     sys.path.insert(0, str(src_path))
+
+
+class PromptTemplates(TypedDict):
+    system: str
+    user: str
+
+
+@dataclass
+class PyhubTomlSetting:
+    env: dict[str, str]
+    prompt_templates: dict[str, PromptTemplates]
 
 
 class TemplateSetting(TypedDict):
@@ -52,6 +64,7 @@ class PyhubSetting:
     SERVICE_DOMAIN: Optional[str]
     NCP_MAP_CLIENT_ID: Optional[str]
     NCP_MAP_CLIENT_SECRET: Optional[str]
+    PROMPT_TEMPLATES: dict[str, PromptTemplates]
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -62,7 +75,15 @@ def make_settings(
     debug: Optional[bool] = None,
     debug_default_value: bool = False,
     log_level: Optional[int] = None,
+    toml_path: Optional[Path] = None,
+    env_path: Optional[Path] = None,
 ) -> PyhubSetting:
+
+    toml_settings = load_toml(toml_path=toml_path, load_env=True)
+    prompt_templates = toml_settings.prompt_templates if toml_settings else {}
+
+    load_envs(env_path=env_path)
+
     env = Env()
 
     if base_dir is None:
@@ -211,6 +232,7 @@ def make_settings(
         SERVICE_DOMAIN=env.str("SERVICE_DOMAIN", default=None),
         NCP_MAP_CLIENT_ID=env.str("NCP_MAP_CLIENT_ID", default=None),
         NCP_MAP_CLIENT_SECRET=env.str("NCP_MAP_CLIENT_SECRET", default=None),
+        PROMPT_TEMPLATES=prompt_templates,
     )
 
 
@@ -286,8 +308,7 @@ def make_filecache_setting(
 def load_envs(env_path: Optional[Union[str, Path]] = None, overwrite: bool = True) -> None:
     if env_path is None:
         env_path = Path.home() / ".pyhub.env"
-
-    if isinstance(env_path, str):
+    elif isinstance(env_path, str):
         env_path = Path(env_path)
 
     env = Env()
@@ -301,15 +322,65 @@ def load_envs(env_path: Optional[Union[str, Path]] = None, overwrite: bool = Tru
             pass
 
 
+def load_toml(
+    toml_path: Optional[Union[str, Path]] = None,
+    load_env: bool = False,
+) -> Optional[PyhubTomlSetting]:
+    if toml_path is None:
+        toml_path = Path.home() / ".pyhub.toml"
+    elif isinstance(toml_path, str):
+        toml_path = Path(toml_path)
+
+    if toml_path.is_file() is False:
+        return None
+
+    obj: dict
+
+    try:
+        with toml_path.open("r", encoding="utf-8") as f:
+            obj = toml.load(f)
+    except IOError:
+        logger.warning("failed to load %s", toml_path)
+        return None
+
+    # 환경변수 설정
+    env_dict: dict = obj.get("env", {})
+
+    if env_dict:
+        env = {}
+        for k, v in env_dict.items():
+            env[k] = v
+            if load_env:
+                os.environ[k] = v
+    else:
+        env = {}
+
+    if "prompt_templates" in obj:
+        prompt_templates = {}
+        for type, prompt in obj["prompt_templates"].items():
+            prompt_templates[type] = PromptTemplates(
+                system=prompt["system"],
+                user=prompt["user"],
+            )
+    else:
+        prompt_templates = {}
+
+    return PyhubTomlSetting(env=env, prompt_templates=prompt_templates)
+
+
 def init(
     debug: bool = False,
     log_level: Optional[int] = None,
+    toml_path: Optional[Path] = None,
     env_path: Optional[Path] = None,
 ):
-    load_envs(env_path)
-
     if not django.conf.settings.configured:
-        pyhub_settings = make_settings(debug=debug, log_level=log_level)
+        pyhub_settings = make_settings(
+            debug=debug,
+            log_level=log_level,
+            toml_path=toml_path,
+            env_path=env_path,
+        )
         settings.configure(**pyhub_settings.to_dict())
         django.setup()
         logging.debug("Django 환경이 초기화되었습니다.")

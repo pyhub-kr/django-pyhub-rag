@@ -45,6 +45,11 @@ def fill_jsonl(
         "-m",
         help="임베딩 모델",
     ),
+    toml_path: Optional[Path] = typer.Option(
+        Path.home() / ".pyhub.toml",
+        "--toml-file",
+        help="toml 설정 파일 경로 (디폴트: ~/.pyhub.toml)",
+    ),
     env_path: Optional[Path] = typer.Option(
         Path.home() / ".pyhub.env",
         "--env-file",
@@ -72,7 +77,7 @@ def fill_jsonl(
         log_level = logging.DEBUG
     else:
         log_level = logging.INFO
-    init(debug=True, log_level=log_level, env_path=env_path)
+    init(debug=True, log_level=log_level, toml_path=toml_path, env_path=env_path)
 
     llm = LLM.create(embedding_model.value)
 
@@ -81,6 +86,7 @@ def fill_jsonl(
     table.add_column("값", style="green")
     table.add_row("임베딩된 jsonl 파일 생성 경로", str(jsonl_out_path))
     table.add_row("임베딩 모델", f"{llm.embedding_model} ({llm.get_embed_size()})")
+    table.add_row("toml 파일 경로", str(toml_path))
     table.add_row("환경변수 파일 경로", str(env_path))
     console.print(table)
 

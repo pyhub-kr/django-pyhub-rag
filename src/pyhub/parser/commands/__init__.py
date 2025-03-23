@@ -188,6 +188,11 @@ def upstage(
     upstage_api_key: Optional[str] = typer.Option(
         None, help="Upstage API Key. 지정하지 않으면 UPSTAGE_API_KEY 환경 변수 사용"
     ),
+    toml_path: Optional[Path] = typer.Option(
+        Path.home() / ".pyhub.toml",
+        "--toml-file",
+        help="toml 설정 파일 경로 (디폴트: ~/.pyhub.toml)",
+    ),
     env_path: Optional[Path] = typer.Option(
         Path.home() / ".pyhub.env",
         "--env-file",
@@ -201,7 +206,7 @@ def upstage(
         raise typer.Exit()
 
     log_level = logging.DEBUG if is_verbose else logging.INFO
-    init(debug=True, log_level=log_level, env_path=env_path)
+    init(debug=True, log_level=log_level, toml_path=toml_path, env_path=env_path)
 
     if upstage_api_key is None:
         upstage_api_key = os.environ.get("UPSTAGE_API_KEY")
@@ -300,6 +305,7 @@ def upstage(
 
         # table.add_row("터미널에 상세 정보 출력하기", "예" if is_verbose else "아니오")
         # table.add_row("생성 폴더 강제 재생성", "예" if is_force else "아니오")
+        table.add_row("toml 파일 경로", str(toml_path))
         table.add_row("환경변수 파일 경로", str(env_path))
         # Print the table
         console.print(table)
@@ -388,13 +394,17 @@ def upstage(
 
                     document_count += 1
 
-                console.print(
-                    f"[green]성공:[/green] {jsonl_output_path} 경로에 {document_count}개의 Document를 jsonl 포맷으로 생성했습니다."
-                )
+                if document_count > 0:
+                    console.print(
+                        f"[green]성공:[/green] {jsonl_output_path} 경로에 {document_count}개의 Document를 jsonl 포맷으로 생성했습니다."
+                    )
 
-                if unified_document_paths:
-                    for _, output_path in unified_document_paths:
-                        console.print(f"[green]성공:[/green] {output_path} 경로에 통합 문서를 생성했습니다.")
+                    if unified_document_paths:
+                        for _, output_path in unified_document_paths:
+                            console.print(f"[green]성공:[/green] {output_path} 경로에 통합 문서를 생성했습니다.")
+                else:
+                    console.print("[red]경고: 생성된 Document가 없습니다.[/red]")
+
     except Exception as e:
         console.print(f"[red]{e}[/red]")
 

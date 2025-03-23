@@ -21,6 +21,11 @@ def run(
     port: int = typer.Option(8000, "--port", "-p", help="Port to bind the server to"),
     reload: bool = typer.Option(False, "--reload", "-r", help="Enable auto-reload on code changes"),
     workers: int = typer.Option(1, "--workers", "-w", help="Number of worker processes"),
+    toml_path: Optional[Path] = typer.Option(
+        Path.home() / ".pyhub.toml",
+        "--toml-file",
+        help="toml 설정 파일 경로 (디폴트: ~/.pyhub.toml)",
+    ),
     env_path: Optional[Path] = typer.Option(
         Path.home() / ".pyhub.env",
         "--env-file",
@@ -35,6 +40,9 @@ def run(
     if is_print_version:
         console.print(get_version())
         raise typer.Exit()
+
+    if toml_path and toml_path.exists():
+        os.environ["TOML_PATH"] = str(toml_path)
 
     if env_path and env_path.exists():
         os.environ["ENV_PATH"] = str(env_path)
