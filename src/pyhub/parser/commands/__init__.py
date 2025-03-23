@@ -194,11 +194,8 @@ def upstage(
         console.print(get_version())
         raise typer.Exit()
 
-    if is_verbose:
-        log_level = logging.DEBUG
-    else:
-        log_level = logging.INFO
-    init(debug=True, log_level=log_level, env_path=env_path)
+    base_dir = ""
+    init(debug=True, env_path=env_path)
 
     if upstage_api_key is None:
         upstage_api_key = os.environ.get("UPSTAGE_API_KEY")

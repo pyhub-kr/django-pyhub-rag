@@ -16,3 +16,6 @@ uv.lock
 /src/chat
 
 /docs-build
+
+.ipynb_checkpoints
+

@@ -2,6 +2,8 @@ from pathlib import Path
 
 from environ import Env
 
+from pyhub import load_envs, make_settings
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
@@ -9,27 +11,19 @@ env = Env()
 
 env_path = env.str("ENV_PATH", default=None)
 if env_path:
-    env.read_env(env_path, overwrite=True)
+    load_envs(env_path)
 
 
-SECRET_KEY = env.str(
-    "SECRET_KEY",
-    default="django-insecure-2%6ln@_fnpi!=ivjk(=)e7nx!7abp9d2e3f-+!*o=4s(bd1ynf",
-)
+PYHUB_SETTINGS = make_settings(base_dir=BASE_DIR, debug_default_value=True)
 
-DEBUG = env.bool("DEBUG", default=True)
+SECRET_KEY = PYHUB_SETTINGS.SECRET_KEY
 
-ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=["localhost", "127.0.0.1", ".ngrok-free.app"])
-CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS", default=[])
+ALLOWED_HOSTS = PYHUB_SETTINGS.ALLOWED_HOSTS
+CSRF_TRUSTED_ORIGINS = PYHUB_SETTINGS.CSRF_TRUSTED_ORIGINS
 
 
 INSTALLED_APPS = [
-    # "django.contrib.admin",
-    "django.contrib.auth",
-    "django.contrib.contenttypes",
-    "django.contrib.sessions",
-    # "django.contrib.messages",
-    # "django.contrib.staticfiles",
+    *PYHUB_SETTINGS.INSTALLED_APPS,
 ]
 
 MIDDLEWARE = [
@@ -44,121 +38,38 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = "config.urls"
 
-TEMPLATES = [
-    {
-        "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [
-            BASE_DIR / "templates",
-        ],
-        "APP_DIRS": True,
-        "OPTIONS": {
-            "context_processors": [
-                "django.template.context_processors.debug",
-                "django.template.context_processors.request",
-                "django.contrib.auth.context_processors.auth",
-                "django.contrib.messages.context_processors.messages",
-            ],
-        },
-    },
-]
-
+TEMPLATES = PYHUB_SETTINGS.TEMPLATES
 WSGI_APPLICATION = "config.wsgi.application"
 ASGI_APPLICATION = "config.asgi.application"
 
+CACHES = PYHUB_SETTINGS.CACHES
 
-# Database
-# https://docs.djangoproject.com/en/5.1/ref/settings/#databases
+DATABASE_ROUTERS = PYHUB_SETTINGS.DATABASE_ROUTERS
+DATABASES = PYHUB_SETTINGS.DATABASES
 
-DATABASE_ROUTERS = ["pyhub.routers.Router"]
+AUTH_PASSWORD_VALIDATORS = PYHUB_SETTINGS.AUTH_PASSWORD_VALIDATORS
 
-DEFAULT_DATABASE = f"sqlite:///{ BASE_DIR / 'db.sqlite3'}"
+LOGGING = PYHUB_SETTINGS.LOGGING
 
-DATABASES = {
-    "default": env.db("DATABASE_URL", default=DEFAULT_DATABASE),
-}
+LANGUAGE_CODE = PYHUB_SETTINGS.LANGUAGE_CODE
+TIME_ZONE = PYHUB_SETTINGS.TIME_ZONE
+USE_I18N = PYHUB_SETTINGS.USE_I18N
+USE_TZ = PYHUB_SETTINGS.USE_TZ
 
-for db_name in DATABASES:
-    if DATABASES[db_name]["ENGINE"] == "django.db.backends.sqlite3":
-        DATABASES[db_name]["ENGINE"] = "pyhub.db.backends.sqlite3"
+STATIC_URL = PYHUB_SETTINGS.STATIC_URL
+STATIC_ROOT = PYHUB_SETTINGS.STATIC_ROOT
+STATICFILES_DIRS = PYHUB_SETTINGS.STATICFILES_DIRS
+MEDIA_URL = PYHUB_SETTINGS.MEDIA_URL
+MEDIA_ROOT = PYHUB_SETTINGS.MEDIA_ROOT
 
-        DATABASES[db_name].setdefault("OPTIONS", {})
-
-        PRAGMA_FOREIGN_KEYS = env.str("PRAGMA_FOREIGN_KEYS", default="ON")
-        PRAGMA_JOURNAL_MODE = env.str("PRAGMA_JOURNAL_MODE", default="WAL")
-        PRAGMA_SYNCHRONOUS = env.str("PRAGMA_SYNCHRONOUS", default="NORMAL")
-        PRAGMA_BUSY_TIMEOUT = env.int("PRAGMA_BUSY_TIMEOUT", default=5000)
-        PRAGMA_TEMP_STORE = env.str("PRAGMA_TEMP_STORE", default="MEMORY")
-        PRAGMA_MMAP_SIZE = env.int("PRAGMA_MMAP_SIZE", default=134_217_728)
-        PRAGMA_JOURNAL_SIZE_LIMIT = env.int("PRAGMA_JOURNAL_SIZE_LIMIT", default=67_108_864)
-        PRAGMA_CACHE_SIZE = env.int("PRAGMA_CACHE_SIZE", default=2000)
-        # "IMMEDIATE" or "EXCLUSIVE"
-        PRAGMA_TRANSACTION_MODE = env.str("PRAGMA_TRANSACTION_MODE", default="IMMEDIATE")
-
-        # https://gcollazo.com/optimal-sqlite-settings-for-django/
-        DATABASES[db_name]["OPTIONS"].update(
-            {
-                "init_command": (
-                    f"PRAGMA foreign_keys={PRAGMA_FOREIGN_KEYS};"
-                    f"PRAGMA journal_mode = {PRAGMA_JOURNAL_MODE};"
-                    f"PRAGMA synchronous = {PRAGMA_SYNCHRONOUS};"
-                    f"PRAGMA busy_timeout = {PRAGMA_BUSY_TIMEOUT};"
-                    f"PRAGMA temp_store = {PRAGMA_TEMP_STORE};"
-                    f"PRAGMA mmap_size = {PRAGMA_MMAP_SIZE};"
-                    f"PRAGMA journal_size_limit = {PRAGMA_JOURNAL_SIZE_LIMIT};"
-                    f"PRAGMA cache_size = {PRAGMA_CACHE_SIZE};"
-                ),
-                "transaction_mode": PRAGMA_TRANSACTION_MODE,
-            }
-        )
-
-
-# Password validation
-# https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
-
-AUTH_PASSWORD_VALIDATORS = [
-    {
-        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
-    },
-    {
-        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
-    },
-    {
-        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
-    },
-    {
-        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
-    },
-]
-
-
-# Internationalization
-# https://docs.djangoproject.com/en/5.1/topics/i18n/
-
-LANGUAGE_CODE = env.str("LANGUAGE_CODE", default="ko-kr")
-
-TIME_ZONE = env.str("TIME_ZONE", default="UTC")
-
-USE_I18N = True
-
-USE_TZ = True
-
-
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.1/howto/static-files/
-
-STATIC_URL = "static/"
-
-# Default primary key field type
-# https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
-
-DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+DEFAULT_AUTO_FIELD = PYHUB_SETTINGS.DEFAULT_AUTO_FIELD
 
 
 #
 # api
 #
 
-SERVICE_DOMAIN = env.str("SERVICE_DOMAIN", default=None)
+SERVICE_DOMAIN = PYHUB_SETTINGS.SERVICE_DOMAIN
 
-NCP_MAP_CLIENT_ID = env.str("NCP_MAP_CLIENT_ID", default=None)
-NCP_MAP_CLIENT_SECRET = env.str("NCP_MAP_CLIENT_SECRET", default=None)
+NCP_MAP_CLIENT_ID = PYHUB_SETTINGS.NCP_MAP_CLIENT_ID
+NCP_MAP_CLIENT_SECRET = PYHUB_SETTINGS.NCP_MAP_CLIENT_SECRET

@@ -5,7 +5,7 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
-from .init import init, make_settings
+from .init import init, load_envs, make_settings
 
 console = Console()
 
@@ -81,4 +81,4 @@ def print_logo() -> None:
     )
 
 
-__all__ = ["init", "get_version", "make_settings", "print_for_main", "print_copyright"]
+__all__ = ["init", "load_envs", "get_version", "make_settings", "print_for_main", "print_copyright"]
