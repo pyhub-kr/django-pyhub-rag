@@ -81,14 +81,15 @@ def fill_jsonl(
 
     llm = LLM.create(embedding_model.value)
 
-    table = Table(show_header=True, header_style="bold blue")
-    table.add_column("설정", style="cyan")
-    table.add_column("값", style="green")
-    table.add_row("임베딩된 jsonl 파일 생성 경로", str(jsonl_out_path))
-    table.add_row("임베딩 모델", f"{llm.embedding_model} ({llm.get_embed_size()})")
-    table.add_row("toml 파일 경로", str(toml_path))
-    table.add_row("환경변수 파일 경로", str(env_path))
-    console.print(table)
+    if is_verbose:
+        table = Table(show_header=True, header_style="bold blue")
+        table.add_column("설정", style="cyan")
+        table.add_column("값", style="green")
+        table.add_row("임베딩된 jsonl 파일 생성 경로", str(jsonl_out_path))
+        table.add_row("임베딩 모델", f"{llm.embedding_model} ({llm.get_embed_size()})")
+        table.add_row("toml 파일 경로", str(toml_path))
+        table.add_row("환경변수 파일 경로", str(env_path))
+        console.print(table)
 
     console.print(f"{jsonl_path} 파싱 중 ...")
     total_usage = Usage()
