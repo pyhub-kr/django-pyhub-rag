@@ -465,7 +465,7 @@ class UpstageDocumentParseParser:
             "model": self.model,
             "output_formats": "['html', 'text', 'markdown']",
             "coordinates": self.coordinates,
-            "base64_encoding": f"{'[' + ",".join(f"'{el}'" for el in self.base64_encoding_category_list) + ']'}",
+            "base64_encoding": "[" + ",".join(f"'{el}'" for el in self.base64_encoding_category_list) + "]",
         }
 
         try:
