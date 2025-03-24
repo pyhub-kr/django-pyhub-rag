@@ -223,6 +223,9 @@ class Element:
         if self.image_descriptions:
             kwargs["image_descriptions"] = self.image_descriptions
 
+        # elements가 비어있으면 현재 element를 포함
+        elements = self.elements if self.elements else [self]
+
         return Document(
             page_content=page_content,
             metadata={
@@ -235,7 +238,7 @@ class Element:
                 **kwargs,
             },
             files=self.files,
-            elements=self.elements,
+            elements=elements,  # 수정된 elements 사용
             variants={
                 DocumentFormatEnum.MARKDOWN: self.content.markdown,
                 DocumentFormatEnum.HTML: self.content.html,

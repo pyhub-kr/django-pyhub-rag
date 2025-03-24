@@ -1,5 +1,9 @@
 # 릴리즈 노트
 
+## 1.1.4
+
++ 단일 Element를 Document로 변환할 때, elements 속성이 누락되는 버그 해결
+
 ## 1.1.3
 
 + `pyhub.llm ask` 명령에 `--multi` 멀티턴 옵션 추가
