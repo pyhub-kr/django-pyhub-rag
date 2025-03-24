@@ -40,7 +40,6 @@ def ask(
     is_multi: bool = typer.Option(
         False,
         "--multi",
-        "-m",
         help="멀티 턴 대화",
     ),
     toml_path: Optional[Path] = typer.Option(
