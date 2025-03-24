@@ -8,6 +8,7 @@ logger = logging.getLogger(__name__)
 class PyhubRagConfig(AppConfig):
     default_auto_field = "django.db.models.BigAutoField"
     name = "pyhub.rag"
+    label = "pyhub_rag"
 
     def ready(self):
         import pyhub.rag.signals  # noqa
