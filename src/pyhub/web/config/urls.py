@@ -11,12 +11,15 @@ from ninja import NinjaAPI
 #
 
 api = NinjaAPI()
-api.add_router("/map", map_router)
 
 if settings.SERVICE_DOMAIN:
     api.servers = [
         {"url": settings.SERVICE_DOMAIN},
     ]
+
+
+if settings.ENABLE_MAP_SERVICE:
+    api.add_router("/map", map_router)
 
 
 #
