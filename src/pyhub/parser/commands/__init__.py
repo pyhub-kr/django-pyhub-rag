@@ -360,7 +360,7 @@ def upstage(
                     document.metadata.setdefault("source", input_path.name)
                     f.write(json_dumps(document) + "\n")
 
-                    if unified_document_paths:
+                    if len(unified_document_paths) > 0:
                         for format_enum, output_path in unified_document_paths:
                             variant_page_content = document.variants.get(format_enum.value)
 
@@ -380,6 +380,8 @@ def upstage(
                                 for name, _file in el.files.items():
                                     output_path = output_dir_path / name
                                     output_path.parent.mkdir(parents=True, exist_ok=True)
+                                    if output_path.exists():
+                                        console.print(f"[red]경고: {output_path} 경로 파일을 덮어쓰기 합니다.[/red]")
                                     output_path.open("wb").write(_file.read())
 
                                     if name in image_dict:
