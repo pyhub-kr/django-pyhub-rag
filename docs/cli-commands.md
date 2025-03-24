@@ -25,6 +25,11 @@ $ pyhub.llm ask --vendor google --model gemini-2.0-flash "hello"
 Hello! How can I help you today?
 ```
 
+``` title="파이프를 통한 context 전달" hl_lines="1"
+$ echo "Reply in Korean" | pyhub.llm ask "hello"
+안녕하세요! 어떻게 도와드릴까요?
+```
+
 더 많은 옵션은 `pyhub.llm ask --help` 명령으로 확인하세요.
 
 ### pyhub.llm describe 명령
@@ -116,9 +121,11 @@ $ pyhub.rag sqlite-vec import-jsonl ./output/argus-bitumen-out.jsonl
 #### similarity-search 명령
 
 지정 SQLite 벡터 데이터베이스에서 의미적 유사도 검색을 수행하고, 검색어와 유사한 문서를 출력합니다.
+임베딩 데이터 생성에 사용했던 임베딩 모델과 동일한 모델을 `--embedding-model` 옵션으로 지정합니다.
+디폴트로 `text-embedding-3-small`입니다.
 
 ```
-$ pyhub.rag sqlite-vec similarity-search --embedding-model text-embedding-3-small "비투멘의 수출 가격"
+$ pyhub.rag sqlite-vec similarity-search "비투멘의 수출 가격"
 
 metadata: {'id': 0, 'page': 5, 'total_pages': 21, 'category': 'header', 'api': '2.0', 'model': 'document-parse-250116', 'image_descriptions': "<image name='p005/12-chart.jpg'><title>헝가리와 루마니아의
 국내 지표 비교</title>\n<details>헝가리와 루마니아의 국내 지표가 2022년 7월부터 2023년 3월까지의 기간 동안 어떻게 변화했는지를 보여주는 그래프입니다. 헝가리의 지표는 전반적으로 상승세를 보였고, 루마니아의
@@ -127,6 +134,11 @@ metadata: {'id': 0, 'page': 5, 'total_pages': 21, 'category': 'header', 'api': '
 'argus-bitumen.pdf', 'distance': 0.7945679426193237}
 
 Argus Bitumen (생략)
+```
+
+``` title="파이프를 통한 context 전달" hl_lines="1"
+$ pyhub.rag sqlite-vec similarity-search "비투멘의 수출 가격" | pyhub.llm ask "비투멘의 수출 가격"
+Naive RAG 출력 ...
 ```
 
 더 많은 옵션은 `pyhub.rag sqlite-vec similarity-search --help` 명령으로 확인하세요.
