@@ -12,6 +12,8 @@ import toml
 from django.conf import settings
 from environ import Env
 
+from pyhub.versions import notify_if_update_available
+
 logger = logging.getLogger(__name__)
 
 
@@ -385,3 +387,5 @@ def init(
         settings.configure(**pyhub_settings.to_dict())
         django.setup()
         logging.debug("Django 환경이 초기화되었습니다.")
+
+        notify_if_update_available()
