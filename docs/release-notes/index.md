@@ -2,6 +2,7 @@
 
 ## 1.1.5
 
++ `pyhub.web` 명령에서 django/uvicorn 서버 모두에서 `DEBUG=False` 상황에서도 static/media 파일 서빙 지원
 + `pyhub.web` 명령 추가 : `print-settings` (Feat. `django-extensions`)
 + `pyhub.web` 명령 추가 : migrate, showmigrations, createsuperuser, createuser, sqlmigrate, shell
 + `*_DATABASE_URL` 패턴의 환경변수를 파싱하여, `settings.DATABASES` 에 자동 등록

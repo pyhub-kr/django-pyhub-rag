@@ -8,6 +8,7 @@ from typing import Optional
 import django
 import typer
 from django.conf import settings
+from django.core.asgi import get_asgi_application
 from django.core.management import call_command
 from django.core.management.base import SystemCheckError
 from rich.console import Console
@@ -29,6 +30,7 @@ def run(
     port: int = typer.Option(8000, "--port", "-p", help="Port to bind the server to"),
     reload: bool = typer.Option(False, "--reload", "-r", help="Enable auto-reload on code changes"),
     workers: int = typer.Option(1, "--workers", "-w", help="Number of worker processes"),
+    is_dev_server: bool = typer.Option(False, "--dev-server", help="Run django dev server"),
     is_disable_check: bool = typer.Option(False, "--disable-check", help="Disable django system check"),
     toml_path: Optional[Path] = typer.Option(
         Path.home() / ".pyhub.toml",
@@ -47,23 +49,40 @@ def run(
 
     with pyhub_web_proj(toml_path=toml_path, env_path=env_path, is_debug=is_debug):
         if is_disable_check is False:
-            os.environ["DJANGO_SETTINGS_MODULE"] = "config.settings"
-            django.setup()
             try:
                 call_command("check", deploy=False, fail_level="ERROR")
             except SystemCheckError as e:
                 console.print(f"[red]{e}[/red]", highlight=False)
                 raise typer.Exit(1)
 
-        console.print(f"Starting PyHub web server on http://{host}:{port}", style="green")
+        if is_dev_server:
+            console.print(
+                f"Starting PyHub web server on http://{host}:{port} using [green bold]django dev server[/green bold]",
+                style="green",
+            )
 
-        uvicorn.run(
-            "config.asgi:application",
-            host=host,
-            port=port,
-            reload=reload,
-            workers=workers,
-        )
+            args = [f"{host}:{port}", "--skip-checks"]
+
+            if not reload:
+                args.append("--noreload")
+
+            console.print("(command) runserver", " ".join(args))
+            call_command("runserver", *args)
+
+        else:
+            console.print(
+                f"Starting PyHub web server on http://{host}:{port} using [green bold]uvicorn[/green bold]",
+                style="green",
+            )
+            application = get_asgi_application()
+
+            uvicorn.run(
+                application,
+                host=host,
+                port=port,
+                reload=reload,
+                workers=workers,
+            )
 
 
 @app.command()
@@ -261,13 +280,19 @@ def pyhub_web_proj(toml_path: Optional[Path], env_path: Optional[Path], is_debug
     if env_path and env_path.exists():
         os.environ["ENV_PATH"] = str(env_path)
 
+    curdir_path = Path(os.curdir).absolute()
+
     # DATABASE_URL 환경변수가 없다면, 디폴트로 현재 경로에 db.sqlite3 지정
     if "DATABASE_URL" not in os.environ:
-        curdir_path = Path(os.curdir).absolute()
         DEFAULT_DATABASE = f"sqlite:///{curdir_path / 'db.sqlite3'}"
         os.environ["DATABASE_URL"] = DEFAULT_DATABASE
 
-    # Django 설정
+    if "STATIC_ROOT" not in os.environ:
+        os.environ["STATIC_ROOT"] = str(curdir_path / "staticfiles")
+
+    if "MEDIA_ROOT" not in os.environ:
+        os.environ["MEDIA_ROOT"] = str(curdir_path / "mediafiles")
+
     os.environ["DJANGO_SETTINGS_MODULE"] = "config.settings"
     django.setup()
 
