@@ -165,7 +165,7 @@ class AbstractDocument(LifecycleModelMixin, models.Model):
 
     @classmethod
     def get_vs_config(cls, using=None) -> tuple[str, str, Optional[dict]]:
-        model_db_alias = getattr(cls._meta, "db_alias", "default")
+        model_db_alias = getattr(cls._meta, "db_alias") or "default"
         db_alias = using or model_db_alias
 
         if db_alias == "default":
