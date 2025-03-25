@@ -2,6 +2,7 @@
 
 ## 1.2.0
 
++ `StatusMixin` 추상화 모델 클래스 추가 : 문서 처리 상태를 관리
 + `PDFFileField` 모델 필드 추가
 + `pyhub.rag` : PGVectorField 마이그레이션 시에 api key가 포함되는 버그 해결
 + `pyhub.web` 명령에서 django/uvicorn 서버 모두에서 `DEBUG=False` 상황에서도 static/media 파일 서빙 지원
