@@ -90,6 +90,8 @@ def run(
 
 @app.command()
 def migrate(
+    app_label: Optional[str] = typer.Argument(None),
+    migration_name: Optional[str] = typer.Argument(None),
     toml_path: Optional[Path] = typer.Option(
         Path.home() / ".pyhub.toml",
         help="toml 설정 파일 경로 (디폴트: ~/.pyhub.toml)",
@@ -110,6 +112,12 @@ def migrate(
         print_db_config(db_alias)
 
         args = []
+
+        if app_label is not None:
+            args.append(app_label)
+        if migration_name is not None:
+            args.append(migration_name)
+
         if db_alias is not None:
             args.extend(("--database", db_alias))
         call_command("migrate", *args)
@@ -117,6 +125,7 @@ def migrate(
 
 @app.command()
 def showmigrations(
+    app_label: list[str] = typer.Argument(None),
     toml_path: Optional[Path] = typer.Option(
         Path.home() / ".pyhub.toml",
         help="toml 설정 파일 경로 (디폴트: ~/.pyhub.toml)",
@@ -137,6 +146,10 @@ def showmigrations(
         print_db_config(db_alias)
 
         args = []
+
+        if app_label:
+            args.extend(app_label)
+
         if db_alias is not None:
             args.extend(("--database", db_alias))
         call_command("showmigrations", *args)
