@@ -2,6 +2,7 @@
 
 ## 1.1.5
 
++ `pyhub.rag` : PGVectorField 마이그레이션 시에 api key가 포함되는 버그 해결
 + `pyhub.web` 명령에서 django/uvicorn 서버 모두에서 `DEBUG=False` 상황에서도 static/media 파일 서빙 지원
 + `pyhub.web` 명령 추가 : `print-settings` (Feat. `django-extensions`)
 + `pyhub.web` 명령 추가 : migrate, showmigrations, createsuperuser, createuser, sqlmigrate, shell

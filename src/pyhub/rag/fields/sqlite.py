@@ -27,21 +27,6 @@ class SQLiteVectorField(BaseVectorField):
         """
         super().__init__(dimensions=dimensions, **kwargs)
 
-    def deconstruct(self):
-        name, path, args, kwargs = super().deconstruct()
-
-        # dimensions는 명시적으로 포함시키지만, 아래 커스텀 옵션은 마이그레이션 대상에서 제거합니다.
-        kwargs.pop("embedding_max_tokens_limit", None)
-        kwargs.pop("embedding_model", None)
-        kwargs.pop("openai_api_key", None)
-        kwargs.pop("openai_base_url", None)
-        kwargs.pop("google_api_key", None)
-
-        if self.dimensions is not None:
-            kwargs["dimensions"] = self.dimensions
-
-        return name, path, args, kwargs
-
     def db_type(self, connection):
         """
         Returns the database column data type.

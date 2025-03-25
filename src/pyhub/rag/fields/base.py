@@ -39,16 +39,14 @@ class BaseVectorField(models.Field):
 
     def deconstruct(self):
         name, path, args, kwargs = super().deconstruct()
-        kwargs.update(
-            {
-                "dimensions": self.dimensions,
-                "openai_api_key": self.openai_api_key,
-                "openai_base_url": self.openai_base_url,
-                "google_api_key": self.google_api_key,
-                "embedding_model": self.embedding_model,
-                "embedding_max_tokens_limit": self.embedding_max_tokens_limit,
-            }
-        )
+
+        # API 키 및 기타 설정은 마이그레이션에서 제외
+        # openai_api_key, openai_base_url, google_api_key, embedding_model, embedding_max_tokens_limit
+
+        # 마이그레이션에 포함할 필드만 추가
+        if self.dimensions is not None:
+            kwargs["dimensions"] = self.dimensions
+
         return name, path, args, kwargs
 
     def db_type(self, connection):
