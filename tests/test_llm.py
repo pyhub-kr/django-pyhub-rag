@@ -4,6 +4,7 @@ import pytest
 from django.core.files.base import ContentFile, File
 from django.template import Template
 from PIL import Image as PILImage
+from google.genai.errors import ServerError
 
 from pyhub.llm import (
     AnthropicLLM,
@@ -31,12 +32,12 @@ async def check_llm_async(llm: BaseLLM):
         # llm.clear()
         # assert len(llm) == 0
 
-        reply1 = await llm.ask_async("hello. my name is tom.")
+        reply1 = await llm.ask_async("hello. my name is tom.", raise_errors=True)
         assert isinstance(reply1, Reply)
         assert "Error" not in reply1.text
         assert len(llm) == 2
 
-        reply2 = await llm.ask_async("what is my name?")
+        reply2 = await llm.ask_async("what is my name?", raise_errors=True)
         assert isinstance(reply2, Reply)
         assert "Error" not in reply2.text
         assert "tom" in reply2.text.lower()
@@ -45,13 +46,13 @@ async def check_llm_async(llm: BaseLLM):
         llm.clear()
         assert len(llm) == 0
 
-        gen1 = await llm.ask_async("hello. my name is tom.", stream=True)
+        gen1 = await llm.ask_async("hello. my name is tom.", stream=True, raise_errors=True)
         reply_list1 = [reply async for reply in gen1]
         assert all([isinstance(reply, Reply) for reply in reply_list1])
         assert "Error" not in "".join([reply.text for reply in reply_list1])
         assert len(llm) == 2
 
-        gen2 = await llm.ask_async("hello. my name is tom.", stream=True)
+        gen2 = await llm.ask_async("hello. my name is tom.", stream=True, raise_errors=True)
         reply_list2 = [reply async for reply in gen2]
         assert all([isinstance(reply, Reply) for reply in reply_list2])
         assert "Error" not in "".join([reply.text for reply in reply_list2])
@@ -152,12 +153,18 @@ async def test_anthropic():
 @pytest.mark.asyncio
 async def test_google_async():
     llm = GoogleLLM()
-    await check_llm_async(llm)
+    try:
+        await check_llm_async(llm)
+    except ServerError as e:
+        pytest.skip(f"Google LLM is not available : {e}")
 
 
 async def test_google():
     llm = GoogleLLM()
-    check_llm(llm)
+    try:
+        check_llm(llm)
+    except ServerError as e:
+        pytest.skip(f"Google LLM is not available : {e}")
 
 
 @pytest.mark.asyncio
