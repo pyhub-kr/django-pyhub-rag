@@ -2,6 +2,7 @@
 
 ## 1.1.5
 
++ `*_DATABASE_URL` 패턴의 환경변수를 파싱하여, `settings.DATABASES` 에 자동 등록
 + sqlite vec0, postgres pgvector 확장 설치 여부를 check 프레임워크를 통해 자동 확인
 + 새 버전이 있을 때, 표준출력으로 알림
 + `pyhub.llm ask` 명령에서 중복된 `-m` 옵션 제거 (버그)

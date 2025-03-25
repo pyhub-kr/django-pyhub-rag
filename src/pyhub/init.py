@@ -247,8 +247,12 @@ def get_databases(base_dir: Path):
         "default": env.db("DATABASE_URL", default=DEFAULT_DATABASE),
     }
 
-    if "VECTORSTORE_DATABASE_URL" in env:
-        _databases["vectorstore"] = env.db("VECTORSTORE_DATABASE_URL")
+    for key in os.environ.keys():
+        if "_DATABASE_URL" in key:
+            db_alias = key.replace("_DATABASE_URL", "").lower()
+            parsed_config = env.db_url(key)  # 파싱에 실패하면 빈 사전을 반환합니다.
+            if parsed_config:
+                _databases[db_alias] = parsed_config
 
     for db_name in _databases:
         if _databases[db_name]["ENGINE"] == "django.db.backends.sqlite3":
