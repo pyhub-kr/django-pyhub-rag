@@ -1,19 +1,22 @@
 from dataclasses import asdict, dataclass, field
 from decimal import Decimal
-from enum import Enum
 from pathlib import Path
 from typing import Any, Literal, TypeAlias, Union
 
 from anthropic.types import ModelParam as AnthropicChatModelType
+from django.core.exceptions import ValidationError
 from django.core.files import File
+from django.db.models import TextChoices
 from openai.types import ChatModel as OpenAIChatModelType
 from typing_extensions import Optional
+
+from pyhub.utils import enum_to_flatten_set, type_to_flatten_set
 
 #
 # Vendor
 #
 
-LLMVendor: TypeAlias = Literal["openai", "anthropic", "google", "ollama"]
+LLMVendorType: TypeAlias = Literal["openai", "anthropic", "google", "upstage", "ollama"]
 
 #
 # Language
@@ -279,75 +282,192 @@ class EmbedList:
         return str(self.arrays)
 
 
-class LanguageEnum(str, Enum):
+class LanguageEnum(TextChoices):
     KOREAN = "korean"
     ENGLISH = "english"
     JAPANESE = "japanese"
     CHINESE = "chinese"
 
 
-class LLMVendorEnum(str, Enum):
-    OPENAI = "openai"
-    ANTHROPIC = "anthropic"
-    GOOGLE = "google"
-    UPSTAGE = "upstage"
-    OLLAMA = "ollama"
+class LLMVendorEnum(TextChoices):
+    OPENAI = "openai", "OpenAI"
+    ANTHROPIC = "anthropic", "Anthropic"
+    GOOGLE = "google", "Google"
+    UPSTAGE = "upstage", "Upstage"
+    OLLAMA = "ollama", "Ollama"
 
 
-class EmbeddingDimensionsEnum(str, Enum):
+class EmbeddingDimensionsEnum(TextChoices):
     D_768 = "768"
     D_1536 = "1536"
     D_3072 = "3072"
 
 
-class LLMEmbeddingModelEnum(str, Enum):
-    TEXT_EMBEDDING_3_SMALL = "text-embedding-3-small"
-    TEXT_EMBEDDING_3_LARGE = "text-embedding-3-large"
-    TEXT_EMBEDDING_004 = "text-embedding-004"
-    TEXT_EMBEDDING_ADA_02 = "text-embedding-ada-002"
+class LLMEmbeddingModelEnum(TextChoices):
+    TEXT_EMBEDDING_3_SMALL = "text-embedding-3-small", "text-embedding-3-small"
+    TEXT_EMBEDDING_3_LARGE = "text-embedding-3-large", "text-embedding-3-large"
+    TEXT_EMBEDDING_004 = "text-embedding-004", "text-embedding-004"
+    TEXT_EMBEDDING_ADA_02 = "text-embedding-ada-002", "text-embedding-ada-002"
 
 
-class LLMChatModelEnum(str, Enum):
+class OpenAIChatModelEnum(TextChoices):
+    GPT_4O = "gpt-4o", "gpt-4o"
+    GPT_4O_MINI = "gpt-4o-mini", "gpt-4o-mini"
+    CHATGPT_4O_LATEST = "chatgpt-4o-latest", "chatgpt-4o-latest"
+    O1 = "o1", "o1"
+    O1_MINI = "o1-mini", "o1-mini"
+    O3_MINI = "o3-mini", "o3-mini"
+
+
+class AnthropicChatModelEnum(TextChoices):
+    CLAUDE_3_7_SONNET_LATEST = "claude-3-7-sonnet-latest", "claude-3-7-sonnet-latest"
+    CLAUDE_3_5_HAIKU_LATEST = "claude-3-5-haiku-latest", "claude-3-5-haiku-latest"
+    CLAUDE_3_5_SONNET_LATEST = "claude-3-5-sonnet-latest", "claude-3-5-sonnet-latest"
+    CLAUDE_3_OPUS_LATEST = "claude-3-opus-latest", "claude-3-opus-latest"
+
+
+class UpstageChatModelEnum(TextChoices):
+    UPSTAGE_SOLAR_PRO = "solar-pro", "solar-pro"
+    UPSTAGE_SOLAR_MINI = "solar-mini", "solar-mini"
+
+
+class GoogleChatModelEnum(TextChoices):
+    GEMINI_2_0_FLASH = "gemini-2.0-flash", "gemini-2.0-flash"
+    GEMINI_2_0_FLASH_LITE = "gemini-2.0-flash-lite", "gemini-2.0-flash-lite"
+    GEMINI_1_5_FLASH = "gemini-1.5-flash", "gemini-1.5-flash"
+    GEMINI_1_5_FLASH_8B = "gemini-1.5-flash-8b", "gemini-1.5-flash-8b"
+    GEMINI_1_5_PRO = "gemini-1.5-pro", "gemini-1.5-pro"
+
+
+class OllamaChatModelEnum(TextChoices):
+    LLAMA_3_3 = "llama3.3", "llama3.3"
+    LLAMA_3_3_70B = "llama3.3:70b", "llama3.3:70b"
+    LLAMA_3_2 = "llama3.2", "llama3.2"
+    LLAMA_3_2_1B = "llama3.2:1b", "llama3.2:1b"
+    LLAMA_3_2_3B = "llama3.2:3b", "llama3.2:3b"
+    LLAMA_3_1 = "llama3.1", "llama3.1"
+    LLAMA_3_1_8B = "llama3.1:8b", "llama3.1:8b"
+    LLAMA_3_1_70B = "llama3.1:70b", "llama3.1:70b"
+    LLAMA_3_1_405B = "llama3.1:405b", "llama3.1:405b"
+    MISTRAL = "mistral", "mistral"
+    MISTRAL_7B = "mistral:7b", "mistral:7b"
+    QWEN2 = "qwen2", "qwen2"
+    QWEN2_0_5B = "qwen2:0.5b", "qwen2:0.5b"
+    QWEN2_1_5B = "qwen2:1.5b", "qwen2:1.5b"
+    QWEN2_7B = "qwen2:7b", "qwen2:7b"
+    QWEN2_72B = "qwen2:72b", "qwen2:72b"
+    GEMMA3 = "gemma3", "gemma3"
+    GEMMA3_1B = "gemma3:1b", "gemma3:1b"
+    GEMMA3_4B = "gemma3:4b", "gemma3:4b"
+    GEMMA3_12B = "gemma3:12b", "gemma3:12b"
+    GEMMA3_27B = "gemma3:27b", "gemma3:27b"
+
+
+# enum은 상속을 지원하지 않습니다.
+class LLMChatModelEnum(TextChoices):
     # openai
-    GPT_4O = "gpt-4o"
-    GPT_4O_MINI = "gpt-4o-mini"
-    CHATGPT_4O_LATEST = "chatgpt-4o-latest"
-    O1 = "o1"
-    O1_MINI = "o1-mini"
-    O3_MINI = "o3-mini"
+    GPT_4O = "gpt-4o", "gpt-4o"
+    GPT_4O_MINI = "gpt-4o-mini", "gpt-4o-mini"
+    CHATGPT_4O_LATEST = "chatgpt-4o-latest", "chatgpt-4o-latest"
+    O1 = "o1", "o1"
+    O1_MINI = "o1-mini", "o1-mini"
+    O3_MINI = "o3-mini", "o3-mini"
     # anthropic
-    CLAUDE_3_7_SONNET_LATEST = "claude-3-7-sonnet-latest"
-    CLAUDE_3_5_HAIKU_LATEST = "claude-3-5-haiku-latest"
-    CLAUDE_3_5_SONNET_LATEST = "claude-3-5-sonnet-latest"
-    CLAUDE_3_OPUS_LATEST = "claude-3-opus-latest"
-    # google
-    GEMINI_2_0_FLASH = "gemini-2.0-flash"
-    GEMINI_2_0_FLASH_LITE = "gemini-2.0-flash-lite"
-    GEMINI_1_5_FLASH = "gemini-1.5-flash"
-    GEMINI_1_5_FLASH_8B = "gemini-1.5-flash-8b"
-    GEMINI_1_5_PRO = "gemini-1.5-pro"
+    CLAUDE_3_7_SONNET_LATEST = "claude-3-7-sonnet-latest", "claude-3-7-sonnet-latest"
+    CLAUDE_3_5_HAIKU_LATEST = "claude-3-5-haiku-latest", "claude-3-5-haiku-latest"
+    CLAUDE_3_5_SONNET_LATEST = "claude-3-5-sonnet-latest", "claude-3-5-sonnet-latest"
+    CLAUDE_3_OPUS_LATEST = "claude-3-opus-latest", "claude-3-opus-latest"
     # upstage
-    UPSTAGE_SOLAR_PRO = "solar-pro"
-    UPSTAGE_SOLAR_MINI = "solar-mini"
+    UPSTAGE_SOLAR_PRO = "solar-pro", "solar-pro"
+    UPSTAGE_SOLAR_MINI = "solar-mini", "solar-mini"
+    # google
+    GEMINI_2_0_FLASH = "gemini-2.0-flash", "gemini-2.0-flash"
+    GEMINI_2_0_FLASH_LITE = "gemini-2.0-flash-lite", "gemini-2.0-flash-lite"
+    GEMINI_1_5_FLASH = "gemini-1.5-flash", "gemini-1.5-flash"
+    GEMINI_1_5_FLASH_8B = "gemini-1.5-flash-8b", "gemini-1.5-flash-8b"
+    GEMINI_1_5_PRO = "gemini-1.5-pro", "gemini-1.5-pro"
     # ollama
-    LLAMA_3_3 = "llama3.3"
-    LLAMA_3_3_70B = "llama3.3:70b"
-    LLAMA_3_2 = "llama3.2"
-    LLAMA_3_2_1B = "llama3.2:1b"
-    LLAMA_3_2_3B = "llama3.2:3b"
-    LLAMA_3_1 = "llama3.1"
-    LLAMA_3_1_8B = "llama3.1_8B"
-    LLAMA_3_1_70B = "llama3.1:70B"
-    LLAMA_3_1_405B = "llama3.1:405B"
-    MISTRAL = "mistral"
-    MISTRAL_7B = "mistral:7b"
-    QWEN2 = "qwen2"
-    QWEN2_0_5B = "qwen2:0.5b"
-    QWEN2_1_5B = "qwen2:1.5b"
-    QWEN2_7B = "qwen2:7b"
-    QWEN2_72B = "qwen2:72b"
-    GEMMA3 = "gemma3"
-    GEMMA3_1B = "gemma3:1b"
-    GEMMA3_4B = "gemma3:4b"
-    GEMMA3_12B = "gemma3:12b"
-    GEMMA3_27B = "gemma3:27b"
+    LLAMA_3_3 = "llama3.3", "llama3.3"
+    LLAMA_3_3_70B = "llama3.3:70b", "llama3.3:70b"
+    LLAMA_3_2 = "llama3.2", "llama3.2"
+    LLAMA_3_2_1B = "llama3.2:1b", "llama3.2:1b"
+    LLAMA_3_2_3B = "llama3.2:3b", "llama3.2:3b"
+    LLAMA_3_1 = "llama3.1", "llama3.1"
+    LLAMA_3_1_8B = "llama3.1:8B", "llama3.1:8B"
+    LLAMA_3_1_70B = "llama3.1:70B", "llama3.1:70B"
+    LLAMA_3_1_405B = "llama3.1:405B", "llama3.1:405B"
+    MISTRAL = "mistral", "mistral"
+    MISTRAL_7B = "mistral:7b", "mistral:7b"
+    QWEN2 = "qwen2", "qwen2"
+    QWEN2_0_5B = "qwen2:0.5b", "qwen2:0.5b"
+    QWEN2_1_5B = "qwen2:1.5b", "qwen2:1.5b"
+    QWEN2_7B = "qwen2:7b", "qwen2:7b"
+    QWEN2_72B = "qwen2:72b", "qwen2:72b"
+    GEMMA3 = "gemma3", "gemma3"
+    GEMMA3_1B = "gemma3:1b", "gemma3:1b"
+    GEMMA3_4B = "gemma3:4b", "gemma3:4b"
+    GEMMA3_12B = "gemma3:12b", "gemma3:12b"
+    GEMMA3_27B = "gemma3:27b", "gemma3:27b"
+
+    @classmethod
+    def validate_model(cls, llm_vendor: LLMVendorType, chat_model: LLMChatModelType) -> None:
+        """
+        지정된 vendor에 해당 model이 존재하는지 검사합니다.
+
+        Args:
+            llm_vendor: 검사할 벤더 타입 ('openai', 'anthropic', 'google', 'ollama', 'upstage' 등)
+            chat_model: 검사할 모델 이름
+
+        Raises:
+            ValidationError
+        """
+
+        if llm_vendor == LLMVendorEnum.OPENAI.value:
+            if chat_model not in OpenAIChatModelEnum:
+                raise ValidationError(f"{chat_model} : Invalid OpenAI Model")
+        elif llm_vendor == LLMVendorEnum.ANTHROPIC.value:
+            if chat_model not in AnthropicChatModelEnum:
+                raise ValidationError(f"{chat_model} : Invalid Anthropic Model")
+        elif llm_vendor == LLMVendorEnum.GOOGLE.value:
+            if chat_model not in GoogleChatModelEnum:
+                raise ValidationError(f"{chat_model} : Invalid Google Model")
+        elif llm_vendor == LLMVendorEnum.OLLAMA.value:
+            if chat_model not in OllamaChatModelEnum:
+                raise ValidationError(f"{chat_model} : Invalid OLLAMA Model")
+        elif llm_vendor == LLMVendorEnum.UPSTAGE.value:
+            if chat_model not in UpstageChatModelEnum:
+                raise ValidationError(f"{chat_model} : Invalid UPSTAGE Model")
+        else:
+            raise ValueError(f"Unknown llm vendor: {llm_vendor}")
+
+
+assert enum_to_flatten_set(LLMVendorEnum) == type_to_flatten_set(
+    LLMVendorType
+), "Values in LLMVendorEnum and LLMVendorType do not match."
+assert enum_to_flatten_set(LanguageEnum) == type_to_flatten_set(
+    LanguageType
+), "Values in LanguageEnum and LanguageType do not match."
+
+assert enum_to_flatten_set(OpenAIChatModelEnum).issubset(
+    type_to_flatten_set(OpenAIChatModelType)
+), "OpenAIChatModelEnum is not a subset of OpenAIChatModelType."
+assert enum_to_flatten_set(UpstageChatModelEnum) == type_to_flatten_set(
+    UpstageChatModelType
+), "Values in UpstageChatModelEnum and UpstageChatModelType do not match."
+assert enum_to_flatten_set(AnthropicChatModelEnum).issubset(
+    type_to_flatten_set(AnthropicChatModelType)
+), "AnthropicChatModelEnum is not a subset of AnthropicChatModelType."
+assert enum_to_flatten_set(GoogleChatModelEnum) == type_to_flatten_set(
+    GoogleChatModelType
+), "Values in GoogleChatModelEnum and GoogleChatModelType do not match."
+assert enum_to_flatten_set(OllamaChatModelEnum) == type_to_flatten_set(
+    OllamaChatModelType
+), "Values in OllamaChatModelEnum and OllamaChatModelType do not match."
+
+assert enum_to_flatten_set(LLMChatModelEnum) == (
+    enum_to_flatten_set(OpenAIChatModelEnum)
+    | enum_to_flatten_set(AnthropicChatModelEnum)
+    | enum_to_flatten_set(UpstageChatModelEnum)
+    | enum_to_flatten_set(GoogleChatModelEnum)
+    | enum_to_flatten_set(OllamaChatModelEnum)
+), "LLMChatModelEnum does not match the union of all vendor-specific ChatModelEnums."

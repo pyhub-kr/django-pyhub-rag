@@ -4,6 +4,7 @@ import json
 import logging
 from dataclasses import dataclass
 from functools import reduce
+from os import environ
 from typing import Any, AsyncGenerator, Generator, Optional, cast
 
 from django.conf import settings
@@ -19,7 +20,7 @@ from pyhub.llm.base import BaseLLM, DescribeImageRequest
 from pyhub.llm.types import (
     GoogleChatModelType,
     LLMChatModelType,
-    LLMVendorEnum,
+    LLMVendorType,
     OpenAIChatModelType,
     Reply,
 )
@@ -46,21 +47,40 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class ImageDescriptor:
-    llm_vendor: LLMVendorEnum = "openai"
+    llm_vendor: LLMVendorType = "openai"
     llm_model: LLMChatModelType = "gpt-4o-mini"
     llm_api_key: Optional[str] = None
     llm_base_url: Optional[str] = None
     temperature: Optional[float] = None
     max_tokens: Optional[int] = None
-    system_prompts = {
+    system_prompts: Optional[dict[str, str]] = None
+    user_prompts: Optional[dict[str, str]] = None
+
+    DEFAULT_SYSTEM_PROMPTS = {
         "image": "prompts/describe/image/system.md",
         "table": "prompts/describe/table/system.md",
     }
-    user_prompts = {
+    DEFAULT_USER_PROMPTS = {
         "image": "prompts/describe/image/user.md",
         "table": "prompts/describe/table/user.md",
     }
     prompt_context: Optional[dict[str, Any]] = None
+
+    def __post_init__(self):
+        image_prompt_templates = self.get_prompts("describe_image")
+        table_prompt_templates = self.get_prompts("describe_table")
+
+        if self.system_prompts is None or len(self.system_prompts) == 0:
+            self.system_prompts = {
+                "image": image_prompt_templates["system"],
+                "table": table_prompt_templates["system"],
+            }
+
+        if self.user_prompts is None or len(self.user_prompts) == 0:
+            self.user_prompts = {
+                "image": image_prompt_templates["user"],
+                "table": table_prompt_templates["user"],
+            }
 
     @classmethod
     def get_prompts(cls, prompt_type: str, use_default_prompts: bool = True) -> PromptTemplates:
@@ -72,27 +92,11 @@ class ImageDescriptor:
         except KeyError as e:
             if use_default_prompts:
                 return PromptTemplates(
-                    system=cls.system_prompts["image"],
-                    user=cls.user_prompts["image"],
+                    system=cls.DEFAULT_SYSTEM_PROMPTS["image"],
+                    user=cls.DEFAULT_USER_PROMPTS["image"],
                 )
             else:
                 raise e
-
-    def __post_init__(self):
-        if settings.PROMPT_TEMPLATES:
-            image_prompt_templates = self.get_prompts("describe_image")
-            table_prompt_templates = self.get_prompts("describe_table")
-
-            self.system_prompts = {
-                "image": image_prompt_templates["system"],
-                "table": table_prompt_templates["system"],
-            }
-            self.user_prompts = {
-                "image": image_prompt_templates["user"],
-                "table": table_prompt_templates["user"],
-            }
-
-            logger.debug("override prompts using settings.PROMPT_TEMPLATES")
 
     def __str__(self) -> str:
         """인스턴스 정보를 문자열로 반환합니다. API 키는 제외됩니다."""
@@ -146,7 +150,7 @@ class UpstageDocumentParseParser:
         max_page: Optional[int] = None,
         image_descriptor: ImageDescriptor = None,
         ocr_mode: OCRModeType = "auto",
-        document_format: DocumentFormatType = "html",
+        document_format: DocumentFormatType = "markdown",
         coordinates: bool = False,
         base64_encoding_category_list: Optional[list[ElementCategoryType]] = None,
         ignore_element_category_list: Optional[list[ElementCategoryType]] = None,
@@ -193,7 +197,7 @@ class UpstageDocumentParseParser:
             verbose (bool, optional): 상세한 처리 정보를 표시할지 여부.
                                      기본값은 False입니다.
         """
-        self.upstage_api_key = upstage_api_key
+        self.upstage_api_key = upstage_api_key or environ.get("UPSTAGE_API_KEY")
         self.api_url = api_url
         self.model = model
         self.split = split
@@ -580,8 +584,8 @@ class UpstageDocumentParseParser:
             )
             logger.info(
                 "%s %s 모델을 통해 이미지 설명을 생성합니다.",
-                self.image_descriptor.llm_vendor.value,
-                self.image_descriptor.llm_model.value,
+                self.image_descriptor.llm_vendor,
+                self.image_descriptor.llm_model,
             )
 
             llm_reply_list: list[Reply] = await image_descriptor_llm.describe_images_async(request_list)

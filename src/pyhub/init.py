@@ -214,6 +214,16 @@ def make_settings(
                     "level": log_level,
                     "propagate": False,
                 },
+                "pyhub.rag": {
+                    "handlers": ["debug_console"],
+                    "level": "INFO",  # pyhub.rag의 debug 로그는 처리하지 않음
+                    "propagate": False,
+                },
+                "pyhub.routers": {
+                    "handlers": ["debug_console"],
+                    "level": "INFO",  # pyhub.rag의 debug 로그는 처리하지 않음
+                    "propagate": False,
+                },
             },
         },
         # Internationalization

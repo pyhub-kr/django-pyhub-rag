@@ -1,10 +1,10 @@
 import logging
 from dataclasses import asdict, dataclass, field
-from enum import Enum
 from re import search, sub
 from typing import Literal, Union
 
 from django.core.files import File
+from django.db.models import TextChoices
 
 from pyhub.parser.documents import Document
 from pyhub.parser.utils import base64_to_file
@@ -46,19 +46,35 @@ ElementCategoryType = Literal[
 ]
 
 
+class ElementCategoryEnum(TextChoices):
+    DEFAULT = "default"
+    PARAGRAPH = "paragraph"
+    TABLE = "table"
+    FIGURE = "figure"
+    HEADER = "header"
+    FOOTER = "footer"
+    CAPTION = "caption"
+    EQUATION = "equation"
+    HEADING1 = "heading1"
+    LIST = "list"
+    INDEX = "index"
+    FOOTNOTE = "footnote"
+    CHART = "chart"
+
+
 # Enum classes
-class DocumentSplitStrategyEnum(str, Enum):
+class DocumentSplitStrategyEnum(TextChoices):
     PAGE = "page"
     ELEMENT = "element"
     NONE = "none"
 
 
-class OCRModeEnum(str, Enum):
+class OCRModeEnum(TextChoices):
     FORCE = "force"
     AUTO = "auto"
 
 
-class DocumentFormatEnum(str, Enum):
+class DocumentFormatEnum(TextChoices):
     MARKDOWN = "markdown"
     HTML = "html"
     TEXT = "text"
@@ -74,7 +90,7 @@ class DocumentFormatEnum(str, Enum):
         return ".txt"
 
 
-class CategoryEnum(str, Enum):
+class CategoryEnum(TextChoices):
     PARAGRAPH = "paragraph"
     TABLE = "table"
     FIGURE = "figure"

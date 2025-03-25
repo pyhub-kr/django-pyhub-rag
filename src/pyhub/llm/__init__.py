@@ -15,7 +15,7 @@ from .types import (
     LLMChatModelType,
     LLMEmbeddingModelEnum,
     LLMEmbeddingModelType,
-    LLMVendor,
+    LLMVendorType,
     OllamaChatModelType,
     OllamaEmbeddingModelType,
     OpenAIChatModelType,
@@ -60,7 +60,7 @@ class LLM:
     def create(
         cls,
         model: Union[LLMChatModelType, LLMEmbeddingModelType],
-        vendor: Optional[LLMVendor] = None,
+        vendor: Optional[LLMVendorType] = None,
         **kwargs,
     ) -> "BaseLLM":
         if vendor is None:

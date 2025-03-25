@@ -23,5 +23,5 @@ def test_field_deconstruct():
     name, path, args, kwargs = field.deconstruct()
 
     assert kwargs["dimensions"] == 512
-    assert kwargs["openai_api_key"] == "test-key"
-    assert kwargs["embedding_model"] == "test-model"
+    assert "openai_api_key" not in kwargs
+    assert "embedding_model" not in kwargs

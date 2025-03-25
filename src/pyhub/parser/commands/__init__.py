@@ -14,7 +14,13 @@ from rich.table import Table
 
 from pyhub import init, print_copyright, print_for_main
 from pyhub.caches import cache_clear_all
-from pyhub.llm.types import LanguageEnum, LLMChatModelEnum, LLMVendorEnum
+from pyhub.llm.types import (
+    LanguageEnum,
+    LLMChatModelEnum,
+    LLMChatModelType,
+    LLMVendorEnum,
+    LLMVendorType,
+)
 from pyhub.parser.json import json_dumps
 from pyhub.parser.upstage import UpstageDocumentParseParser
 from pyhub.parser.upstage.parser import ImageDescriptor
@@ -26,10 +32,13 @@ from pyhub.parser.upstage.settings import (
 from pyhub.parser.upstage.types import (
     CategoryEnum,
     DocumentFormatEnum,
+    DocumentFormatType,
     DocumentSplitStrategyEnum,
+    DocumentSplitStrategyType,
     Element,
     ElementCategoryType,
     OCRModeEnum,
+    OCRModeType,
 )
 from pyhub.rag.utils import get_literal_values
 
@@ -311,8 +320,8 @@ def upstage(
 
     if is_enable_image_descriptor:
         image_descriptor = ImageDescriptor(
-            llm_vendor=image_descriptor_llm_vendor,
-            llm_model=image_descriptor_llm_model,
+            llm_vendor=cast(LLMVendorType, image_descriptor_llm_vendor.value),
+            llm_model=cast(LLMChatModelType, image_descriptor_llm_model.value),
             llm_api_key=image_descriptor_api_key,
             llm_base_url=image_descriptor_base_url,
             prompt_context={"language": image_descriptor_language},
@@ -324,13 +333,13 @@ def upstage(
 
     parser = UpstageDocumentParseParser(
         upstage_api_key=upstage_api_key,
-        split=document_split_strategy.value,
+        split=cast(DocumentSplitStrategyType, document_split_strategy.value),
         pages=pages,
         start_page=start_page,
         max_page=max_page,
         image_descriptor=image_descriptor,
-        ocr_mode=ocr_mode.value,
-        document_format=document_format.value,
+        ocr_mode=cast(OCRModeType, ocr_mode.value),
+        document_format=cast(DocumentFormatType, document_format.value),
         base64_encoding_category_list=extract_element_category_list,
         ignore_element_category_list=ignore_element_category_list,
         ignore_cache=is_ignore_cache,
@@ -364,30 +373,30 @@ def upstage(
                                     uf.write("\n\n")
                                 uf.write(variant_page_content)
 
-                        el: Element
-                        for el in document.elements:
-                            if el.files:
-                                html: str = el.image_descriptions
+                    el: Element
+                    for el in document.elements:
+                        if el.files:
+                            html: str = el.image_descriptions
 
-                                matches = re.findall(r"(<image\s+name=[\'\"](.*?)[\'\"]>.*?</image>)", html, re.DOTALL)
-                                image_dict = {name: full_tag.strip() for full_tag, name in matches}
+                            matches = re.findall(r"(<image\s+name=[\'\"](.*?)[\'\"]>.*?</image>)", html, re.DOTALL)
+                            image_dict = {name: full_tag.strip() for full_tag, name in matches}
 
-                                for name, _file in el.files.items():
-                                    output_path = output_dir_path / name
-                                    output_path.parent.mkdir(parents=True, exist_ok=True)
-                                    if output_path.exists():
-                                        console.print(f"[red]경고: {output_path} 경로 파일을 덮어쓰기 합니다.[/red]")
-                                    output_path.open("wb").write(_file.read())
+                            for name, _file in el.files.items():
+                                output_path = output_dir_path / name
+                                output_path.parent.mkdir(parents=True, exist_ok=True)
+                                if output_path.exists():
+                                    console.print(f"[red]경고: {output_path} 경로 파일을 덮어쓰기 합니다.[/red]")
+                                output_path.open("wb").write(_file.read())
 
-                                    if name in image_dict:
-                                        desc = image_dict[name]
-                                        output_path.with_suffix(".txt").write_text(desc)
+                                if name in image_dict:
+                                    desc = image_dict[name]
+                                    output_path.with_suffix(".txt").write_text(desc)
 
-                        # for name, _file in document.files.items():
-                        #     print("name :", repr(name))
-                        #     output_path = output_dir_path / name
-                        #     output_path.parent.mkdir(parents=True, exist_ok=True)
-                        #     output_path.open("wb").write(_file.read())
+                    # for name, _file in document.files.items():
+                    #     print("name :", repr(name))
+                    #     output_path = output_dir_path / name
+                    #     output_path.parent.mkdir(parents=True, exist_ok=True)
+                    #     output_path.open("wb").write(_file.read())
 
                     document_count += 1
 

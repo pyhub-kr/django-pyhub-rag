@@ -2,7 +2,6 @@ import logging
 from typing import List, Literal, Type
 
 from asgiref.sync import sync_to_async
-from django.conf import settings
 from django.core import checks
 from django.core.exceptions import ImproperlyConfigured
 from django.db import connections
