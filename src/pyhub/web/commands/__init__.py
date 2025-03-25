@@ -1,10 +1,18 @@
+import contextlib
+import getpass
 import os
 import sys
 from pathlib import Path
 from typing import Optional
 
+import django
 import typer
+from django.conf import settings
+from django.core.management import call_command
+from django.core.management.base import SystemCheckError
 from rich.console import Console
+from rich.prompt import Prompt
+from rich.table import Table
 
 from pyhub import print_for_main
 
@@ -21,6 +29,7 @@ def run(
     port: int = typer.Option(8000, "--port", "-p", help="Port to bind the server to"),
     reload: bool = typer.Option(False, "--reload", "-r", help="Enable auto-reload on code changes"),
     workers: int = typer.Option(1, "--workers", "-w", help="Number of worker processes"),
+    is_disable_check: bool = typer.Option(False, "--disable-check", help="Disable django system check"),
     toml_path: Optional[Path] = typer.Option(
         Path.home() / ".pyhub.toml",
         "--toml-file",
@@ -36,25 +45,223 @@ def run(
     """Run the PyHub web server using uvicorn."""
     import uvicorn
 
+    with pyhub_web_proj(toml_path=toml_path, env_path=env_path, is_debug=is_debug):
+        if is_disable_check is False:
+            os.environ["DJANGO_SETTINGS_MODULE"] = "config.settings"
+            django.setup()
+            try:
+                call_command("check", deploy=False, fail_level="ERROR")
+            except SystemCheckError as e:
+                console.print(f"[red]{e}[/red]", highlight=False)
+                raise typer.Exit(1)
+
+        console.print(f"Starting PyHub web server on http://{host}:{port}", style="green")
+
+        uvicorn.run(
+            "config.asgi:application",
+            host=host,
+            port=port,
+            reload=reload,
+            workers=workers,
+        )
+
+
+@app.command()
+def migrate(
+    toml_path: Optional[Path] = typer.Option(
+        Path.home() / ".pyhub.toml",
+        help="toml 설정 파일 경로 (디폴트: ~/.pyhub.toml)",
+    ),
+    env_path: Optional[Path] = typer.Option(
+        Path.home() / ".pyhub.env",
+        help="환경 변수 파일(.env) 경로 (디폴트: ~/.pyhub.env)",
+    ),
+    db_alias: str = typer.Option(
+        "default",
+        help="migrate를 적용할 database alias",
+    ),
+    is_debug: bool = typer.Option(False, "--debug"),
+):
+    """최신 현황까지 데이터베이스 마이그레이션을 실행합니다."""
+
+    with pyhub_web_proj(toml_path=toml_path, env_path=env_path, is_debug=is_debug):
+        print_db_config(db_alias)
+
+        args = []
+        if db_alias is not None:
+            args.extend(("--database", db_alias))
+        call_command("migrate", *args)
+
+
+@app.command()
+def showmigrations(
+    toml_path: Optional[Path] = typer.Option(
+        Path.home() / ".pyhub.toml",
+        help="toml 설정 파일 경로 (디폴트: ~/.pyhub.toml)",
+    ),
+    env_path: Optional[Path] = typer.Option(
+        Path.home() / ".pyhub.env",
+        help="환경 변수 파일(.env) 경로 (디폴트: ~/.pyhub.env)",
+    ),
+    db_alias: str = typer.Option(
+        "default",
+        help="migrate를 적용할 database alias",
+    ),
+    is_debug: bool = typer.Option(False, "--debug"),
+):
+    """마이그레이션 적용 현황을 출력합니다."""
+
+    with pyhub_web_proj(toml_path=toml_path, env_path=env_path, is_debug=is_debug):
+        print_db_config(db_alias)
+
+        args = []
+        if db_alias is not None:
+            args.extend(("--database", db_alias))
+        call_command("showmigrations", *args)
+
+
+@app.command()
+def sqlmigrate(
+    app_label: str = typer.Argument(...),
+    migration_name: str = typer.Argument(...),
+    toml_path: Optional[Path] = typer.Option(
+        Path.home() / ".pyhub.toml",
+        help="toml 설정 파일 경로 (디폴트: ~/.pyhub.toml)",
+    ),
+    env_path: Optional[Path] = typer.Option(
+        Path.home() / ".pyhub.env",
+        help="환경 변수 파일(.env) 경로 (디폴트: ~/.pyhub.env)",
+    ),
+    db_alias: str = typer.Option(
+        "default",
+        help="migrate를 적용할 database alias",
+    ),
+    is_debug: bool = typer.Option(False, "--debug"),
+):
+    """장고 쉘을 구동합니다."""
+
+    with pyhub_web_proj(toml_path=toml_path, env_path=env_path, is_debug=is_debug):
+        print_db_config(db_alias)
+
+        args = []
+        if db_alias is not None:
+            args.extend(("--database", db_alias))
+        call_command("sqlmigrate", app_label, migration_name, *args)
+
+
+@app.command()
+def createuser(
+    toml_path: Optional[Path] = typer.Option(
+        Path.home() / ".pyhub.toml",
+        help="toml 설정 파일 경로 (디폴트: ~/.pyhub.toml)",
+    ),
+    env_path: Optional[Path] = typer.Option(
+        Path.home() / ".pyhub.env",
+        help="환경 변수 파일(.env) 경로 (디폴트: ~/.pyhub.env)",
+    ),
+    is_debug: bool = typer.Option(False, "--debug"),
+):
+    """새로운 유저를 생성합니다."""
+
+    username = Prompt.ask("username", default=getpass.getuser())
+    password1 = Prompt.ask("password", password=True)
+    password2 = Prompt.ask("password (confirm)", password=True)
+
+    with pyhub_web_proj(toml_path=toml_path, env_path=env_path, is_debug=is_debug):
+        from django.contrib.auth.forms import UserCreationForm
+
+        form = UserCreationForm(
+            data={
+                "username": username,
+                "password1": password1,
+                "password2": password2,
+            }
+        )
+        if form.is_valid():
+            user = form.save()
+            console.print(f"[green]Created user: {user}[/green]")
+        else:
+            table = Table()
+            table.add_column("Field", style="cyan")
+            table.add_column("Errors", style="red")
+            for field_name, errors in form.errors.items():
+                table.add_row(field_name, "\n".join(errors))
+            console.print(table)
+            raise typer.Exit(1)
+
+
+@app.command()
+def createsuperuser(
+    toml_path: Optional[Path] = typer.Option(
+        Path.home() / ".pyhub.toml",
+        help="toml 설정 파일 경로 (디폴트: ~/.pyhub.toml)",
+    ),
+    env_path: Optional[Path] = typer.Option(
+        Path.home() / ".pyhub.env",
+        help="환경 변수 파일(.env) 경로 (디폴트: ~/.pyhub.env)",
+    ),
+    is_debug: bool = typer.Option(False, "--debug"),
+):
+    """새로운 슈퍼 유저를 생성합니다."""
+
+    with pyhub_web_proj(toml_path=toml_path, env_path=env_path, is_debug=is_debug):
+        call_command("createsuperuser")
+
+
+@app.command()
+def shell(
+    toml_path: Optional[Path] = typer.Option(
+        Path.home() / ".pyhub.toml",
+        help="toml 설정 파일 경로 (디폴트: ~/.pyhub.toml)",
+    ),
+    env_path: Optional[Path] = typer.Option(
+        Path.home() / ".pyhub.env",
+        help="환경 변수 파일(.env) 경로 (디폴트: ~/.pyhub.env)",
+    ),
+    is_debug: bool = typer.Option(False, "--debug"),
+):
+    """장고 쉘을 구동합니다."""
+
+    with pyhub_web_proj(toml_path=toml_path, env_path=env_path, is_debug=is_debug):
+        call_command("shell")
+
+
+@contextlib.contextmanager
+def pyhub_web_proj(toml_path: Optional[Path], env_path: Optional[Path], is_debug: bool):
+    # Find the pyhub.web package path and add it to sys.path
+    web_package_path = Path(__file__).parent.parent
+    if web_package_path not in sys.path:
+        sys.path.insert(0, str(web_package_path))
+
+    os.environ["DEBUG"] = "1" if is_debug else "0"
+
     if toml_path and toml_path.exists():
         os.environ["TOML_PATH"] = str(toml_path)
 
     if env_path and env_path.exists():
         os.environ["ENV_PATH"] = str(env_path)
 
-    os.environ["DEBUG"] = "1" if is_debug else "0"
+    # DATABASE_URL 환경변수가 없다면, 디폴트로 현재 경로에 db.sqlite3 지정
+    if "DATABASE_URL" not in os.environ:
+        curdir_path = Path(os.curdir).absolute()
+        DEFAULT_DATABASE = f"sqlite:///{curdir_path / 'db.sqlite3'}"
+        os.environ["DATABASE_URL"] = DEFAULT_DATABASE
 
-    console.print(f"Starting PyHub web server on http://{host}:{port}", style="green")
+    # Django 설정
+    os.environ["DJANGO_SETTINGS_MODULE"] = "config.settings"
+    django.setup()
 
-    # Find the pyhub.web package path and add it to sys.path
-    web_package_path = Path(__file__).parent.parent
-    if web_package_path not in sys.path:
-        sys.path.insert(0, str(web_package_path))
+    try:
+        # 컨텍스트 제공
+        yield
+    finally:
+        # 필요한 정리 작업이 있다면 여기에 구현
+        pass
 
-    uvicorn.run(
-        "pyhub.web.config.asgi:application",
-        host=host,
-        port=port,
-        reload=reload,
-        workers=workers,
-    )
+
+def print_db_config(db_alias: str) -> None:
+    config = settings.DATABASES[db_alias]
+    if config["HOST"]:
+        console.print("[green]using {ENGINE} {HOST}:{PORT}/{NAME}[/green]".format(**config))
+    else:
+        console.print("[green]using {ENGINE} {NAME}[/green]".format(**config))
