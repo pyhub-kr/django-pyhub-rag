@@ -4,6 +4,8 @@ from typing import Union, cast
 
 import tiktoken
 from asgiref.sync import async_to_sync
+from django.conf import settings
+from django.core import checks
 from django.db import models
 from django_lifecycle import BEFORE_CREATE, BEFORE_UPDATE, LifecycleModelMixin, hook
 from typing_extensions import Optional
@@ -142,6 +144,38 @@ class AbstractDocument(LifecycleModelMixin, models.Model):
         encoding: tiktoken.Encoding = tiktoken.encoding_for_model(cls.get_embedding_field().embedding_model)
         token: list[int] = encoding.encode(text or "")
         return len(token)
+
+    @classmethod
+    def check(cls, **kwargs):
+        errors = super().check(**kwargs)
+
+        using = kwargs.get("using")
+        db_alias, env_name, vs_config = cls.get_vs_config(using=using)
+
+        if vs_config is None:
+            errors.append(
+                checks.Error(
+                    f"RAG 문서 저장을 위해 {env_name} 환경변수 설정이 필요합니다.",
+                    hint=f"settings.DATABASES['{db_alias}'] 설정과 {env_name} 환경변수 값을 확인해주세요.",
+                    obj=cls,
+                )
+            )
+
+        return errors
+
+    @classmethod
+    def get_vs_config(cls, using=None) -> tuple[str, str, Optional[dict]]:
+        model_db_alias = getattr(cls._meta, "db_alias", "default")
+        db_alias = using or model_db_alias
+
+        if db_alias == "default":
+            env_name = "DATABASE_URL"
+        else:
+            env_name = f"{db_alias.upper()}_DATABASE_URL"
+
+        vs_config = settings.DATABASES.get(db_alias, None)
+
+        return db_alias, env_name, vs_config
 
     class Meta:
         abstract = True

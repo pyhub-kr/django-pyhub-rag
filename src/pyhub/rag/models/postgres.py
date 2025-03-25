@@ -2,8 +2,10 @@ import logging
 from typing import List, Literal, Type
 
 from asgiref.sync import sync_to_async
+from django.conf import settings
 from django.core import checks
 from django.core.exceptions import ImproperlyConfigured
+from django.db import connections
 from django.db.models import QuerySet
 from pgvector.django import CosineDistance, HnswIndex, IvfflatIndex, L2Distance
 
@@ -139,9 +141,30 @@ class PGVectorDocument(AbstractDocument):
     def check(cls, **kwargs):
         errors = super().check(**kwargs)
 
-        def add_error(msg: str, hint: str = None):
-            errors.append(checks.Error(msg, hint=hint, obj=cls))
+        # database 확인
+        using = kwargs.get("using")
+        db_alias, env_name, vs_config = cls.get_vs_config(using=using)
 
+        if vs_config and vs_config["ENGINE"] != "django.db.backends.postgresql":
+            errors.append(
+                checks.Error(
+                    f"settings.DATABASES['{db_alias}']에 지정된 계정 정보가 Postgres 데이터베이스가 아닙니다.",
+                    hint=f"{cls._meta.app_label}.{cls._meta.model_name} 모델은 Postgres 데이터베이스가 필요합니다.",
+                    obj=cls,
+                )
+            )
+        else:
+            with connections[db_alias].cursor() as cursor:
+                cursor.execute("SELECT EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'vector');")
+                (is_exist,) = cursor.fetchone()
+                if not is_exist:  # bool
+                    checks.Error(
+                        f"settings.DATABASES['{db_alias}']에 지정된 데이터베이스에 pgvector 확장을 찾을 수 없습니다.",
+                        hint="데이터베이스에 pgvector 확장을 설치해주세요.",
+                        obj=cls,
+                    )
+
+        # fields 확인
         embedding_field = cls.get_embedding_field()
         embedding_field_name = embedding_field.name
 
@@ -151,23 +174,32 @@ class PGVectorDocument(AbstractDocument):
                     if embedding_field.dimensions <= 2000:
                         for opclass_name in index.opclasses:
                             if "halfvec_" in opclass_name:
-                                add_error(
-                                    f"{embedding_field.name} 필드는 {embedding_field.__class__.__name__} 타입으로서 "
-                                    f"{opclass_name}를 지원하지 않습니다.",
-                                    hint=f"{opclass_name.replace('halfvec_', 'vector_')}로 변경해주세요.",
+                                errors.append(
+                                    checks.Error(
+                                        f"{embedding_field.name} 필드는 {embedding_field.__class__.__name__} 타입으로서 "
+                                        f"{opclass_name}를 지원하지 않습니다.",
+                                        hint=f"{opclass_name.replace('halfvec_', 'vector_')}로 변경해주세요.",
+                                        obj=cls,
+                                    )
                                 )
                     else:
                         for opclass_name in index.opclasses:
                             if "vector_" in opclass_name:
-                                add_error(
-                                    f"{embedding_field.name} 필드는 {embedding_field.__class__.__name__} 타입으로서 "
-                                    f"{opclass_name}를 지원하지 않습니다.",
-                                    hint=f"{opclass_name.replace('vector_', 'halfvec_')}로 변경해주세요.",
+                                errors.append(
+                                    checks.Error(
+                                        f"{embedding_field.name} 필드는 {embedding_field.__class__.__name__} 타입으로서 "
+                                        f"{opclass_name}를 지원하지 않습니다.",
+                                        hint=f"{opclass_name.replace('vector_', 'halfvec_')}로 변경해주세요.",
+                                        obj=cls,
+                                    )
                                 )
                 else:
-                    add_error(
-                        f"Document 모델 check 메서드에서 {index.__class__.__name__}에 대한 확인이 누락되었습니다.",
-                        hint=f"{index.__class__.__name__} 인덱스에 대한 check 루틴을 보완해주세요.",
+                    errors.append(
+                        checks.Error(
+                            f"Document 모델 check 메서드에서 {index.__class__.__name__}에 대한 확인이 누락되었습니다.",
+                            hint=f"{index.__class__.__name__} 인덱스에 대한 check 루틴을 보완해주세요.",
+                            obj=cls,
+                        )
                     )
 
         return errors

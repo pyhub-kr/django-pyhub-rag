@@ -15,6 +15,7 @@ UPSTAGE_API_KEY = "up_xxxxx..."
 OPENAI_API_KEY = "sk-xxxxx..."
 # ANTHROPIC_API_KEY = "sk-ant-xxxxx..."
 # GOOGLE_API_KEY = "AIxxxxx...."
+# VECTORSTORE_DATABASE_URL = "postgresql://postgres:pw@localhost:5432/postgres"
 
 [prompt_templates.describe_image]
 system = """..."""

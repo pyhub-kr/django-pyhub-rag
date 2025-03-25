@@ -2,8 +2,8 @@ import logging
 from typing import List
 
 from asgiref.sync import sync_to_async
-from django.conf import settings
 from django.core import checks
+from django.db import connections
 from django.db.models.query import QuerySet
 
 from ..decorators import warn_if_async
@@ -47,27 +47,36 @@ class SQLiteVectorDocument(AbstractDocument):
     def check(cls, **kwargs):
         errors = super().check(**kwargs)
 
-        def add_error(msg: str, hint: str = None):
-            errors.append(checks.Error(msg, hint=hint, obj=cls))
+        using = kwargs.get("using")
+        db_alias, env_name, vs_config = cls.get_vs_config(using=using)
 
-        db_alias = kwargs.get("using") or "default"
-        db_settings = settings.DATABASES.get(db_alias, {})
-        engine = db_settings.get("ENGINE", "")
-
-        if engine != "pyhub.db.backends.sqlite3":
-            add_error(
-                "SQLiteVectorDocument 모델은 pyhub.db.backends.sqlite3 데이터베이스 엔진에서 지원합니다.",
-                hint=(
-                    "settings.DATABASES sqlite3 설정에 pyhub.db.backends.sqlite3 데이터베이스 엔진을 적용해주세요.\n"
-                    "\n"
-                    "\t\tDATABASES = {\n"
-                    '\t\t    "default": {\n'
-                    '\t\t        "ENGINE": "pyhub.db.backends.sqlite3",  # <-- \n'
-                    "\t\t        # ...\n"
-                    "\t\t    }\n"
-                    "\t\t}\n"
-                ),
+        if vs_config and vs_config["ENGINE"] != "pyhub.db.backends.sqlite3":
+            errors.append(
+                checks.Error(
+                    "SQLiteVectorDocument 모델은 pyhub.db.backends.sqlite3 데이터베이스 엔진에서 지원합니다.",
+                    hint=(
+                        "settings.DATABASES sqlite3 설정에 pyhub.db.backends.sqlite3 데이터베이스 엔진을 적용해주세요.\n"
+                        "\n"
+                        "\t\tDATABASES = {\n"
+                        '\t\t    "default": {\n'
+                        '\t\t        "ENGINE": "pyhub.db.backends.sqlite3",  # <-- \n'
+                        "\t\t        # ...\n"
+                        "\t\t    }\n"
+                        "\t\t}\n"
+                    ),
+                    obj=cls,
+                )
             )
+        else:
+            with connections[db_alias].cursor() as cursor:
+                cursor.execute("SELECT EXISTS (SELECT 1 FROM pragma_function_list WHERE name = 'vec_f32');")
+                (is_exist,) = cursor.fetchone()
+                if not is_exist:  # 1 or 0
+                    checks.Error(
+                        f"settings.DATABASES['{db_alias}']에 지정된 데이터베이스에 vec0 확장을 찾을 수 없습니다.",
+                        hint="sqlite-vec 라이브러리를 설치해주세요.",
+                        obj=cls,
+                    )
 
         return errors
 

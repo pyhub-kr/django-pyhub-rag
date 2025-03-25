@@ -247,6 +247,9 @@ def get_databases(base_dir: Path):
         "default": env.db("DATABASE_URL", default=DEFAULT_DATABASE),
     }
 
+    if "VECTORSTORE_DATABASE_URL" in env:
+        _databases["vectorstore"] = env.db("VECTORSTORE_DATABASE_URL")
+
     for db_name in _databases:
         if _databases[db_name]["ENGINE"] == "django.db.backends.sqlite3":
             _databases[db_name]["ENGINE"] = "pyhub.db.backends.sqlite3"
