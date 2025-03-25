@@ -11,6 +11,7 @@ from django.conf import settings
 from django.core.asgi import get_asgi_application
 from django.core.management import call_command
 from django.core.management.base import SystemCheckError
+from django.utils.autoreload import DJANGO_AUTORELOAD_ENV
 from rich.console import Console
 from rich.prompt import Prompt
 from rich.table import Table
@@ -56,17 +57,19 @@ def run(
                 raise typer.Exit(1)
 
         if is_dev_server:
-            console.print(
-                f"Starting PyHub web server on http://{host}:{port} using [green bold]django dev server[/green bold]",
-                style="green",
-            )
-
             args = [f"{host}:{port}", "--skip-checks", "--insecure"]
-
             if not reload:
                 args.append("--noreload")
 
-            console.print("(command) runserver", " ".join(args))
+            # 메인 프로세스와 auto reload로 구동되는 자식 프로세스를 구별하여, 콘솔 출력
+            if DJANGO_AUTORELOAD_ENV not in os.environ:
+                console.print(
+                    f"Starting PyHub web server on http://{host}:{port} using [green bold]django dev server[/green bold]",
+                    style="green",
+                )
+
+                console.print("(command) runserver", " ".join(args))
+
             call_command("runserver", *args)
 
         else:
