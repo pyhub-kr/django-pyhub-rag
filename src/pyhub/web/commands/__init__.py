@@ -226,6 +226,26 @@ def shell(
         call_command("shell")
 
 
+@app.command()
+def print_settings(
+    settings_names: list[str] = typer.Argument(..., help="출력할 settings 이름을 지정"),
+    toml_path: Optional[Path] = typer.Option(
+        Path.home() / ".pyhub.toml",
+        help="toml 설정 파일 경로 (디폴트: ~/.pyhub.toml)",
+    ),
+    env_path: Optional[Path] = typer.Option(
+        Path.home() / ".pyhub.env",
+        help="환경 변수 파일(.env) 경로 (디폴트: ~/.pyhub.env)",
+    ),
+    # format: Optional[] = typer.Option(None, help=""),
+    is_debug: bool = typer.Option(False, "--debug"),
+):
+    """장고 쉘을 구동합니다."""
+
+    with pyhub_web_proj(toml_path=toml_path, env_path=env_path, is_debug=is_debug):
+        call_command("print_settings", *settings_names)
+
+
 @contextlib.contextmanager
 def pyhub_web_proj(toml_path: Optional[Path], env_path: Optional[Path], is_debug: bool):
     # Find the pyhub.web package path and add it to sys.path

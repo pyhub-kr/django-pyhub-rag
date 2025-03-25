@@ -116,6 +116,7 @@ def make_settings(
         "django.contrib.sessions",
         "django.contrib.messages",
         "django.contrib.staticfiles",
+        "django_extensions",
         *pyhub_apps,
     ]
 

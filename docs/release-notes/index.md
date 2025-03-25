@@ -2,6 +2,7 @@
 
 ## 1.1.5
 
++ `pyhub.web` 명령 추가 : `print-settings` (Feat. `django-extensions`)
 + `pyhub.web` 명령 추가 : migrate, showmigrations, createsuperuser, createuser, sqlmigrate, shell
 + `*_DATABASE_URL` 패턴의 환경변수를 파싱하여, `settings.DATABASES` 에 자동 등록
 + sqlite vec0, postgres pgvector 확장 설치 여부를 check 프레임워크를 통해 자동 확인

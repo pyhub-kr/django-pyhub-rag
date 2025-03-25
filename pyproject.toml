@@ -25,6 +25,7 @@ dependencies = [
     "django-environ",
     "django-lifecycle",
     "django-debug-toolbar",
+    "django-extensions",
     "tiktoken",
     "openai",
     "anthropic",
