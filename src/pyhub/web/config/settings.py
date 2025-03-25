@@ -32,6 +32,8 @@ CSRF_TRUSTED_ORIGINS = PYHUB_SETTINGS.CSRF_TRUSTED_ORIGINS
 
 INSTALLED_APPS = [
     *PYHUB_SETTINGS.INSTALLED_APPS,
+    "django.contrib.admin",
+    "django.contrib.admindocs",
 ]
 
 MIDDLEWARE = [
@@ -40,7 +42,7 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
-    # "django.contrib.messages.middleware.MessageMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 

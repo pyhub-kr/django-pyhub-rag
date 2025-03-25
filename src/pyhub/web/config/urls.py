@@ -36,7 +36,7 @@ urlpatterns = [
     path("api/", api.urls),
 ]
 
-if apps.is_installed("admin"):
+if apps.is_installed("django.contrib.admin"):
     urlpatterns += [
         path("admin/", admin.site.urls),
     ]

@@ -61,7 +61,7 @@ def run(
                 style="green",
             )
 
-            args = [f"{host}:{port}", "--skip-checks"]
+            args = [f"{host}:{port}", "--skip-checks", "--insecure"]
 
             if not reload:
                 args.append("--noreload")
