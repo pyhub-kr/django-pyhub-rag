@@ -6,7 +6,7 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
-from pyhub import get_version, init
+from pyhub import init
 from pyhub.llm import LLM
 from pyhub.llm.types import LLMEmbeddingModelEnum, Usage
 from pyhub.rag.json import JSONDecodeError, json_dumps, json_loads
@@ -57,13 +57,8 @@ def fill_jsonl(
     ),
     is_force: bool = typer.Option(False, "--force", "-f", help="확인 없이 출력 폴더 삭제 후 재생성"),
     is_verbose: bool = typer.Option(False, "--verbose", help="상세한 처리 정보 표시"),
-    is_print_version: bool = typer.Option(False, "--version", help="현재 패키지 버전 출력"),
 ):
     """JSONL 파일 데이터의 page_content 필드 값을 임베딩하고 embedding 필드에 저장합니다."""
-
-    if is_print_version:
-        console.print(get_version())
-        raise typer.Exit()
 
     # 출력 경로가 지정되지 않은 경우 기존 자동 생성 로직 사용
     if jsonl_out_path is None:

@@ -12,7 +12,7 @@ from django.core.validators import URLValidator
 from rich.console import Console
 from rich.table import Table
 
-from pyhub import get_version, init, print_copyright, print_for_main
+from pyhub import init, print_copyright, print_for_main
 from pyhub.caches import cache_clear_all
 from pyhub.llm.types import LanguageEnum, LLMChatModelEnum, LLMVendorEnum
 from pyhub.parser.json import json_dumps
@@ -198,13 +198,8 @@ def upstage(
         "--env-file",
         help="환경 변수 파일(.env) 경로 (디폴트: ~/.pyhub.env)",
     ),
-    is_print_version: bool = typer.Option(False, "--version", help="현재 패키지 버전 출력"),
     is_debug: bool = typer.Option(False, "--debug"),
 ):
-    if is_print_version:
-        console.print(get_version())
-        raise typer.Exit()
-
     log_level = logging.DEBUG if is_verbose else logging.INFO
     init(debug=True, log_level=log_level, toml_path=toml_path, env_path=env_path)
 

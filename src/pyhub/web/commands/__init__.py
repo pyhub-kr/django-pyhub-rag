@@ -6,7 +6,7 @@ from typing import Optional
 import typer
 from rich.console import Console
 
-from pyhub import get_version, print_for_main
+from pyhub import print_for_main
 
 app = typer.Typer()
 console = Console()
@@ -31,15 +31,10 @@ def run(
         "--env-file",
         help="환경 변수 파일(.env) 경로 (디폴트: ~/.pyhub.env)",
     ),
-    is_print_version: bool = typer.Option(False, "--version", help="현재 패키지 버전 출력"),
     is_debug: bool = typer.Option(False, "--debug"),
 ):
     """Run the PyHub web server using uvicorn."""
     import uvicorn
-
-    if is_print_version:
-        console.print(get_version())
-        raise typer.Exit()
 
     if toml_path and toml_path.exists():
         os.environ["TOML_PATH"] = str(toml_path)

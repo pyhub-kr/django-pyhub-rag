@@ -8,7 +8,7 @@ from PIL import Image as PILImage
 from rich.console import Console
 from rich.table import Table
 
-from pyhub import get_version, init
+from pyhub import init
 from pyhub.llm import LLM
 from pyhub.llm.types import LLMChatModelEnum, LLMVendorEnum
 from pyhub.parser.upstage.parser import ImageDescriptor
@@ -67,13 +67,8 @@ def describe(
         help="환경 변수 파일(.env) 경로 (디폴트: ~/.pyhub.env)",
     ),
     is_verbose: bool = typer.Option(False, "--verbose", help="상세한 처리 정보 표시"),
-    is_print_version: bool = typer.Option(False, "--version", help="현재 패키지 버전 출력"),
 ):
     """LLM에게 이미지 설명을 요청합니다."""
-
-    if is_print_version:
-        console.print(get_version())
-        raise typer.Exit()
 
     if is_verbose:
         log_level = logging.DEBUG
