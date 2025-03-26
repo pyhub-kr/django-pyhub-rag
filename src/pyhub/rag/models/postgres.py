@@ -39,7 +39,9 @@ class PGVectorDocumentQuerySet(BaseDocumentQuerySet):
                 else:
                     raise NotImplementedError(f"{index.opclasses}에 대한 검색 구현이 필요합니다.")
 
-        raise ImproperlyConfigured(f"{self.model.__name__} 모델에 embedding 필드에 대한 인덱스를 추가해주세요.")
+        raise ImproperlyConfigured(
+            f"{self.model._meta.app_label}.{self.model.__name__} 모델의 embedding 필드에 대한 Vector 인덱스를 찾을 수 없습니다."
+        )
 
     @warn_if_async
     def similarity_search(self, query: str, k: int = 4) -> QuerySet["AbstractDocument"]:
@@ -167,8 +169,17 @@ class PGVectorDocument(AbstractDocument):
         embedding_field = cls.get_embedding_field()
         embedding_field_name = embedding_field.name
 
+        is_found_index_opclasses = False
+
         for index in cls._meta.indexes:
             if embedding_field_name in index.fields:
+                # vector_cosine_ops, halfvec_cosine_ops, etc.
+                if any("_cosine_ops" in op for op in index.opclasses):
+                    is_found_index_opclasses = True
+                # vector_l2_ops, halfvec_l2_ops, etc.
+                elif any("_l2_ops" in op for op in index.opclasses):
+                    is_found_index_opclasses = True
+
                 if isinstance(index, (HnswIndex, IvfflatIndex)):
                     if embedding_field.dimensions <= 2000:
                         for opclass_name in index.opclasses:
@@ -200,6 +211,25 @@ class PGVectorDocument(AbstractDocument):
                             obj=cls,
                         )
                     )
+
+        if is_found_index_opclasses is False:
+            errors.append(
+                checks.Error(
+                    f"{cls._meta.app_label}.{cls.__name__} 모델의 embedding 필드에 대한 Vector 인덱스를 찾을 수 없습니다.",
+                    hint=f"""
+\tclass {cls.__name__}(PGVectorDocument):
+\t    # ...
+\t    class Meta:
+\t        indexes = [
+\t            PGVectorDocument.make_hnsw_index(
+\t                "{cls._meta.app_label}_vecdoc_idx",  # TODO: 반드시 데이터베이스 내에서 유일한 이름으로 지정
+\t                # "vector",            # field type
+\t                # "cosine",            # distance metric
+\t            ),
+\t        ]""",
+                    obj=cls,
+                )
+            )
 
         return errors
 

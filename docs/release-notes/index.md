@@ -2,6 +2,7 @@
 
 ## 1.2.0
 
++ `PGVectorDocument` 모델에서 check 프레임워크를 통해 인덱스 미지정 확인
 + `StatusMixin` 추상화 모델 클래스 추가 : 문서 처리 상태를 관리
 + `PDFFileField` 모델 필드 추가
 + `pyhub.rag` : PGVectorField 마이그레이션 시에 api key가 포함되는 버그 해결
