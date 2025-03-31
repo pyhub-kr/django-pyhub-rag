@@ -321,6 +321,12 @@ def pyhub_web_proj(toml_path: Optional[Path], env_path: Optional[Path], is_debug
     os.environ["DJANGO_SETTINGS_MODULE"] = "settings"
     django.setup()
 
+    if settings.DATABASES["default"]["ENGINE"] != "django.db.backends.postgresql":
+        console.print(
+            "[red]PostgreSQL 데이터베이스만 지원됩니다. DATABASE_URL 환경변수를 PostgreSQL URL로 설정해주세요.[/red]"
+        )
+        sys.exit(1)
+
     try:
         # 컨텍스트 제공
         yield
