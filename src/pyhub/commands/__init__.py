@@ -124,7 +124,10 @@ def _get_toml_str() -> str:
 # OPENAI_API_KEY = "sk-xxxxx..."
 # ANTHROPIC_API_KEY = "sk-ant-xxxxx..."
 # GOOGLE_API_KEY = "AIxxxxx...."
-# VECTORSTORE_DATABASE_URL = "postgresql://postgres:pw@localhost:5432/postgres
+
+# 무료 PostgreSQL 서비스로서 supabase를 추천합니다. - https://supabase.com
+# DATABASE_URL = "postgresql://postgres:pw@localhost:5432/postgres
+
 USER_DEFAULT_TIME_ZONE = "Asia/Seoul"
 
 [prompt_templates.describe_image]
