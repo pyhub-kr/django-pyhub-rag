@@ -1,8 +1,8 @@
 from datetime import datetime
 from importlib.metadata import PackageNotFoundError, version
+from typing import Optional
 
 import typer
-from mkdocs.config.config_options import Optional
 from rich.console import Console
 
 from .init import PromptTemplates, init, load_envs, load_toml, make_settings
