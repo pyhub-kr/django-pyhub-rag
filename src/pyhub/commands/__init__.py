@@ -38,6 +38,12 @@ def toml(
         "-c",
         help="지정 경로에 toml 설정 파일을 생성합니다.",
     ),
+    is_force_create: bool = typer.Option(
+        False,
+        "--force-create",
+        "-f",
+        help="지정 경로에 toml 설정 파일을 덮어쓰며 생성합니다. 기존 설정이 유실될 수 있습니다.",
+    ),
     is_print: bool = typer.Option(
         False,
         "--print",
@@ -58,9 +64,12 @@ def toml(
 
     init(debug=True)
 
-    if is_create:
+    if is_create or is_force_create:
         if toml_path.exists():
-            raise typer.BadParameter(f"{toml_path} 경로에 파일이 이미 있습니다.")
+            if is_force_create:
+                console.print(f"[red]{toml_path} 경로의 파일을 덮어쓰기 합니다.[/red]")
+            else:
+                raise typer.BadParameter(f"{toml_path} 경로에 파일이 이미 있습니다.")
 
         try:
             with toml_path.open("wt", encoding="utf-8") as f:
