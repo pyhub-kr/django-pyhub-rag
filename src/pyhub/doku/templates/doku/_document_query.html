@@ -1,0 +1,44 @@
+{% load doku_tags %}
+
+{% include "pyhub/_crispy_form.html" %}
+
+{% if doc_list is not None %}
+    {% if not doc_list %}
+        {% alert type="warning" %}조회 결과가 없습니다.{% endalert %}
+    {% else %}
+        {% alert type="info" %}{{ doc_list|length }}개의 문서를 찾았습니다.{% endalert %}
+    {% endif %}
+
+    {% for doc in doc_list %}
+        <div class="mb-10" x-data="{ isOpen: false }">
+            <button 
+                @click="isOpen = !isOpen" 
+                class="w-full text-left p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors duration-200"
+            >
+                <div class="flex items-center">
+                    <div class="mr-2" x-show="!isOpen">▶</div>
+                    <div class="mr-2" x-show="isOpen">▼</div>
+                    <div>문서#{{ forloop.counter }}. 코사인 거리 : {{ doc.distance }}</div>
+                </div>
+            </button>
+
+            <div
+                x-show="isOpen" 
+                x-transition:enter="transition ease-out duration-200"
+                x-transition:enter-start="opacity-0 transform -translate-y-2"
+                x-transition:enter-end="opacity-100 transform translate-y-0"
+                class="font-mono text-sm [&>p]:text-gray-700 [&>p]:mb-2 [&>p]:leading-relaxed mt-3 pl-4 border-l-2 border-gray-200 max-h-96 overflow-y-auto"
+            >
+                <div class="text-xs text-gray-500 flex gap-2 flex-wrap mb-3">
+                    {% for key, value in doc.metadata.items %}
+                        {% if key != "image_descriptions" %}
+                            <span class="bg-gray-200 px-2 py-1 rounded">{{ key }}: {{ value }}</span>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+
+                {{ doc.page_content|linebreaks }}
+            </div>
+        </div>
+    {% endfor %}
+{% endif %}

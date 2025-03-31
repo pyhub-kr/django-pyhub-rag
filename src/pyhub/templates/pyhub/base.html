@@ -1,0 +1,66 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0"/>
+    <meta http-equiv="X-UA-Compatible" content="ie=edge"/>
+    <meta name="description" content="문서 기반 지식 센터"/>
+    <title>문서 기반 지식 센터</title>
+    {% include "pyhub/scripts.html" %}
+    <script>
+        {# toast_container 내에서 toast 이벤트를 받습니다. toast 이벤트 명은 Toast 컴포넌트 내에 정의되어있습니다. #}
+        function toastError({ message, event }) {
+            const statusCode = event.detail.xhr.status || "Unknown";
+            htmx.trigger(window, 'toast', { type: 'error', message: `${message} (상태코드: ${statusCode})` })
+        }
+    </script>
+</head>
+
+<body class="flex flex-col min-h-screen bg-gray-50"
+      hx-headers='{"x-csrftoken": "{{ csrf_token }}"}'
+      x-data="{}"
+      @reload-page.window="window.location.reload();"
+      @htmx:send-error="toastError({ event, message: '네트워크 오류로 요청을 전송하지 못했습니다. 인터넷 연결이나 서버 실행을 확인해주세요.' })"
+      @htmx:response-error="toastError({ event, message: '서버에서 오류 응답을 받았습니다. 관리자에게 문의해주세요.' })"
+      @htmx:timeout="toastError({ event, message: '서버 응답 시간이 초과되었습니다. 잠시 후 다시 시도해주세요.' })"
+>
+
+<nav class="bg-blue-600 text-white shadow-md">
+    <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+        <div class="flex items-center space-x-2">
+            {% block nav_header %}
+                <h1 class="text-xl font-bold">
+                    <a href="{% url 'doku:document-list' %}">
+                        파이썬사랑방 RAG
+                    </a>
+                </h1>
+            {% endblock %}
+        </div>
+        <div class="flex items-center space-x-4">
+            <c-button.modal link="{% url 'doku:document-new' %}" color="none"
+                            class="px-3 py-1 bg-blue-500 hover:bg-blue-400 rounded-md transition">
+                새 PDF 문서 등록
+            </c-button.modal>
+        </div>
+    </div>
+</nav>
+
+<main class="container mx-auto px-4 py-6 flex-grow">
+    {% block content %}{% endblock content %}
+    {% block extra-content %}{% endblock %}
+</main>
+
+<footer class="bg-gray-800 text-white py-4">
+    <div class="container mx-auto px-4 text-center">
+        <p>Copyright 2025. 파이썬사랑방. Made with Django. All rights reserved.</p>
+    </div>
+</footer>
+
+{% toast_container / %}
+
+{% block extra-js %}{% endblock %}
+</body>
+
+</html>

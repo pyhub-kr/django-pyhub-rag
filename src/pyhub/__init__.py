@@ -2,11 +2,22 @@ from datetime import datetime
 from importlib.metadata import PackageNotFoundError, version
 
 import typer
+from mkdocs.config.config_options import Optional
 from rich.console import Console
 
 from .init import PromptTemplates, init, load_envs, load_toml, make_settings
 
 console = Console()
+
+
+DEFAULT_LOGO = """
+    ██████╗ ██╗   ██╗██╗  ██╗██╗   ██╗██████╗
+    ██╔══██╗╚██╗ ██╔╝██║  ██║██║   ██║██╔══██╗
+    ██████╔╝ ╚████╔╝ ███████║██║   ██║██████╔╝
+    ██╔═══╝   ╚██╔╝  ██╔══██║██║   ██║██╔══██╗
+    ██║        ██║   ██║  ██║╚██████╔╝██████╔╝
+    ╚═╝        ╚═╝   ╚═╝  ╚═╝ ╚═════╝ ╚═════╝
+"""
 
 
 def get_version() -> str:
@@ -16,22 +27,24 @@ def get_version() -> str:
         return "not found"
 
 
-def print_for_main(
-    ctx: typer.Context,
-    is_help: bool = typer.Option(False, "--help", "-h", help="도움말 메시지 출력"),
-    is_print_version: bool = typer.Option(False, "--version", help="현재 패키지 버전 출력"),
-):
-    if is_print_version:
-        console.print(get_version())
-        raise typer.Exit()
+def print_for_main(logo: str):
+    def wrap(
+        ctx: typer.Context,
+        is_help: bool = typer.Option(False, "--help", "-h", help="도움말 메시지 출력"),
+        is_print_version: bool = typer.Option(False, "--version", help="현재 패키지 버전 출력"),
+    ):
+        if is_print_version:
+            console.print(get_version())
+            raise typer.Exit()
 
-    if is_help:
-        print_help(ctx)
-        raise typer.Exit()
+        if is_help:
+            print_help(ctx)
+            raise typer.Exit()
 
-    if ctx.invoked_subcommand is None:
-        print_logo()
-        print_help(ctx)
+        if ctx.invoked_subcommand is None:
+            print_logo(logo)
+            print_help(ctx)
+    return wrap
 
 
 def print_copyright() -> None:
@@ -46,17 +59,8 @@ def print_help(ctx: typer.Context) -> None:
     raise typer.Exit()
 
 
-def print_logo() -> None:
-    logo = """
-        ██████╗ ██╗   ██╗██╗  ██╗██╗   ██╗██████╗     ██████╗  █████╗  ██████╗ 
-        ██╔══██╗╚██╗ ██╔╝██║  ██║██║   ██║██╔══██╗    ██╔══██╗██╔══██╗██╔════╝ 
-        ██████╔╝ ╚████╔╝ ███████║██║   ██║██████╔╝    ██████╔╝███████║██║  ███╗
-        ██╔═══╝   ╚██╔╝  ██╔══██║██║   ██║██╔══██╗    ██╔══██╗██╔══██║██║   ██║
-        ██║        ██║   ██║  ██║╚██████╔╝██████╔╝    ██║  ██║██║  ██║╚██████╔╝
-        ╚═╝        ╚═╝   ╚═╝  ╚═╝ ╚═════╝ ╚═════╝     ╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝ 
-    """
-
-    console.print(logo, style="bold white")
+def print_logo(logo: Optional[str] = None) -> None:
+    console.print(logo or DEFAULT_LOGO, style="bold white")
     console.print(f"Welcome to PyHub RAG CLI! {get_version()} (Documents : https://rag.pyhub.kr)", style="green")
 
     # arg: str = sys.argv[0]

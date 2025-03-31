@@ -10,6 +10,7 @@ from typing import Any, Literal, Optional, TypedDict, Union
 import django
 import toml
 from django.conf import settings
+from django_components import ComponentsSettings
 from environ import Env
 
 from pyhub.versions import notify_if_update_available
@@ -43,10 +44,13 @@ class TemplateSetting(TypedDict):
 @dataclass
 class PyhubSetting:
     DEBUG: bool
+    BASE_DIR: Path
     SECRET_KEY: str
+    INTERNAL_IPS: list[str]
     ALLOWED_HOSTS: list[str]
     CSRF_TRUSTED_ORIGINS: list[str]
     INSTALLED_APPS: list[str]
+    MIDDLEWARE: list[str]
     TEMPLATES: list[TemplateSetting]
     DATABASE_ROUTERS: list[str]
     DATABASES: dict[str, dict]
@@ -55,11 +59,13 @@ class PyhubSetting:
     LOGGING: dict[str, Any]
     LANGUAGE_CODE: str
     TIME_ZONE: str
+    USER_DEFAULT_TIME_ZONE: str
     USE_I18N: bool
     USE_TZ: bool
     STATIC_URL: str
     STATIC_ROOT: Path
     STATICFILES_DIRS: list[Union[str, Path]]
+    STATICFILES_FINDERS: list[str]
     MEDIA_URL: str
     MEDIA_ROOT: Path
     DEFAULT_AUTO_FIELD: Literal["django.db.models.BigAutoField"]
@@ -67,6 +73,9 @@ class PyhubSetting:
     NCP_MAP_CLIENT_ID: Optional[str]
     NCP_MAP_CLIENT_SECRET: Optional[str]
     PROMPT_TEMPLATES: dict[str, PromptTemplates]
+    CRISPY_ALLOWED_TEMPLATE_PACKS: Literal["tailwind"]
+    CRISPY_TEMPLATE_PACK: Literal["tailwind"]
+    COMPONENTS: ComponentsSettings
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -110,51 +119,116 @@ def make_settings(
 
     logger.debug("자동으로 감지된 pyhub 앱: %s", ", ".join(pyhub_apps))
 
-    installed_apps = [
-        "django.contrib.auth",
-        "django.contrib.contenttypes",
-        "django.contrib.sessions",
-        "django.contrib.messages",
-        "django.contrib.staticfiles",
-        "django_extensions",
-        *pyhub_apps,
-    ]
-
     return PyhubSetting(
         DEBUG=debug,
+        BASE_DIR=base_dir,
         SECRET_KEY=os.environ.get(
             "SECRET_KEY",
             default="django-insecure-2%6ln@_fnpi!=ivjk(=)e7nx!7abp9d2e3f-+!*o=4s(bd1ynf",
         ),
+        INTERNAL_IPS=env.list("INTERNAL_IPS", default=["127.0.0.1"]),
         ALLOWED_HOSTS=env.list("ALLOWED_HOSTS", default=["localhost", "127.0.0.1", ".ngrok-free.app"]),
         CSRF_TRUSTED_ORIGINS=env.list("CSRF_TRUSTED_ORIGINS", default=[]),
-        INSTALLED_APPS=installed_apps,
+        INSTALLED_APPS=[
+            "django.contrib.auth",
+            "django.contrib.contenttypes",
+            "django.contrib.sessions",
+            "django.contrib.messages",
+            "django.contrib.staticfiles",
+            "django_components",
+            "django_cotton.apps.SimpleAppConfig",
+            "cotton_heroicons",
+            "django_extensions",
+            "django_htmx",
+            *(["debug_toolbar"] if debug else []),
+            "crispy_forms",
+            "crispy_tailwind",
+            "template_partials.apps.SimpleAppConfig",  # 2개의 AppConfig가 제공
+            *pyhub_apps,
+        ],
+        MIDDLEWARE=[
+            *(["debug_toolbar.middleware.DebugToolbarMiddleware"] if debug else []),
+            "django.middleware.security.SecurityMiddleware",
+            "django.contrib.sessions.middleware.SessionMiddleware",
+            "pyhub.ui.middleware.TimezoneMiddleware",
+            "django.middleware.common.CommonMiddleware",
+            "django.middleware.csrf.CsrfViewMiddleware",
+            "django.contrib.auth.middleware.AuthenticationMiddleware",
+            "django.contrib.messages.middleware.MessageMiddleware",
+            "django.middleware.clickjacking.XFrameOptionsMiddleware",
+            "django_components.middleware.ComponentDependencyMiddleware",
+            "django_htmx.middleware.HtmxMiddleware",
+        ],
         TEMPLATES=[
             {
                 "BACKEND": "django.template.backends.django.DjangoTemplates",
                 "DIRS": [
                     *([base_dir / "templates"] if base_dir is not None else []),
+                    pyhub_path / "templates",
                 ],
-                "APP_DIRS": True,
+                "APP_DIRS": False,
                 "OPTIONS": {
+                    "builtins": [
+                        "django_components.templatetags.component_tags",
+                        "pyhub.ui.templatetags.components_tags",
+                        "pyhub.ui.templatetags.cotton_tags",
+                        "template_partials.templatetags.partials",
+                    ],
                     "context_processors": [
                         "django.template.context_processors.debug",
                         "django.template.context_processors.request",
                         "django.contrib.auth.context_processors.auth",
                         "django.contrib.messages.context_processors.messages",
                     ],
+                    "loaders": (
+                        [
+                            (
+                                "template_partials.loader.Loader",
+                                (
+                                    "django_cotton.cotton_loader.Loader",
+                                    "django_components.template_loader.Loader",
+                                    "django.template.loaders.filesystem.Loader",
+                                    "django.template.loaders.app_directories.Loader",
+                                ),
+                            )
+                        ]
+                        if debug
+                        else [
+                            (
+                                "template_partials.loader.Loader",
+                                (
+                                    "django.template.loaders.cached.Loader",
+                                    (
+                                        "django_cotton.cotton_loader.Loader",
+                                        "django_components.template_loader.Loader",
+                                        "django.template.loaders.filesystem.Loader",
+                                        "django.template.loaders.app_directories.Loader",
+                                    ),
+                                ),
+                            )
+                        ]
+                    ),
                 },
             },
         ],
         # https://docs.djangoproject.com/en/dev/topics/cache/
         CACHES={
             # 개당 200KB 기준 * 5,000개 = 1GB
-            "default": make_filecache_setting("pyhub_cache", max_entries=5_000, cull_frequency=5),
-            "upstage": make_filecache_setting("pyhub_upstage", max_entries=5_000, cull_frequency=5),
-            "openai": make_filecache_setting("pyhub_openai", max_entries=5_000, cull_frequency=5),
-            "anthropic": make_filecache_setting("pyhub_anthropic", max_entries=5_000, cull_frequency=5),
-            "google": make_filecache_setting("pyhub_google", max_entries=5_000, cull_frequency=5),
-            "ollama": make_filecache_setting("pyhub_ollama", max_entries=5_000, cull_frequency=5),
+            "default": make_filecache_setting("pyhub_cache", max_entries=5_000, cull_frequency=5, timeout=86400 * 30),
+            "upstage": make_filecache_setting("pyhub_upstage", max_entries=5_000, cull_frequency=5, timeout=86400 * 30),
+            "openai": make_filecache_setting("pyhub_openai", max_entries=5_000, cull_frequency=5, timeout=86400 * 30),
+            "anthropic": make_filecache_setting(
+                "pyhub_anthropic", max_entries=5_000, cull_frequency=5, timeout=86400 * 30
+            ),
+            "google": make_filecache_setting("pyhub_google", max_entries=5_000, cull_frequency=5, timeout=86400 * 30),
+            "ollama": make_filecache_setting("pyhub_ollama", max_entries=5_000, cull_frequency=5, timeout=86400 * 30),
+            "locmem": {
+                "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+                "LOCATION": "pyhub_locmem",
+            },
+            "dummy": {
+                "BACKEND": "django.core.cache.backends.dummy.DummyCache",
+            },
         },
         # Database
         # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
@@ -183,9 +257,9 @@ def make_settings(
             "version": 1,
             "disable_existing_loggers": True,
             "filters": {
-                # "require_debug_true": {
-                #     "()": "django.utils.log.RequireDebugTrue",
-                # },
+                "require_debug_true": {
+                    "()": "django.utils.log.RequireDebugTrue",
+                },
             },
             "formatters": {
                 "color": {
@@ -201,42 +275,66 @@ def make_settings(
                 },
             },
             "handlers": {
+                "console": {
+                    "level": "DEBUG",
+                    "class": "logging.StreamHandler",
+                    "formatter": "color",
+                },
                 "debug_console": {
                     "level": "DEBUG",
                     "class": "logging.StreamHandler",
-                    # "filters": ["require_debug_true"],
+                    "filters": ["require_debug_true"],
                     "formatter": "color",
                 },
             },
             "loggers": {
+                "django.request": {
+                    "handlers": ["console"],
+                    "level": log_level,
+                    "propagate": False,
+                },
                 "pyhub": {
-                    "handlers": ["debug_console"],
+                    "handlers": ["console"],
                     "level": log_level,
                     "propagate": False,
                 },
                 "pyhub.rag": {
-                    "handlers": ["debug_console"],
+                    "handlers": ["console"],
                     "level": "INFO",  # pyhub.rag의 debug 로그는 처리하지 않음
                     "propagate": False,
                 },
                 "pyhub.routers": {
-                    "handlers": ["debug_console"],
-                    "level": "INFO",  # pyhub.rag의 debug 로그는 처리하지 않음
+                    "handlers": ["console"],
+                    "level": "INFO",
                     "propagate": False,
                 },
+                # "django_components": {
+                #     "level": 5,
+                #     "handlers": ["debug_console"],
+                # },
             },
         },
         # Internationalization
         # https://docs.djangoproject.com/en/5.1/topics/i18n/
         LANGUAGE_CODE=env.str("LANGUAGE_CODE", default="ko-kr"),
         TIME_ZONE=env.str("TIME_ZONE", default="UTC"),
+        USER_DEFAULT_TIME_ZONE=env.str("USER_DEFAULT_TIME_ZONE", default="UTC"),
         USE_I18N=True,
         USE_TZ=True,
         # Static files (CSS, JavaScript, Images)
         # https://docs.djangoproject.com/en/5.1/howto/static-files/
         STATIC_URL=env.str("STATIC_URL", default="static/"),
         STATIC_ROOT=env.path("STATIC_ROOT", default=base_dir / "staticfiles"),
-        STATICFILES_DIRS=[],
+        STATICFILES_DIRS=[
+            pyhub_path / "static",
+        ],
+        STATICFILES_FINDERS=[
+            # Default finders
+            "django.contrib.staticfiles.finders.FileSystemFinder",
+            "django.contrib.staticfiles.finders.AppDirectoriesFinder",
+            # Django components
+            "django_components.finders.ComponentsFileSystemFinder",
+        ],
         MEDIA_URL=env.str("MEDIA_URL", default="media/"),
         MEDIA_ROOT=env.path("MEDIA_ROOT", default=base_dir / "mediafiles"),
         # Default primary key field type
@@ -247,6 +345,25 @@ def make_settings(
         NCP_MAP_CLIENT_ID=env.str("NCP_MAP_CLIENT_ID", default=None),
         NCP_MAP_CLIENT_SECRET=env.str("NCP_MAP_CLIENT_SECRET", default=None),
         PROMPT_TEMPLATES=prompt_templates,
+        # https://github.com/django-crispy-forms/crispy-tailwind
+        CRISPY_ALLOWED_TEMPLATE_PACKS="tailwind",
+        CRISPY_TEMPLATE_PACK="tailwind",
+        # https://django-components.github.io/django-components/latest/overview/installation/
+        COMPONENTS=ComponentsSettings(
+            autodiscover=False,
+            dirs=[
+                pyhub_path / "ui",
+            ],
+            tag_formatter="django_components.component_shorthand_formatter",
+            # CSS/JS 캐싱
+            cache=("dummy" if debug else "locmem"),
+            # 템플릿 캐싱은 LRU 메모리에 캐싱 (디폴트: 128)
+            # https://django-components.github.io/django-components/latest/reference/settings/#django_components.app_settings.ComponentsSettings.template_cache_size
+            # django-components 컴포넌트는 기본적으로 메모리에 캐싱되어있음.
+            # 이 LRU 캐싱을 끈다고 해서 매번 파일에서 템플릿 파일을 읽어오는 것은 아님. 컴포넌트 클래스를 등록하는 과정에서 이미 메모리에 로딩.
+            # LRU 캐싱은 부가적인 연산에 대한 캐싱. (0: 캐시 끄기, None: 무제한 캐싱)
+            # template_cache_size=(0 if debug else 128),
+        ),
     )
 
 

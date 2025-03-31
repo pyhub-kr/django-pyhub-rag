@@ -1,0 +1,90 @@
+name: "Tests"
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+
+permissions:
+  contents: read
+
+jobs:
+  UnitTests:
+    strategy:
+      matrix:
+        # lowest verison here should also be in `engines` field
+        node_version: [18, "lts/*", "latest"]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+      - name: Install Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node_version }}
+          check-latest: true
+      - name: Install Dependencies
+        run: npm ci
+      - name: Build 🗜️
+        run: npm run build
+      - name: Run Unit Tests 👩🏽‍💻
+        run: npm run test:unit
+      - name: Run Spec Tests 👩🏽‍💻
+        run: npm run test:specs
+
+  OtherTests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+      - name: Install Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "lts/*"
+      - name: Install Dependencies
+        run: npm ci
+      - name: Build 🗜️
+        run: npm run build
+      - name: Run UMD Tests 👩🏽‍💻
+        run: npm run test:umd
+      - name: Run Types Tests 👩🏽‍💻
+        run: npm run test:types
+      - name: Lint ✨
+        run: npm run test:lint
+
+  Release:
+    permissions:
+      contents: write
+      id-token: write
+    needs: [UnitTests, OtherTests]
+    if: |
+      github.ref == 'refs/heads/master' &&
+      github.event.repository.fork == false
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+      - name: Install Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "lts/*"
+      - name: Install Dependencies
+        run: npm ci
+      - name: Build 🗜️
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          export SEMANTIC_RELEASE_NEXT_VERSION=$(npx semantic-release --no-ci --dry-run | grep -oP 'The next release version is \K[0-9]+\.[0-9]+\.[0-9]+')
+          echo "Next Version: $SEMANTIC_RELEASE_NEXT_VERSION"
+          npm run build
+          if ! git diff --quiet; then
+            git config --global user.email "<>"
+            git config --global user.name "MarkedJS bot"
+            git commit -am "🗜️ build v$SEMANTIC_RELEASE_NEXT_VERSION [skip ci]"
+          fi
+      - name: Release 🎉
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npx semantic-release

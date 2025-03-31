@@ -3,8 +3,8 @@ from io import BytesIO
 import pytest
 from django.core.files.base import ContentFile, File
 from django.template import Template
-from PIL import Image as PILImage
 from google.genai.errors import ServerError
+from PIL import Image as PILImage
 
 from pyhub.llm import (
     AnthropicLLM,

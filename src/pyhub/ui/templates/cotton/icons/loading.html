@@ -1,0 +1,23 @@
+<c-vars htmx placement="none" />
+
+<div class="inline-flex items-center space-x-2 bg-white/80 backdrop-blur-sm px-3 py-1.5 rounded-full
+            {% if htmx %}htmx-indicator{% endif %}
+            {% if placement|hyphen_to_underscore == "right_top" %}absolute top-2 right-2
+            {% elif placement|hyphen_to_underscore == "right_bottom" %}absolute bottom-2 right-2
+            {% elif placement|hyphen_to_underscore == "left_top" %}absolute top-2 left-2
+            {% elif placement|hyphen_to_underscore == "left_bottom" %}absolute bottom-2 left-2
+            {% else %}{# none #}{% endif %}
+            {{ attrs.class }}"
+     {{ attrs }}>
+    <svg class="animate-spin h-5 w-5 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none"
+         viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+    </svg>
+    {% if slot %}
+        <span class="text-sm font-medium text-gray-700">
+            {{ slot }}
+        </span>
+    {% endif %}
+</div>

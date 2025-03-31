@@ -1,0 +1,28 @@
+{% load doku_tags %}
+
+{% if not documentparsejob_list %}
+    {% alert type="warning" %}조회된 Document Parse Job이 없습니다.{% endalert %}
+{% else %}
+    <div class="overflow-x-auto relative shadow-md sm:rounded-lg">
+        <table class="w-full text-sm text-left text-gray-500">
+            <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+            <tr>
+                <th scope="col" class="py-3 px-6">상태</th>
+                <th scope="col" class="py-3 px-6">생성일</th>
+                <th scope="col" class="py-3 px-6">수정일</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for job in documentparsejob_list %}
+                <tr class="bg-white border-b hover:bg-gray-50">
+                    <td class="py-4 px-6">
+                        {{ job.status_label }}
+                    </td>
+                    <td class="py-4 px-6">{{ job.created_at }}</td>
+                    <td class="py-4 px-6">{{ job.updated_at }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endif %}

@@ -24,7 +24,8 @@ class AbstractImageDescriptorPrompt(models.Model):
 
 
 class ImageDescriptorPrompt(AbstractImageDescriptorPrompt):
-    pass
+    class Meta:
+        db_table = "pyhub_llm_image_descriptor_prompt"
 
 
 __all__ = ["AbstractImageDescriptorPrompt", "ImageDescriptorPrompt"]

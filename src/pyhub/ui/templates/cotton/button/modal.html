@@ -1,0 +1,31 @@
+<c-vars color="neutral" size="md"
+        modal_container_id="modal-container" />
+
+<c-button color="{{ color }}" style="{{ style }}" size="{{ size }}"
+    hx-get="{{ link }}"
+    hx-vals='{"modal_container_id": "{{ modal_container_id }}" }'
+    hx-trigger="click"
+    onclick="{{ onclick }}"
+    hx-target="#{{ modal_container_id }}"
+    hx-swap="innerHTML"
+    class="{{ attrs.class }}"
+    {{ attrs }}>
+    {{ slot }}
+</c-button>
+
+{% if modal_container_id %}
+<script>
+  (function () {
+    const currentScript = document.currentScript;
+
+    document.addEventListener('DOMContentLoaded', function () {
+      if (!document.getElementById('{{ modal_container_id }}')) {
+        const modalContainer = document.createElement('div');
+        modalContainer.id = '{{ modal_container_id }}';
+        document.body.appendChild(modalContainer);
+      }
+      currentScript.remove();
+    });
+  })();
+</script>
+{% endif %}

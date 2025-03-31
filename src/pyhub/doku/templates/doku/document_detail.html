@@ -1,0 +1,18 @@
+{% extends "doku/base.html" %}
+
+
+{# blocks #}
+
+{% block content %}
+    <div class="flex justify-between items-start">
+        <c-header.h1>{{ document }}</c-header.h1>
+        <div class="float-right">
+            <a href="{% url 'doku:vectordocument-list' document.pk %}"
+               class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md
+                      text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2
+                      focus:ring-indigo-500">
+                Vector Documents
+            </a>
+        </div>
+    </div>
+{% endblock content %}

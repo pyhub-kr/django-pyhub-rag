@@ -1,0 +1,75 @@
+{% extends "doku/base.html" %}
+
+
+{# blocks #}
+
+{% block content %}
+    <h2 class="text-2xl font-bold mb-6">Image List</h2>
+
+    <div class="grid gap-6"
+         x-data="{}"
+         @created-doku-vectordocumentimage.window="window.location.reload()">
+
+        {% partial list %}
+    </div>
+{% endblock %}
+
+
+{# partials #}
+
+{# list 에서는 element 만을 반복 렌더링 #}
+{% partialdef list %}
+    {% for vector_document_image in object_list %}
+        {% partial element %}
+
+        {% if is_paginated and forloop.last and page_obj.has_next %}
+            <button hx-get="{% url 'doku:vectordocumentimage-list' document.pk vector_document.pk %}?page={{ page_obj.next_page_number }}"
+                    hx-vals="js:{_: new Date().getTime()}"
+                    hx-swap="outerHTML"
+                    hx-trigger="intersect once">
+                <c-icons.loading/>
+            </button>
+        {% endif %}
+    {% endfor %}
+{% endpartialdef %}
+
+{% partialdef element %}
+    <div class="flex border rounded-lg overflow-hidden shadow-md relative doku-vectordocumentimage"
+         x-data=""
+         hx-get="{% url 'doku:vectordocumentimage-list' document.pk vector_document.pk %}?pk={{ vector_document_image.pk }}"
+         hx-vals="js:{_: new Date().getTime()}"
+         hx-swap="outerHTML"
+         hx-trigger="reload-doku-vectordocumentimage-{{ vector_document_image.pk }},
+                     updated-doku-vectordocumentimage-{{ vector_document_image.pk }} from:window">
+        <c-icons.loading htmx placement="right-top"/>
+        <div class="w-1/2 p-4">
+            <div class="border border-white rounded-lg p-2 bg-white shadow-sm">
+                <img src="{{ vector_document_image.file.url }}"
+                     alt="{{ vector_document_image.name }}"
+                     class="w-full h-auto object-cover"
+                     width="400"
+                     height="300"/>
+            </div>
+        </div>
+        <div class="w-1/2 p-4">
+            <div class="font-mono text-xs [&>p]:text-gray-700 [&>p]:mb-2 [&>p]:leading-relaxed">
+                {{ vector_document_image.description|linebreaks }}
+            </div>
+
+            <div class="mt-4">
+                <c-button.modal link="{% url 'doku:vectordocumentimage-edit' vector_document_image.pk %}">
+                    수정하기
+                </c-button.modal>
+                <c-button hx-post="{% url 'doku:vectordocumentimage-delete' vector_document_image.pk %}"
+                          confirm="정말 삭제하시겠습니까? 불필요한 이미지만 삭제해주세요."
+                          hx-target="closest .doku-vectordocumentimage"
+                          hx-swap="delete">
+                    삭제하기
+                </c-button>
+                <c-button onclick="$dispatch('reload-doku-vectordocumentimage-{{ vector_document_image.pk }}');">
+                    새로고침
+                </c-button>
+            </div>
+        </div>
+    </div>
+{% endpartialdef %}

@@ -1,0 +1,88 @@
+<div x-data="{
+         toasts: [],
+         add({ type, message, delay }) {
+             const id = Date.now();
+             const visible = true;
+             this.toasts.push({ id, type, message, visible });
+             setTimeout(() => this.remove(id), delay || 3000);
+         },
+         remove(id) {
+             const toast = this.toasts.find(t => t.id === id)
+             if (toast) {
+                 toast.visible = false
+                 setTimeout(() => {
+                     this.toasts = this.toasts.filter(t => t.id !== id)
+                 }, 300) // transition 시간과 맞춤
+             }
+         }
+     }"
+     @{{ toast_event_name }}.window="add($event.detail)"
+     class="fixed top-4 right-4 z-50 w-full max-w-sm space-y-4">
+
+    <template x-for="toast in toasts" :key="toast.id">
+        <div
+                x-show="toast.visible"
+                x-transition:enter="transform ease-out duration-300 transition"
+                x-transition:enter-start="translate-y-2 opacity-0 sm:translate-y-0 sm:translate-x-2"
+                x-transition:enter-end="translate-y-0 opacity-100 sm:translate-x-0"
+                x-transition:leave="transition ease-in duration-100"
+                x-transition:leave-start="opacity-100"
+                x-transition:leave-end="opacity-0"
+                class="pointer-events-auto w-full max-w-sm overflow-hidden rounded-lg bg-white shadow-lg ring-1 ring-black ring-opacity-5"
+        >
+            <div class="p-4">
+                <div class="flex items-start">
+                    <div class="flex-shrink-0">
+                        <template x-if="toast.type === 'default'">
+                            <svg class="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </template>
+                        <template x-if="toast.type === 'info'">
+                            <svg class="h-6 w-6 text-blue-400" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z"/>
+                            </svg>
+                        </template>
+                        <template x-if="toast.type === 'success'">
+                            <svg class="h-6 w-6 text-green-400" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </template>
+                        <template x-if="toast.type === 'warning'">
+                            <svg class="h-6 w-6 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126z"/>
+                            </svg>
+                        </template>
+                        <template x-if="toast.type === 'error'">
+                            <svg class="h-6 w-6 text-red-400" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"/>
+                            </svg>
+                        </template>
+                        <template x-if="toast.type === 'loading'">
+                            <svg class="h-6 w-6 text-purple-400 animate-spin" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                        stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor"
+                                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                        </template>
+                    </div>
+                    <div class="ml-3 w-0 flex-1 pt-0.5">
+                        <p x-text="toast.message" class="text-sm font-medium text-gray-900"></p>
+                    </div>
+                    <div class="ml-4 flex flex-shrink-0">
+                        <button
+                                @click="remove(toast.id)"
+                                class="inline-flex rounded-md bg-white text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                        >
+                            <span class="sr-only">Close</span>
+                            <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
+</div>

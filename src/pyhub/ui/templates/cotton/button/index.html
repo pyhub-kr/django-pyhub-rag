@@ -1,0 +1,239 @@
+<c-vars tag="a" color="neutral" size="md"
+        id disabled link tooltip onclick confirm
+        hx_get hx_post hx_put hx_delete hx_vals hx_trigger hx_target hx_swap/>
+
+{# TODO: 타입 체크 or 자동 완성을 지원할 수 있는 방법은? #}
+{# ButtonColor = Literal["neutral", "primary", "secondary", "accent", "info", "success", "warning", "error", "none"] #}
+{# ButtonStyle = Literal["outline", "dash", "soft", "ghost", "link"] #}
+{# ButtonSize = Literal["xs", "sm", "md", "lg", "xl"] #}
+
+<{{ tag }}
+class="
+select-none relative
+
+{% if disabled %}
+    cursor-not-allowed opacity-50
+{% else %}
+    cursor-pointer
+{% endif %}
+
+{% if color|lower == "neutral" %}
+    {% if style == "outline" %}
+        inline-block text-gray-900 border-2 border-gray-300 bg-transparent hover:bg-gray-50 focus:ring-4
+        focus:ring-gray-300 font-medium rounded-lg text-center mr-2 mb-2
+    {% elif style == "dash" %}
+        inline-block text-gray-900 border-2 border-dashed border-gray-300 bg-transparent hover:bg-gray-50
+        focus:ring-4
+        focus:ring-gray-300 font-medium rounded-lg text-center mr-2 mb-2
+    {% elif style == "soft" %}
+        inline-block text-gray-900 bg-gray-100/50 hover:bg-gray-100 focus:ring-4
+        focus:ring-gray-300 font-medium rounded-lg text-center mr-2 mb-2
+    {% elif style == "ghost" %}
+        inline-block text-gray-900 bg-transparent hover:bg-gray-100 focus:ring-4
+        focus:ring-gray-300 font-medium rounded-lg text-center mr-2 mb-2
+    {% elif style == "link" %}
+        inline-block text-gray-900 bg-transparent hover:underline hover:text-gray-700 focus:ring-4
+        focus:ring-gray-300 font-medium text-center mr-2 mb-2
+    {% else %}
+        inline-block text-gray-900 bg-white border border-gray-300 hover:bg-gray-100 focus:ring-4
+        focus:ring-gray-300 font-medium rounded-lg text-center mr-2 mb-2
+    {% endif %}
+{% elif color|lower == "primary" %}
+    {% if style == "outline" %}
+        inline-block text-blue-700 border-2 border-blue-700 bg-transparent hover:bg-blue-50 focus:ring-4
+        focus:ring-blue-300 font-medium rounded-lg text-center mr-2 mb-2
+    {% elif style == "dash" %}
+        inline-block text-blue-700 border-2 border-dashed border-blue-700 bg-transparent hover:bg-blue-50
+        focus:ring-4
+        focus:ring-blue-300 font-medium rounded-lg text-center mr-2 mb-2
+    {% elif style == "soft" %}
+        inline-block text-blue-700 bg-blue-100/50 hover:bg-blue-100 focus:ring-4
+        focus:ring-blue-300 font-medium rounded-lg text-center mr-2 mb-2
+    {% elif style == "ghost" %}
+        inline-block text-blue-700 bg-transparent hover:bg-blue-100 focus:ring-4
+        focus:ring-blue-300 font-medium rounded-lg text-center mr-2 mb-2
+    {% elif style == "link" %}
+        inline-block text-blue-700 bg-transparent hover:underline hover:text-blue-800 focus:ring-4
+        focus:ring-blue-300 font-medium text-center mr-2 mb-2
+    {% else %}
+        inline-block text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300
+        font-medium rounded-lg text-center mr-2 mb-2
+    {% endif %}
+{% elif color|lower == "secondary" %}
+    {% if style == "outline" %}
+        inline-block text-gray-600 border-2 border-gray-600 bg-transparent hover:bg-gray-50 focus:ring-4
+        focus:ring-gray-300 font-medium rounded-lg text-center mr-2 mb-2
+    {% elif style == "dash" %}
+        inline-block text-gray-600 border-2 border-dashed border-gray-600 bg-transparent hover:bg-gray-50
+        focus:ring-4
+        focus:ring-gray-300 font-medium rounded-lg text-center mr-2 mb-2
+    {% elif style == "soft" %}
+        inline-block text-gray-600 bg-gray-100/50 hover:bg-gray-100 focus:ring-4
+        focus:ring-gray-300 font-medium rounded-lg text-center mr-2 mb-2
+    {% elif style == "ghost" %}
+        inline-block text-gray-600 bg-transparent hover:bg-gray-100 focus:ring-4
+        focus:ring-gray-300 font-medium rounded-lg text-center mr-2 mb-2
+    {% elif style == "link" %}
+        inline-block text-gray-600 bg-transparent hover:underline hover:text-gray-700 focus:ring-4
+        focus:ring-gray-300 font-medium text-center mr-2 mb-2
+    {% else %}
+        inline-block text-white bg-gray-600 hover:bg-gray-700 focus:ring-4 focus:ring-gray-300
+        font-medium rounded-lg text-center mr-2 mb-2
+    {% endif %}
+{% elif color|lower == "accent" %}
+    {% if style == "outline" %}
+        inline-block text-purple-600 border-2 border-purple-600 bg-transparent hover:bg-purple-50 focus:ring-4
+        focus:ring-purple-300 font-medium rounded-lg text-center mr-2 mb-2
+    {% elif style == "dash" %}
+        inline-block text-purple-600 border-2 border-dashed border-purple-600 bg-transparent hover:bg-purple-50
+        focus:ring-4
+        focus:ring-purple-300 font-medium rounded-lg text-center mr-2 mb-2
+    {% elif style == "soft" %}
+        inline-block text-purple-600 bg-purple-100/50 hover:bg-purple-100 focus:ring-4
+        focus:ring-purple-300 font-medium rounded-lg text-center mr-2 mb-2
+    {% elif style == "ghost" %}
+        inline-block text-purple-600 bg-transparent hover:bg-purple-100 focus:ring-4
+        focus:ring-purple-300 font-medium rounded-lg text-center mr-2 mb-2
+    {% elif style == "link" %}
+        inline-block text-purple-600 bg-transparent hover:underline hover:text-purple-700 focus:ring-4
+        focus:ring-purple-300 font-medium text-center mr-2 mb-2
+    {% else %}
+        inline-block text-white bg-purple-600 hover:bg-purple-700 focus:ring-4 focus:ring-purple-300
+        font-medium rounded-lg text-center mr-2 mb-2
+    {% endif %}
+{% elif color|lower == "info" %}
+    {% if style == "outline" %}
+        inline-block text-blue-500 border-2 border-blue-500 bg-transparent hover:bg-blue-50 focus:ring-4
+        focus:ring-blue-300 font-medium rounded-lg text-center mr-2 mb-2
+    {% elif style == "dash" %}
+        inline-block text-blue-500 border-2 border-dashed border-blue-500 bg-transparent hover:bg-blue-50
+        focus:ring-4
+        focus:ring-blue-300 font-medium rounded-lg text-center mr-2 mb-2
+    {% elif style == "soft" %}
+        inline-block text-blue-500 bg-blue-100/50 hover:bg-blue-100 focus:ring-4
+        focus:ring-blue-300 font-medium rounded-lg text-center mr-2 mb-2
+    {% elif style == "ghost" %}
+        inline-block text-blue-500 bg-transparent hover:bg-blue-100 focus:ring-4
+        focus:ring-blue-300 font-medium rounded-lg text-center mr-2 mb-2
+    {% elif style == "link" %}
+        inline-block text-blue-500 bg-transparent hover:underline hover:text-blue-600 focus:ring-4
+        focus:ring-blue-300 font-medium text-center mr-2 mb-2
+    {% else %}
+        inline-block text-white bg-blue-500 hover:bg-blue-600 focus:ring-4 focus:ring-blue-300
+        font-medium rounded-lg text-center mr-2 mb-2
+    {% endif %}
+{% elif color|lower == "success" %}
+    {% if style == "outline" %}
+        inline-block text-green-600 border-2 border-green-600 bg-transparent hover:bg-green-50 focus:ring-4
+        focus:ring-green-300 font-medium rounded-lg text-center mr-2 mb-2
+    {% elif style == "dash" %}
+        inline-block text-green-600 border-2 border-dashed border-green-600 bg-transparent hover:bg-green-50
+        focus:ring-4
+        focus:ring-green-300 font-medium rounded-lg text-center mr-2 mb-2
+    {% elif style == "soft" %}
+        inline-block text-green-600 bg-green-100/50 hover:bg-green-100 focus:ring-4
+        focus:ring-green-300 font-medium rounded-lg text-center mr-2 mb-2
+    {% elif style == "ghost" %}
+        inline-block text-green-600 bg-transparent hover:bg-green-100 focus:ring-4
+        focus:ring-green-300 font-medium rounded-lg text-center mr-2 mb-2
+    {% elif style == "link" %}
+        inline-block text-green-600 bg-transparent hover:underline hover:text-green-700 focus:ring-4
+        focus:ring-green-300 font-medium text-center mr-2 mb-2
+    {% else %}
+        inline-block text-white bg-green-600 hover:bg-green-700 focus:ring-4 focus:ring-green-300
+        font-medium rounded-lg text-center mr-2 mb-2
+    {% endif %}
+{% elif color|lower == "warning" %}
+    {% if style == "outline" %}
+        inline-block text-yellow-500 border-2 border-yellow-500 bg-transparent hover:bg-yellow-50 focus:ring-4
+        focus:ring-yellow-300 font-medium rounded-lg text-center mr-2 mb-2
+    {% elif style == "dash" %}
+        inline-block text-yellow-500 border-2 border-dashed border-yellow-500 bg-transparent hover:bg-yellow-50
+        focus:ring-4
+        focus:ring-yellow-300 font-medium rounded-lg text-center mr-2 mb-2
+    {% elif style == "soft" %}
+        inline-block text-yellow-500 bg-yellow-100/50 hover:bg-yellow-100 focus:ring-4
+        focus:ring-yellow-300 font-medium rounded-lg text-center mr-2 mb-2
+    {% elif style == "ghost" %}
+        inline-block text-yellow-500 bg-transparent hover:bg-yellow-100 focus:ring-4
+        focus:ring-yellow-300 font-medium rounded-lg text-center mr-2 mb-2
+    {% elif style == "link" %}
+        inline-block text-yellow-500 bg-transparent hover:underline hover:text-yellow-600 focus:ring-4
+        focus:ring-yellow-300 font-medium text-center mr-2 mb-2
+    {% else %}
+        inline-block text-white bg-yellow-500 hover:bg-yellow-600 focus:ring-4 focus:ring-yellow-300
+        font-medium rounded-lg text-center mr-2 mb-2
+    {% endif %}
+{% elif color|lower == "error" %}
+    {% if style == "outline" %}
+        inline-block text-red-600 border-2 border-red-600 bg-transparent hover:bg-red-50 focus:ring-4
+        focus:ring-red-300 font-medium rounded-lg text-center mr-2 mb-2
+    {% elif style == "dash" %}
+        inline-block text-red-600 border-2 border-dashed border-red-600 bg-transparent hover:bg-red-50 focus:ring-4
+        focus:ring-red-300 font-medium rounded-lg text-center mr-2 mb-2
+    {% elif style == "soft" %}
+        inline-block text-red-600 bg-red-100/50 hover:bg-red-100 focus:ring-4
+        focus:ring-red-300 font-medium rounded-lg text-center mr-2 mb-2
+    {% elif style == "ghost" %}
+        inline-block text-red-600 bg-transparent hover:bg-red-100 focus:ring-4
+        focus:ring-red-300 font-medium rounded-lg text-center mr-2 mb-2
+    {% elif style == "link" %}
+        inline-block text-red-600 bg-transparent hover:underline hover:text-red-700 focus:ring-4
+        focus:ring-red-300 font-medium text-center mr-2 mb-2
+    {% else %}
+        inline-block text-white bg-red-600 hover:bg-red-700 focus:ring-4 focus:ring-red-300
+        font-medium rounded-lg text-center mr-2 mb-2
+    {% endif %}
+{% elif color|lower == "none" %}
+    {# class 로 직접 지정 #}
+{% endif %}
+
+{% if size|lower == "xs" %}text-xs px-2 py-1
+{% elif size|lower == "sm" %}text-sm px-3 py-1.5
+{% elif size|lower == "md" %}text-sm px-5 py-2.5
+{% elif size|lower == "lg" %}text-base px-6 py-3
+{% elif size|lower == "xl" %}text-lg px-8 py-3.5
+{% else %}
+    {# none #}
+{% endif %}
+
+{{ attrs.class }}
+"
+{{ attrs }}
+
+{% if link and not disabled %}href="{{ link }}"{% endif %}
+{# htmx #}
+{% if not disabled %}
+    {% if hx_get %}hx-get="{{ hx_get }}"{% endif %}
+    {% if hx_post %}hx-post="{{ hx_post }}"{% endif %}
+    {% if hx_put %}hx-put="{{ hx_put }}"{% endif %}
+    {% if hx_delete %}hx-delete="{{ hx_delete }}"{% endif %}
+    {% if hx_trigger %}hx-trigger="{{ hx_trigger }}"{% endif %}
+    {% if hx_target %}hx-target="{{ hx_target }}"{% endif %}
+    {% if hx_swap %}hx-swap="{{ hx_swap }}"{% endif %}
+{% endif %}
+
+{% if hx_vals %}
+    hx-vals="{{ hx_vals }}"
+{% endif %}
+
+{% if confirm %}
+    hx-confirm="{{ confirm }}"
+{% endif %}
+
+{# tooltip #}
+{% if tooltip %}
+    x-data="{ tooltip: false }"
+    x-on:mouseover="tooltip = true"
+    x-on:mouseleave="tooltip = false"
+{% endif %}
+{% if onclick and not disabled %}@click="{{ onclick }}"{% endif %}
+>
+{% if tooltip %}
+    <div class=" absolute left-1/2 -top-[4px] -translate-x-1/2 -translate-y-[100%] z-10 py-2 px-3 whitespace-nowrap text-sm font-medium text-white bg-gray-900 rounded-lg shadow-sm transition-opacity opacity-0 tooltip
+              {# dark:bg-gray-700 #}"
+         :class="tooltip ? 'opacity-100': ''">{{ tooltip }}</div>
+{% endif %}
+{{ label }}
+{{ slot }}
+</{{ tag }}>

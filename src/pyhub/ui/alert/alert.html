@@ -1,0 +1,14 @@
+{# ref: https://flowbite.com/docs/components/alerts/ #}
+{# djlint:off #}
+<div class="p-4 text-sm rounded-lg my-4
+        {% if type == "info" %} text-blue-700 bg-blue-100 dark:bg-blue-200 dark:text-blue-800 selection:bg-blue-300 selection:text-blue-900
+        {% elif type == "danger" or type == "error" %} text-red-700 bg-red-100 dark:bg-red-200 dark:text-red-800 selection:bg-red-300 selection:text-red-900
+        {% elif type == "success" %} text-green-700 bg-green-100 dark:bg-green-200 dark:text-green-800 selection:bg-green-300 selection:text-green-900
+        {% elif type == "warning" %} text-yellow-700 bg-yellow-100 dark:bg-yellow-200 dark:text-yellow-800 selection:bg-yellow-300 selection:text-yellow-900
+        {% else %} text-gray-700 bg-gray-100 dark:bg-gray-200 dark:text-gray-800 selection:bg-gray-300 selection:text-gray-900
+        {% endif %} " role="alert">
+    {# TODO: slot 값에 urlize|linebreaksbr 적용하기 #}
+    {% slot "default" default %}{% endslot %}
+</div>
+{# djlint:on #}
+{% for event in events %}{{ event.as_html }}{% endfor %}

@@ -1,0 +1,111 @@
+{% extends "doku/base.html" %}
+
+
+{# blocks #}
+
+{% block content %}
+    <c-header.h1>문서</c-header.h1>
+
+    {# TODO: 대기중/처리중 Job이 있을 경우, 자동 새로고침 (Table or Row ?) #}
+
+    <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+            <tr>
+                <th scope="col"
+                    class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    문서 정보
+                </th>
+                <th scope="col"
+                    class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    변환 작업
+                </th>
+                <th scope="col"
+                    class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    액션
+                </th>
+            </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                {% partial list %}
+            </tbody>
+        </table>
+    </div>
+{% endblock content %}
+
+
+{# partials #}
+
+{# list 에서는 element 만을 반복 렌더링 #}
+{% partialdef list %}
+    {% for document in document_list %}
+        {% partial element %}
+
+        {% if is_paginated and forloop.last and page_obj.has_next %}
+            <tr>
+                <td colspan="3">
+                    <div class="flex justify-center">
+                        <button hx-get="{% url 'doku:document-list' %}?page={{ page_obj.next_page_number }}"
+                                hx-vals="js:{_: new Date().getTime()}"
+                                hx-swap="outerHTML"
+                                hx-trigger="intersect once"
+                                class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                            <c-icons.loading />
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        {% endif %}
+    {% endfor %}
+{% endpartialdef %}
+
+{% partialdef element %}
+    <tr x-data="{}"
+        hx-get="{% url 'doku:document-list' %}?pk={{ document.pk }}"
+        hx-vals="js:{_: new Date().getTime()}"
+        hx-swap="outerHTML"
+        hx-trigger="reload-doku-document-{{ document.pk }}, updated-doku-document-{{ document.pk }} from:window
+                   {% if document.needs_refresh %},load delay:5s{% endif %}"
+        class="doku-document">
+        <td class="px-6 py-4 whitespace-nowrap">
+            <div class="text-sm text-gray-900">
+                 <a href="{% url 'doku:vectordocument-list' document.pk %}" class="hover:underline">
+                    #{{ document.pk }}. {{ document.name }}
+                </a>
+                <c-icons.loading htmx />
+            </div>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap">
+            <div class="flex justify-between items-center">
+                <div class="text-md text-gray-500 cursor-pointer" @click="$dispatch('reload-doku-document-{{ document.pk }}')">
+                    {{ document.status_label }}
+                </div>
+            </div>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+            <c-button.modal link="{% url 'doku:document-edit' document.pk %}">
+                수정
+            </c-button.modal>
+
+            <c-button hx-post="{% url 'doku:document-delete' document.pk %}"
+                      confirm="정말 삭제하시겠습니까? 불필요한 이미지만 삭제해주세요."
+                      hx-target="closest .doku-document"
+                      hx-swap="delete">
+                삭제하기
+            </c-button>
+
+
+            <c-button.modal link="{% url 'doku:document-query' document.pk %}">
+                유사 문서 조회
+            </c-button.modal>
+
+            <c-button.modal link="{% url 'doku:documentparsejobs-list' document.pk %}">
+                작업 히스토리
+            </c-button.modal>
+
+            <c-button.modal link="{% url 'doku:document-export' document.pk %}">
+                내보내기
+            </c-button.modal>
+        </td>
+    </tr>
+{% endpartialdef %}

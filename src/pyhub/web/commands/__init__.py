@@ -22,7 +22,16 @@ app = typer.Typer()
 console = Console()
 
 
-app.callback(invoke_without_command=True)(print_for_main)
+logo = """
+    ██████╗  ██╗   ██╗ ██╗  ██╗ ██╗   ██╗ ██████╗     ██╗    ██╗ ███████╗ ██████╗
+    ██╔══██╗ ╚██╗ ██╔╝ ██║  ██║ ██║   ██║ ██╔══██╗    ██║    ██║ ██╔════╝ ██╔══██╗
+    ██████╔╝  ╚████╔╝  ███████║ ██║   ██║ ██████╔╝    ██║ █╗ ██║ █████╗   ██████╔╝
+    ██╔═══╝    ╚██╔╝   ██╔══██║ ██║   ██║ ██╔══██╗    ██║███╗██║ ██╔══╝   ██╔══██╗
+    ██║         ██║    ██║  ██║ ╚██████╔╝ ██████╔╝    ╚███╔███╔╝ ███████╗ ██████╔╝
+    ╚═╝         ╚═╝    ╚═╝  ╚═╝  ╚═════╝  ╚═════╝      ╚══╝╚══╝  ╚══════╝ ╚═════╝
+"""
+
+app.callback(invoke_without_command=True)(print_for_main(logo))
 
 
 @app.command()
@@ -309,7 +318,7 @@ def pyhub_web_proj(toml_path: Optional[Path], env_path: Optional[Path], is_debug
     if "MEDIA_ROOT" not in os.environ:
         os.environ["MEDIA_ROOT"] = str(curdir_path / "mediafiles")
 
-    os.environ["DJANGO_SETTINGS_MODULE"] = "config.settings"
+    os.environ["DJANGO_SETTINGS_MODULE"] = "settings"
     django.setup()
 
     try:

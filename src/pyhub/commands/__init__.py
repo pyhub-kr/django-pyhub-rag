@@ -12,7 +12,17 @@ app = typer.Typer()
 console = Console()
 
 
-app.callback(invoke_without_command=True)(print_for_main)
+logo = """
+    ██████╗ ██╗   ██╗██╗  ██╗██╗   ██╗██████╗
+    ██╔══██╗╚██╗ ██╔╝██║  ██║██║   ██║██╔══██╗
+    ██████╔╝ ╚████╔╝ ███████║██║   ██║██████╔╝
+    ██╔═══╝   ╚██╔╝  ██╔══██║██║   ██║██╔══██╗
+    ██║        ██║   ██║  ██║╚██████╔╝██████╔╝
+    ╚═╝        ╚═╝   ╚═╝  ╚═╝ ╚═════╝ ╚═════╝
+"""
+
+
+app.callback(invoke_without_command=True)(print_for_main(logo))
 
 
 @app.command()
@@ -115,6 +125,7 @@ def _get_toml_str() -> str:
 # ANTHROPIC_API_KEY = "sk-ant-xxxxx..."
 # GOOGLE_API_KEY = "AIxxxxx...."
 # VECTORSTORE_DATABASE_URL = "postgresql://postgres:pw@localhost:5432/postgres
+USER_DEFAULT_TIME_ZONE = "Asia/Seoul"
 
 [prompt_templates.describe_image]
 system = """{_get_template_code("prompts/describe/image/system.md")}"""

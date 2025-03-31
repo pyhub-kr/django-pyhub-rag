@@ -1,7 +1,7 @@
 import logging
 from dataclasses import asdict, dataclass, field
 from re import search, sub
-from typing import Literal, Union
+from typing import Literal, Union, Optional
 
 from django.core.files import File
 from django.db.models import TextChoices
@@ -150,10 +150,10 @@ class ElementContent:
 
 @dataclass
 class Element:
-    id: int
+    id: Optional[int]
     page: int
     total_pages: int
-    category: ElementCategoryType
+    category: Optional[ElementCategoryType]
     content: ElementContent
     b64_str: str
     coordinates: list[Coordinate]
@@ -207,11 +207,12 @@ class Element:
         merged_files = dict(self.files)
         merged_files.update(other.files)
 
+        # 여러 Element를 합쳐질 때, Element 만의 속성 필드는 제거합니다.
         return Element(
-            id=self.id,  # Keep the first element's ID
+            id=None,
             page=self.page,  # Keep the first element's page
             total_pages=self.total_pages,  # keep the first element's page
-            category=self.category,  # Keep the first element's category
+            category=None,
             content=self.content + self.separator + other.content,
             b64_str=self.b64_str,  # Keep the first element's b64_str
             coordinates=self.coordinates + other.coordinates,
@@ -233,26 +234,33 @@ class Element:
             f"Invalid document_format : {document_format}",
         )
 
+        metadata = {
+            "total_pages": self.total_pages,
+            "api": self.api,
+            "model": self.model,
+        }
+
+        if self.id:
+            metadata["id"] = self.id
+
+        if self.page:
+            metadata["page"] = self.page
+
+        if self.category:
+            metadata["category"] = self.category
+
         if self.coordinates:
-            kwargs["coordinates"] = self.coordinates
+            metadata["coordinates"] = self.coordinates
 
         if self.image_descriptions:
-            kwargs["image_descriptions"] = self.image_descriptions
+            metadata["image_descriptions"] = self.image_descriptions
 
         # elements가 비어있으면 현재 element를 포함
         elements = self.elements if self.elements else [self]
 
         return Document(
             page_content=page_content,
-            metadata={
-                "id": self.id,
-                "page": self.page,
-                "total_pages": self.total_pages,
-                "category": self.category,
-                "api": self.api,
-                "model": self.model,
-                **kwargs,
-            },
+            metadata=dict(metadata, **kwargs),
             files=self.files,
             elements=elements,  # 수정된 elements 사용
             variants={

@@ -1,0 +1,88 @@
+{% extends "doku/base.html" %}
+
+{% load doku_tags %}
+
+
+{# blocks #}
+
+{% block content %}
+    <c-header.h1>{{ document }}</c-header.h1>
+
+    {% if not vectordocument_list %}
+        {% alert type="warning" %}조회된 Vector Document가 없습니다.{% endalert %}
+    {% endif %}
+
+    {% partial list %}
+{% endblock content %}
+
+
+{# partials #}
+
+{# list 에서는 element 만을 반복 렌더링 #}
+{% partialdef list %}
+    {% for object in vectordocument_list|dictsort:"metadata.page" %}
+        {% partial element %}
+
+        {% if is_paginated and forloop.last and page_obj.has_next %}
+            <button hx-get="{% url 'doku:vectordocument-list' document.pk %}?page={{ page_obj.next_page_number }}"
+                    hx-vals="js:{_: new Date().getTime()}"
+                    hx-swap="outerHTML"
+                    hx-trigger="intersect once">
+                <c-icons.loading />
+            </button>
+        {% endif %}
+    {% endfor %}
+{% endpartialdef %}
+
+{% partialdef element %}
+    <div x-data="{}"
+         hx-get="{% url 'doku:vectordocument-list' document.pk %}?pk={{ object.pk }}"
+         hx-vals="js:{_: new Date().getTime()}"
+         hx-swap="outerHTML"
+         hx-trigger="reload-doku-vectordocument-{{ object.pk }}, updated-doku-vectordocument-{{ object.pk }} from:window"
+         class="w-full mb-4 vectordocument-wrap">
+        <div class="bg-gray-50 px-3 py-2 rounded-lg border border-gray-400 relative overflow-hidden">
+            <div class="text-sm text-gray-500 mb-3 pb-2 border-b border-gray-300 flex justify-between">
+                <span class="font-medium"><span class="font-normal">{{ object.metadata.page }}</span> 페이지</span>
+                {# <span class="font-medium"><span class="font-normal">{{ object.metadata.category }}</span></span> #}
+            </div>
+            <div class="mt-2 relative clearfix">
+                <div class="font-mono text-sm [&>p]:text-gray-700 [&>p]:mb-2 [&>p]:leading-relaxed">
+                    <div class="text-xs text-gray-500 flex gap-2 flex-wrap mt-1 mb-3">
+                        {% for key, value in object.metadata.items %}
+                            {% if key != "image_descriptions" %}
+                                <span class="bg-gray-200 px-2 py-1 rounded">{{ key }}: {{ value }}</span>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+
+                    {{ object.page_content|doku_minimum_style|linebreaks }}
+                </div>
+
+                {% if object.image_count > 0 %}
+                    <div hx-get="{% url 'doku:vectordocumentimage-list' document.pk object.pk %}"
+                         hx-vals="js:{_: new Date().getTime()}"
+                         hx-trigger="intersect once">
+                        <c-icons.loading />
+                    </div>
+                {% endif %}
+
+                <hr class="my-2" />
+
+                <c-button.modal link="{% url 'doku:vectordocument-edit' document.pk object.pk %}">
+                    수정
+                </c-button.modal>
+
+                <c-button hx-post="{% url 'doku:vectordocument-edit' document.pk object.pk %}"
+                          hx-target="closest .vectordocument-wrap"
+                          hx-swap="delete"
+                          confirm="Are you sure?">
+                    삭제
+                </c-button>
+                <c-button.modal onclick="$dispatch('reload-doku-vectordocument-{{ object.pk }}');">
+                    새로고침
+                </c-button.modal>
+            </div>
+        </div>
+    </div>
+{% endpartialdef %}

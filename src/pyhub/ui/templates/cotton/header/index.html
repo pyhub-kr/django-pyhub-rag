@@ -1,0 +1,8 @@
+<c-vars text_class="text-3xl font-extrabold" />
+
+<div class="mb-8 {{ attrs.class }}" {{ attrs }}>
+    <h2 class="order-1 text-gray-900 {{ text_class }} tracking-tight mt-2 {{ css_class }}">
+        {{ slot }}
+        {% if sub %}<small class="ml-3 text-sm font-light text-gray-500">{{ sub }}</small>{% endif %}
+    </h2>
+</div>

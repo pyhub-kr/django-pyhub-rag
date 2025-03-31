@@ -1,0 +1,32 @@
+<c-header.h3>지원 포맷</c-header.h3>
+
+{# TODO: django form을 활용한 Form 위젯 렌더링 #}
+
+<c-button link="{% url 'doku:document-export' document.pk %}?format=jsonl">
+    <c-heroicon.arrow-down-tray variant="mini" class="inline-block align-middle" />
+    랭체인 Document 포맷의 jsonl
+</c-button>
+
+<c-button disabled>
+    <c-heroicon.arrow-down-tray variant="mini" class="inline-block align-middle" />
+    FAISS
+</c-button>
+
+<c-button disabled>
+    <c-heroicon.arrow-down-tray variant="mini" class="inline-block align-middle" />
+    SQLite
+</c-button>
+
+<c-button disabled>
+    <c-heroicon.arrow-down-tray variant="mini" class="inline-block align-middle" />
+    Postgres SQL
+</c-button>
+
+<div class="flex items-center mb-4">
+    <input id="include-images" type="checkbox" value="" disabled class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
+    <label for="include-images" class="ms-2 text-sm font-medium text-gray-600 dark:text-gray-300">이미지 포함 다운로드 (zip)</label>
+</div>
+
+{% alert type="info" %}
+    이미지 포함 다운로드 옵션은 지원 예정입니다.
+{% endalert %}
