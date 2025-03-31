@@ -82,6 +82,8 @@ def run(
             call_command("runserver", *args)
 
         else:
+            call_command("collectstatic", "--noinput")
+
             console.print(
                 f"Starting PyHub web server on http://{host}:{port} using [green bold]uvicorn[/green bold]",
                 style="green",
