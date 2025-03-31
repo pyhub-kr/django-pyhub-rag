@@ -40,7 +40,7 @@ class PageNumbersField(models.CharField):
         """데이터베이스에서 값을 가져올 때 자동으로 리스트로 변환"""
         if value is None:
             return []
-        return sorted(set(int(x) for x in value.split(',') if x.strip()))
+        return sorted(set(int(x) for x in value.split(",") if x.strip()))
 
     def get_prep_value(self, value):
         """Python 값을 데이터베이스에 저장하기 전에 문자열로 변환"""
@@ -48,9 +48,9 @@ class PageNumbersField(models.CharField):
             return ""
         # 리스트를 정렬하고 중복을 제거한 후 문자열로 변환
         if isinstance(value, str):
-            value = [int(x) for x in value.split(',') if x.strip()]
+            value = [int(x) for x in value.split(",") if x.strip()]
         numbers = sorted(set(value))
-        return ','.join(str(num) for num in numbers)
+        return ",".join(str(num) for num in numbers)
 
     def to_python(self, value):
         if not value:

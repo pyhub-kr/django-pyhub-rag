@@ -11,7 +11,6 @@ from rich.table import Table
 from pyhub import init
 from pyhub.llm import LLM
 from pyhub.llm.types import LLMChatModelEnum, LLMVendorEnum
-from pyhub.parser.upstage.parser import ImageDescriptor
 
 console = Console()
 
@@ -75,6 +74,9 @@ def describe(
     else:
         log_level = logging.INFO
     init(debug=True, log_level=log_level, toml_path=toml_path, env_path=env_path)
+
+    # LLM 명령 시에 PyPDF2 라이브러리 의존성이 걸리지 않도록 임포트 위치 조정
+    from pyhub.parser.upstage.parser import ImageDescriptor
 
     if prompt_type is None:
         prompt_templates = ImageDescriptor.get_prompts("describe_image")

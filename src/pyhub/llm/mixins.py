@@ -7,7 +7,7 @@ from django.db import models
 from pyhub.parser.upstage.parser import ImageDescriptor
 
 from .models import ImageDescriptorPrompt
-from .types import LLMChatModelEnum, LLMVendorEnum, LLMVendorType, LanguageEnum
+from .types import LanguageEnum, LLMChatModelEnum, LLMVendorEnum, LLMVendorType
 
 logger = logging.getLogger(__name__)
 

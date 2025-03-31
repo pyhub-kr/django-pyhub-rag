@@ -2,10 +2,9 @@ import json
 from dataclasses import dataclass
 from typing import Literal, Optional
 
-from django.template import Template, Context
+from django.template import Context, Template
 from django.utils.safestring import mark_safe
 from django_components import Component, register
-
 
 TOAST_EVENT_NAME = "toast"
 
@@ -28,7 +27,7 @@ class ToastMessage:
     )
 
     def as_html(self) -> str:
-        detail_s = json.dumps({"detail": { "type": self.type, "message": self.message, "delay": self.delay }})
+        detail_s = json.dumps({"detail": {"type": self.type, "message": self.message, "delay": self.delay}})
         return self.template.render(
             Context(
                 {
@@ -37,7 +36,6 @@ class ToastMessage:
                 }
             )
         )
-
 
 
 @register("toast_container")

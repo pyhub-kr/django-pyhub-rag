@@ -1,18 +1,18 @@
 from django.urls import path
 
 from .views import (
-    DocumentListView,
-    DocumentFormView,
     DocumentDeleteView,
-    document_export,
-    document_query,
+    DocumentFormView,
+    DocumentListView,
     DocumentParseJobListView,
-    VectorDocumentListView,
-    VectorDocumentUpdateView,
     VectorDocumentDeleteView,
+    VectorDocumentImageDeleteView,
     VectorDocumentImageListView,
     VectorDocumentImageUpdateView,
-    VectorDocumentImageDeleteView,
+    VectorDocumentListView,
+    VectorDocumentUpdateView,
+    document_export,
+    document_query,
 )
 
 app_name = "doku"

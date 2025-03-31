@@ -1,4 +1,4 @@
-from typing import Optional, Type, Literal
+from typing import Literal, Optional, Type
 
 from crispy_forms.utils import render_crispy_form
 from django.db.models import Model, QuerySet

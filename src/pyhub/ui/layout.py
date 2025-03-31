@@ -1,4 +1,4 @@
-from crispy_forms.layout import Submit, Row, Field
+from crispy_forms.layout import Field, Row, Submit
 
 
 class JustOneClickableSubmit(Submit):

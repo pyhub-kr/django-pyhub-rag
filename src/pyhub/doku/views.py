@@ -150,7 +150,7 @@ class DocumentParseJobListView(ListView):
         body = render_to_string(self.get_template_names(), context, request=self.request)
         return Modal.render_to_response(
             kwargs={
-                "title": f"작업 히스토리",
+                "title": "작업 히스토리",
             },
             slots={
                 "body": body,

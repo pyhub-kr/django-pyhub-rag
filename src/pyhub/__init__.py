@@ -44,6 +44,7 @@ def print_for_main(logo: str):
         if ctx.invoked_subcommand is None:
             print_logo(logo)
             print_help(ctx)
+
     return wrap
 
 

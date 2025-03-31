@@ -4,11 +4,11 @@ import django.core.validators
 import django.db.models.deletion
 import django_lifecycle.mixins
 import pgvector.django.indexes
+from django.db import migrations, models
 from pgvector.django import VectorExtension
 
 import pyhub.db.models.fields
 import pyhub.rag.fields.postgres
-from django.db import migrations, models
 
 
 class Migration(migrations.Migration):

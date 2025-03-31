@@ -1,7 +1,7 @@
 import logging
 from dataclasses import asdict, dataclass, field
 from re import search, sub
-from typing import Literal, Union, Optional
+from typing import Literal, Optional, Union
 
 from django.core.files import File
 from django.db.models import TextChoices

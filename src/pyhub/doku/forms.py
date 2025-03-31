@@ -1,7 +1,6 @@
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import ButtonHolder, Field, Fieldset, Layout, Row
 from django import forms
-from django.db.models import TextChoices
 from django.http import HttpRequest
 
 from pyhub.ui.forms import CrispyLayoutAwareModelForm
