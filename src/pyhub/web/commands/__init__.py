@@ -305,18 +305,24 @@ def pyhub_web_proj(toml_path: Optional[Path], env_path: Optional[Path], is_debug
     if env_path and env_path.exists():
         os.environ["ENV_PATH"] = str(env_path)
 
-    curdir_path = Path(os.curdir).absolute()
+    pyhub_config_path = Path.home() / ".pyhub"
+    pyhub_config_path.mkdir(parents=True, exist_ok=True)
 
     # DATABASE_URL 환경변수가 없다면, 디폴트로 현재 경로에 db.sqlite3 지정
     if "DATABASE_URL" not in os.environ:
-        DEFAULT_DATABASE = f"sqlite:///{curdir_path / 'db.sqlite3'}"
+        default_sqlite3_path = pyhub_config_path / "db.sqlite3"
+        DEFAULT_DATABASE = f"sqlite:///{default_sqlite3_path}"
         os.environ["DATABASE_URL"] = DEFAULT_DATABASE
 
     if "STATIC_ROOT" not in os.environ:
-        os.environ["STATIC_ROOT"] = str(curdir_path / "staticfiles")
+        default_static_root_path = pyhub_config_path / "staticfiles"
+        default_static_root_path.mkdir(parents=True, exist_ok=True)
+        os.environ["STATIC_ROOT"] = str(default_static_root_path)
 
     if "MEDIA_ROOT" not in os.environ:
-        os.environ["MEDIA_ROOT"] = str(curdir_path / "mediafiles")
+        default_media_root_path = pyhub_config_path / "mediafiles"
+        default_media_root_path.mkdir(parents=True, exist_ok=True)
+        os.environ["MEDIA_ROOT"] = str(default_media_root_path)
 
     os.environ["DJANGO_SETTINGS_MODULE"] = "settings"
     django.setup()
