@@ -180,34 +180,22 @@ def make_settings(
                         "django.contrib.auth.context_processors.auth",
                         "django.contrib.messages.context_processors.messages",
                     ],
-                    "loaders": (
-                        [
-                            (
-                                "template_partials.loader.Loader",
-                                (
-                                    "django_cotton.cotton_loader.Loader",
-                                    "django_components.template_loader.Loader",
-                                    "django.template.loaders.filesystem.Loader",
-                                    "django.template.loaders.app_directories.Loader",
-                                ),
-                            )
-                        ]
-                        if debug
-                        else [
-                            (
-                                "template_partials.loader.Loader",
+                    "loaders": [
+                        (
+                            "template_partials.loader.Loader",
+                            [
                                 (
                                     "django.template.loaders.cached.Loader",
-                                    (
+                                    [
                                         "django_cotton.cotton_loader.Loader",
                                         "django_components.template_loader.Loader",
                                         "django.template.loaders.filesystem.Loader",
                                         "django.template.loaders.app_directories.Loader",
-                                    ),
-                                ),
-                            )
-                        ]
-                    ),
+                                    ],
+                                )
+                            ],
+                        ),
+                    ],
                 },
             },
         ],
@@ -363,6 +351,8 @@ def make_settings(
             # 이 LRU 캐싱을 끈다고 해서 매번 파일에서 템플릿 파일을 읽어오는 것은 아님. 컴포넌트 클래스를 등록하는 과정에서 이미 메모리에 로딩.
             # LRU 캐싱은 부가적인 연산에 대한 캐싱. (0: 캐시 끄기, None: 무제한 캐싱)
             # template_cache_size=(0 if debug else 128),
+            reload_on_file_change=debug,
+            reload_on_template_change=debug,
         ),
     )
 
