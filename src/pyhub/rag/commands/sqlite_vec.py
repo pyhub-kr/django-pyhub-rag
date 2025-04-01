@@ -143,11 +143,21 @@ def command_import_jsonl(
     JSONL 파일의 벡터 데이터를 SQLite 데이터베이스 테이블로 로드합니다.
     """
 
+    if not db_path.exists():
+        console.print(f"Not found : {db_path}")
+        raise typer.Exit(code=1)
+
+    if table_name and "sqlite3" in table_name:
+        console.print(f"[red]Invalid table name : {table_name}[/red]")
+        raise typer.Exit(code=1)
+
     if is_verbose:
         log_level = logging.DEBUG
     else:
         log_level = logging.INFO
     init(debug=True, log_level=log_level, toml_path=toml_path, env_path=env_path)
+
+    console.print(f"{db_path} 경로의 {table_name} 테이블에 {jsonl_path} 데이터를 임포트합니다.")
 
     try:
         import_jsonl(
@@ -186,6 +196,10 @@ def command_similarity_search(
     """
     SQLite 벡터 데이터베이스에서 의미적 유사도 검색을 수행합니다.
     """
+
+    if not db_path.exists():
+        console.print(f"Not found : {db_path}")
+        raise typer.Exit(code=1)
 
     if is_verbose:
         log_level = logging.INFO

@@ -6,7 +6,7 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
-from pyhub import init
+from pyhub import init, print_for_main
 from pyhub.llm import LLM
 from pyhub.llm.types import LLMEmbeddingModelEnum, Usage
 from pyhub.rag.json import JSONDecodeError, json_dumps, json_loads
@@ -28,6 +28,18 @@ def validate_embeddings(data: List[Dict]) -> Optional[int]:
         raise typer.Exit(1)
 
     return dimensions.pop() if dimensions else None
+
+
+logo = """
+    ██████╗  ██╗   ██╗ ██╗  ██╗ ██╗   ██╗ ██████╗     ███████╗ ███╗   ███╗ ██████╗ ███████╗ ██████╗ 
+    ██╔══██╗ ╚██╗ ██╔╝ ██║  ██║ ██║   ██║ ██╔══██╗    ██╔════╝ ████╗ ████║ ██╔══██╗ ██╔════╝ ██╔══██╗
+    ██████╔╝  ╚████╔╝  ███████║ ██║   ██║ ██████╔╝    █████╗   ██╔████╔██║ ██████╔╝ █████╗   ██║  ██║
+    ██╔═══╝    ╚██╔╝   ██╔══██║ ██║   ██║ ██╔══██╗    ██╔══╝   ██║╚██╔╝██║ ██╔══██╗ ██╔══╝   ██║  ██║
+    ██║         ██║    ██║  ██║ ╚██████╔╝ ██████╔╝    ███████╗ ██║ ╚═╝ ██║ ██████╔╝ ███████╗ ██████╔╝
+    ╚═╝         ╚═╝    ╚═╝  ╚═╝  ╚═════╝  ╚═════╝     ╚══════╝ ╚═╝     ╚═╝ ╚═════╝  ╚══════╝ ╚═════╝ 
+"""
+
+app.callback(invoke_without_command=True)(print_for_main(logo))
 
 
 @app.command()
@@ -60,6 +72,10 @@ def fill_jsonl(
 ):
     """JSONL 파일 데이터의 page_content 필드 값을 임베딩하고 embedding 필드에 저장합니다."""
 
+    if jsonl_path.suffix.lower() != ".jsonl":
+        console.print(f"[red]{jsonl_path} 파일이 jsonl 확장자가 아닙니다.[/red]")
+        raise typer.Exit(1)
+
     # 출력 경로가 지정되지 않은 경우 기존 자동 생성 로직 사용
     if jsonl_out_path is None:
         jsonl_out_path = jsonl_path.with_name(f"{jsonl_path.stem}-out{jsonl_path.suffix}")
@@ -86,7 +102,7 @@ def fill_jsonl(
         table.add_row("환경변수 파일 경로", str(env_path))
         console.print(table)
 
-    console.print(f"{jsonl_path} 파싱 중 ...")
+    console.print(f"{jsonl_path} ...")
     total_usage = Usage()
 
     try:
