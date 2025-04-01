@@ -54,6 +54,7 @@ class PyhubSetting:
     TEMPLATES: list[TemplateSetting]
     DATABASE_ROUTERS: list[str]
     DATABASES: dict[str, dict]
+    AUTH_USER_MODEL: str
     AUTH_PASSWORD_VALIDATORS: list[dict[str, str]]
     CACHES: dict[str, dict]
     LOGGING: dict[str, Any]
@@ -249,6 +250,7 @@ def make_settings(
         # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
         DATABASE_ROUTERS=["pyhub.routers.Router"],
         DATABASES=get_databases(base_dir),
+        AUTH_USER_MODEL=env.str("AUTH_USER_MODEL", default="accounts.User"),
         # Password validation
         # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
         AUTH_PASSWORD_VALIDATORS=[
