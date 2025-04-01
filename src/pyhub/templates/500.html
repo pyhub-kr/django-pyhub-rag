@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <meta name="description" content="500 - 내부 서버 오류">
+    <meta name="keywords" content="500, error, internal server error">
+    <title>500 - 내부 서버 오류</title>
+    {% include "pyhub/scripts.html" %}
+</head>
+<body class="bg-red-50 min-h-screen flex items-center justify-center">
+<div class="text-center p-8">
+    <h1 class="text-6xl font-bold text-red-800 mb-4">500</h1>
+    <p class="text-xl text-red-600 mb-4">내부 서버 오류가 발생했습니다</p>
+    <p class="text-md text-red-500 mb-8">잠시 후 다시 시도해주세요</p>
+    <a href="/"
+       class="bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-lg transition duration-300">
+        홈으로 돌아가기
+    </a>
+</div>
+</body>
+</html>
