@@ -89,6 +89,7 @@ def make_settings(
     log_level: Optional[int] = None,
     toml_path: Optional[Path] = None,
     env_path: Optional[Path] = None,
+    additional_apps: Optional[list[str]] = None,
 ) -> PyhubSetting:
 
     toml_settings = load_toml(toml_path=toml_path, load_env=True)
@@ -173,6 +174,7 @@ def make_settings(
             "crispy_tailwind",
             "template_partials.apps.SimpleAppConfig",  # 2개의 AppConfig가 제공
             *pyhub_apps,
+            *(additional_apps or []),
         ],
         MIDDLEWARE=[
             *(["debug_toolbar.middleware.DebugToolbarMiddleware"] if debug else []),
@@ -250,7 +252,7 @@ def make_settings(
         # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
         DATABASE_ROUTERS=["pyhub.routers.Router"],
         DATABASES=get_databases(base_dir),
-        AUTH_USER_MODEL=env.str("AUTH_USER_MODEL", default="accounts.User"),
+        AUTH_USER_MODEL=env.str("AUTH_USER_MODEL", default="auth.User"),
         # Password validation
         # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
         AUTH_PASSWORD_VALIDATORS=[
