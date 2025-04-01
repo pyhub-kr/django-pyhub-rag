@@ -119,6 +119,33 @@ def make_settings(
 
     logger.debug("자동으로 감지된 pyhub 앱: %s", ", ".join(pyhub_apps))
 
+    #
+    # ~/.pyhub/ 경로 아래에 db/static/media 디폴트 경로 설정
+    #
+
+    pyhub_config_path = Path.home() / ".pyhub"
+    pyhub_config_path.mkdir(parents=True, exist_ok=True)
+
+    # DATABASE_URL 환경변수가 없다면, 디폴트로 ~/.pyhub/ 경로에 db.sqlite3 지정
+    if "DATABASE_URL" not in os.environ:
+        default_sqlite3_path = pyhub_config_path / "db.sqlite3"
+        DEFAULT_DATABASE = f"sqlite:///{default_sqlite3_path}"
+        os.environ["DATABASE_URL"] = DEFAULT_DATABASE
+
+    if "STATIC_ROOT" not in os.environ:
+        default_static_root_path = pyhub_config_path / "staticfiles"
+        default_static_root_path.mkdir(parents=True, exist_ok=True)
+        os.environ["STATIC_ROOT"] = str(default_static_root_path)
+
+    if "MEDIA_ROOT" not in os.environ:
+        default_media_root_path = pyhub_config_path / "mediafiles"
+        default_media_root_path.mkdir(parents=True, exist_ok=True)
+        os.environ["MEDIA_ROOT"] = str(default_media_root_path)
+
+    #
+    # settings 설정 생성
+    #
+
     return PyhubSetting(
         DEBUG=debug,
         BASE_DIR=base_dir,
