@@ -7,8 +7,8 @@ from django_lifecycle import AFTER_SAVE, BEFORE_SAVE, LifecycleModelMixin, hook
 
 from pyhub.db.mixins import StatusMixin, TimestampedMixin
 from pyhub.db.models.fields import PageNumbersField, PDFFileField
+from pyhub.llm.json import json_dumps
 from pyhub.llm.mixins import ImageDescriptorMixin
-from pyhub.parser.json import json_dumps
 from pyhub.parser.upstage.types import DocumentSplitStrategyEnum
 from pyhub.rag.models.postgres import PGVectorDocument
 

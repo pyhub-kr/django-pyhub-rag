@@ -8,8 +8,8 @@ from rich.table import Table
 
 from pyhub import init, print_for_main
 from pyhub.llm import LLM
+from pyhub.llm.json import json_dumps, json_loads, JSONDecodeError
 from pyhub.llm.types import LLMEmbeddingModelEnum, Usage
-from pyhub.rag.json import JSONDecodeError, json_dumps, json_loads
 
 app = typer.Typer(name="embed", help="LLM 임베딩 관련 명령")
 console = Console()

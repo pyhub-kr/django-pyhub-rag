@@ -7,14 +7,13 @@ from pathlib import Path
 from typing import Generator, Optional, Union
 
 from pyhub.llm import LLM, LLMEmbeddingModelEnum
+from pyhub.llm.json import json_dumps, json_loads, JSONDecodeError
 from pyhub.llm.types import Embed, EmbeddingDimensionsEnum
 
 try:
     import sqlite_vec
 except ImportError:
     sqlite_vec = None
-
-from pyhub.rag.json import JSONDecodeError, json_dumps, json_loads
 
 logger = logging.getLogger(__name__)
 

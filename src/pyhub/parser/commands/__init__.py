@@ -14,6 +14,7 @@ from rich.table import Table
 
 from pyhub import init, print_for_main
 from pyhub.caches import cache_clear_all
+from pyhub.llm.json import json_dumps
 from pyhub.llm.types import (
     LanguageEnum,
     LLMChatModelEnum,
@@ -21,7 +22,6 @@ from pyhub.llm.types import (
     LLMVendorEnum,
     LLMVendorType,
 )
-from pyhub.parser.json import json_dumps
 from pyhub.parser.upstage import UpstageDocumentParseParser
 from pyhub.parser.upstage.parser import ImageDescriptor
 from pyhub.parser.upstage.settings import (
