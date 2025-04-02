@@ -12,7 +12,7 @@ from django.core.validators import URLValidator
 from rich.console import Console
 from rich.table import Table
 
-from pyhub import init, print_copyright, print_for_main
+from pyhub import init, print_for_main
 from pyhub.caches import cache_clear_all
 from pyhub.llm.types import (
     LanguageEnum,
@@ -427,9 +427,6 @@ def upstage(
             console.print_exception()
 
         raise typer.Exit(code=1)
-
-    else:
-        print_copyright()
 
 
 def validate_categories(categories_str: str) -> list[str]:
