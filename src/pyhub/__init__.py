@@ -70,7 +70,7 @@ def print_logo(logo: Optional[str] = None) -> None:
     #     module_name = matches[-1]
 
     console.print(
-        "\n장고와 함께 웹 기반의 문서 지식 저장소를 손쉽게 구축하실 수 있습니다.",
+        "\n인생은 짧습니다. 파이썬/장고를 쓰세요. ;-)",
         style="green",
     )
 

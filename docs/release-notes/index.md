@@ -1,7 +1,17 @@
 # 릴리즈 노트
 
+## 1.2.2
+
++ `pyhub.mcp` 앱을 통한 MCP API 지원
+
+## 1.2.1
+
++ `pyhub.web` 앱에서 기본 User 모델 커스텀
++ 커스텀 `404`, `500` 템플릿 지원
+
 ## 1.2.0
 
++ `pyhub.web`, `pyhub.ui` 앱을 통한 웹 UI 지원
 + `PGVectorDocument` 모델에서 check 프레임워크를 통해 인덱스 미지정 확인
 + `StatusMixin` 추상화 모델 클래스 추가 : 문서 처리 상태를 관리
 + `PDFFileField` 모델 필드 추가

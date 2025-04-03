@@ -14,6 +14,7 @@ from django.conf import settings
 from django.utils import timezone
 from django_components import ComponentsSettings
 from environ import Env
+from mcp.server.fastmcp.server import Settings as FastmcpSettings
 
 from pyhub.versions import notify_if_update_available
 
@@ -80,6 +81,7 @@ class PyhubSetting:
     CRISPY_TEMPLATE_PACK: Literal["tailwind"]
     COMPONENTS: ComponentsSettings
     TEST_RUNNER: str
+    FASTMCP_SETTINGS: Optional[FastmcpSettings]
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -335,6 +337,15 @@ def make_settings(
                         "django_lifecycle",
                     ]
                 },
+                # "django_components": {
+                #     "level": 5,
+                #     "handlers": ["debug_console"],
+                # },
+                "mcp.server": {
+                    "handlers": ["console"],
+                    "level": log_level,
+                    "propagate": False,
+                },
             },
         },
         # Internationalization
@@ -349,7 +360,8 @@ def make_settings(
         STATIC_URL=env.str("STATIC_URL", default="static/"),
         STATIC_ROOT=env.path("STATIC_ROOT", default=base_dir / "staticfiles"),
         STATICFILES_DIRS=[
-            pyhub_path / "static",
+            # core 앱의 static 경로를 사용하기에, 별도 static 경로를 사용하지 않겠습니다.
+            # pyhub_path / "static",
         ],
         STATICFILES_FINDERS=[
             # Default finders
@@ -391,6 +403,14 @@ def make_settings(
         ),
         # https://github.com/adamchainz/django-rich
         TEST_RUNNER="django_rich.test.RichRunner",
+        FASTMCP_SETTINGS=FastmcpSettings(
+            debug=debug,
+            instructions=env.str("FASTMCP_INSTRUCTIONS", default=None),
+            log_level="DEBUG" if debug else "INFO",
+            # Uncomment and configure paths if needed
+            # sse_path="/sse",
+            # message_path="/messages/",
+        ),
     )
 
 
@@ -564,7 +584,8 @@ def init(
         )
         settings.configure(**pyhub_settings.to_dict())
         django.setup()
-        logging.debug("Django 환경이 초기화되었습니다.")
+        # TODO: django.setup() 이후에 호출 함에도 pyhub.init 로거 설정을 따르지 않음.
+        # logging.debug("Loaded django project settings.")
 
         activate_timezone()
 

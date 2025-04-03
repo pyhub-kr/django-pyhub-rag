@@ -29,7 +29,7 @@
 
 <nav class="bg-blue-600 text-white shadow-md">
     <div class="container mx-auto px-4 py-3 flex justify-between items-center">
-        <div class="flex items-center space-x-2">
+        <div class="flex items-center space-x-8">
             {% block nav_header %}
                 <h1 class="text-xl font-bold">
                     <a href="{% url 'doku:document-list' %}">
@@ -37,6 +37,9 @@
                     </a>
                 </h1>
             {% endblock %}
+            <div class="flex items-center space-x-6">
+                <a href="{% url 'mcp:index' %}" class="hover:text-blue-200 transition">MCP</a>
+            </div>
         </div>
         <div class="flex items-center space-x-4">
             <c-button.modal link="{% url 'doku:document-new' %}" color="none"

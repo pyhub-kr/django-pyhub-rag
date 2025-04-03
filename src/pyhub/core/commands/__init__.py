@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import Optional
 
 import typer
-from django.core.management import call_command, CommandError
+from django.core.management import call_command
 from rich.console import Console
 
 from pyhub import init, print_for_main
@@ -30,7 +30,6 @@ console = Console()
 
 @app.command()
 def toml(
-    ctx: typer.Context,
     toml_path: Optional[Path] = typer.Argument(
         Path.home() / ".pyhub.toml",
         help="toml 파일 경로",

@@ -55,7 +55,6 @@ def run(
     is_debug: bool = typer.Option(False, "--debug"),
 ):
     """Run the PyHub web server using uvicorn."""
-    import uvicorn
 
     with pyhub_web_proj(toml_path=toml_path, env_path=env_path, is_debug=is_debug):
         if is_disable_check is False:
@@ -66,7 +65,12 @@ def run(
                 raise typer.Exit(1)
 
         if is_dev_server:
-            args = [f"{host}:{port}", "--skip-checks", "--insecure"]
+            args = [f"{host}:{port}", "--skip-checks"]
+
+            if "daphne" not in settings.INSTALLED_APPS:
+                # daphne runserver 에서는 --insecure 옵션을 지원하지 않습니다.
+                args += ["--insecure"]
+
             if not reload:
                 args.append("--noreload")
 
@@ -89,6 +93,8 @@ def run(
                 style="green",
             )
             application = get_asgi_application()
+
+            import uvicorn
 
             uvicorn.run(
                 application,
@@ -286,7 +292,7 @@ def print_settings(
     # format: Optional[] = typer.Option(None, help=""),
     is_debug: bool = typer.Option(False, "--debug"),
 ):
-    """장고 쉘을 구동합니다."""
+    """지정 settings 설정을 출력합니다."""
 
     with pyhub_web_proj(toml_path=toml_path, env_path=env_path, is_debug=is_debug):
         call_command("print_settings", *settings_names)

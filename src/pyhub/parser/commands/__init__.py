@@ -193,7 +193,7 @@ def upstage(
         help="이미지 설명 생성에 사용할 언어",
         callback=lambda x: validate_language(x),
     ),
-    is_verbose: bool = typer.Option(False, "--verbose", help="상세한 처리 정보 표시"),
+    is_verbose: bool = typer.Option(False, "--verbose"),
     is_force: bool = typer.Option(False, "--force", "-f", help="확인 없이 출력 폴더 삭제 후 재생성"),
     is_ignore_cache: bool = typer.Option(
         False, "--ignore-cache", help="API 응답 캐시를 무시하고 항상 새로운 API 요청을 보냅니다. 캐시는 유지됩니다."

@@ -33,6 +33,7 @@ urlpatterns = [
     path("", TemplateView.as_view(template_name="pyhub/root.html"), name="root"),
     path("ui/", include("pyhub.ui.urls")),
     path("doku/", include("pyhub.doku.urls")),
+    path("mymcp/", include("pyhub.mcp.urls")),
     path("api/", api.urls),
 ]
 
