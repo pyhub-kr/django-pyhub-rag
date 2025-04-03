@@ -1,6 +1,5 @@
 import logging
 import re
-from typing import List, Tuple
 
 from django.db.backends.sqlite3.schema import DatabaseSchemaEditor as SQLiteSchemaEditor
 
@@ -9,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 class VirtualTableSchemaEditor(SQLiteSchemaEditor):
 
-    def table_sql(self, model) -> Tuple[str, List]:
+    def table_sql(self, model) -> tuple[str, list]:
         from pyhub.rag.fields.sqlite import SQLiteVectorField
 
         sql, params = super().table_sql(model)

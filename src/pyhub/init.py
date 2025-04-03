@@ -2,6 +2,7 @@ import logging
 import os
 import sys
 import tempfile
+import zoneinfo
 from dataclasses import asdict, dataclass
 from io import StringIO
 from pathlib import Path
@@ -10,6 +11,7 @@ from typing import Any, Literal, Optional, TypedDict, Union
 import django
 import toml
 from django.conf import settings
+from django.utils import timezone
 from django_components import ComponentsSettings
 from environ import Env
 
@@ -77,6 +79,7 @@ class PyhubSetting:
     CRISPY_ALLOWED_TEMPLATE_PACKS: Literal["tailwind"]
     CRISPY_TEMPLATE_PACK: Literal["tailwind"]
     COMPONENTS: ComponentsSettings
+    TEST_RUNNER: str
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -166,6 +169,8 @@ def make_settings(
             "django.contrib.staticfiles",
             "django_components",
             "django_cotton.apps.SimpleAppConfig",
+            "django_rich",
+            "django_typer",
             "cotton_heroicons",
             "django_extensions",
             "django_htmx",
@@ -317,20 +322,19 @@ def make_settings(
                     "level": log_level,
                     "propagate": False,
                 },
-                "pyhub.rag": {
-                    "handlers": ["console"],
-                    "level": "INFO",  # pyhub.rag의 debug 로그는 처리하지 않음
-                    "propagate": False,
+                **{
+                    _app: {
+                        "handlers": ["console"],
+                        "level": "INFO",
+                        "propagate": False,
+                    }
+                    for _app in [
+                        "pyhub.rag",
+                        "pyhub.routers",
+                        "django_components",
+                        "django_lifecycle",
+                    ]
                 },
-                "pyhub.routers": {
-                    "handlers": ["console"],
-                    "level": "INFO",
-                    "propagate": False,
-                },
-                # "django_components": {
-                #     "level": 5,
-                #     "handlers": ["debug_console"],
-                # },
             },
         },
         # Internationalization
@@ -385,6 +389,8 @@ def make_settings(
             reload_on_file_change=debug,
             reload_on_template_change=debug,
         ),
+        # https://github.com/adamchainz/django-rich
+        TEST_RUNNER="django_rich.test.RichRunner",
     )
 
 
@@ -527,6 +533,22 @@ def load_toml(
     return PyhubTomlSetting(env=env, prompt_templates=prompt_templates)
 
 
+def activate_timezone(tzname: Optional[str] = None) -> None:
+    if not tzname:
+        if hasattr(settings, "USER_DEFAULT_TIME_ZONE"):
+            tzname = settings.USER_DEFAULT_TIME_ZONE
+
+    if tzname:
+        try:
+            timezone.activate(zoneinfo.ZoneInfo(tzname))
+        except zoneinfo.ZoneInfoNotFoundError:
+            timezone.deactivate()
+    else:
+        # If no timezone is found in session or default setting, deactivate
+        # to use the default (settings.TIME_ZONE)
+        timezone.deactivate()
+
+
 def init(
     debug: bool = False,
     log_level: Optional[int] = None,
@@ -543,5 +565,7 @@ def init(
         settings.configure(**pyhub_settings.to_dict())
         django.setup()
         logging.debug("Django 환경이 초기화되었습니다.")
+
+        activate_timezone()
 
         notify_if_update_available()

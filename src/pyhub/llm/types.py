@@ -10,7 +10,7 @@ from django.db.models import TextChoices
 from openai.types import ChatModel as OpenAIChatModelType
 from typing_extensions import Optional
 
-from pyhub.utils import enum_to_flatten_set, type_to_flatten_set
+from pyhub.core.utils import enum_to_flatten_set, type_to_flatten_set
 
 #
 # Vendor
@@ -125,6 +125,8 @@ LLMChatModelType: TypeAlias = Union[
     OpenAIChatModelType, AnthropicChatModelType, UpstageChatModelType, GoogleChatModelType, OllamaChatModelType
 ]
 
+
+LLMModelType = Union[LLMChatModelType, LLMEmbeddingModelType]
 
 #
 # Groundedness Check

@@ -5,8 +5,8 @@ from django.core.validators import MinValueValidator
 from django.db import models
 from django_lifecycle import AFTER_SAVE, BEFORE_SAVE, LifecycleModelMixin, hook
 
+from pyhub.core.models.fields import PageNumbersField, PDFFileField
 from pyhub.db.mixins import StatusMixin, TimestampedMixin
-from pyhub.db.models.fields import PageNumbersField, PDFFileField
 from pyhub.llm.json import json_dumps
 from pyhub.llm.mixins import ImageDescriptorMixin
 from pyhub.parser.upstage.types import DocumentSplitStrategyEnum

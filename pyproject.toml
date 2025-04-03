@@ -30,6 +30,8 @@ dependencies = [
     "django-cotton",
     "django-crispy-forms",
     "django-htmx",
+    "django-rich",
+    "django-typer[rich]",
     "django-template-partials",
     "cotton-heroicons",  # https://github.com/snopoke/cotton-heroicons
     "crispy-tailwind",

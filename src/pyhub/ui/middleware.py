@@ -1,8 +1,6 @@
-import zoneinfo
-
 from asgiref.sync import iscoroutinefunction, markcoroutinefunction
-from django.conf import settings
-from django.utils import timezone
+from pyhub import activate_timezone
+
 
 # https://docs.djangoproject.com/en/dev/topics/i18n/timezones/#selecting-the-current-time-zone
 
@@ -33,17 +31,5 @@ class TimezoneMiddleware:
 
     def _process_request(self, request):
         """Shared synchronous logic to process the request."""
-        tzname = request.session.get("django_timezone")
-        if not tzname:
-            if hasattr(settings, "USER_DEFAULT_TIME_ZONE"):
-                tzname = settings.USER_DEFAULT_TIME_ZONE
-
-        if tzname:
-            try:
-                timezone.activate(zoneinfo.ZoneInfo(tzname))
-            except zoneinfo.ZoneInfoNotFoundError:
-                timezone.deactivate()
-        else:
-            # If no timezone is found in session or default setting, deactivate
-            # to use the default (settings.TIME_ZONE)
-            timezone.deactivate()
+        tzname = request.session.get("django_timezone", None)
+        activate_timezone(tzname)

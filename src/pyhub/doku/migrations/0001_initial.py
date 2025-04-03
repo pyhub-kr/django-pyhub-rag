@@ -7,7 +7,7 @@ import pgvector.django.indexes
 from django.db import migrations, models
 from pgvector.django import VectorExtension
 
-import pyhub.db.models.fields
+import pyhub.core.models.fields
 import pyhub.rag.fields.postgres
 
 
@@ -139,7 +139,7 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "file",
-                    pyhub.db.models.fields.PDFFileField(upload_to="doku/document/%Y/%m/%d", verbose_name="PDF 파일"),
+                    pyhub.core.models.fields.PDFFileField(upload_to="doku/document/%Y/%m/%d", verbose_name="PDF 파일"),
                 ),
                 (
                     "name",
@@ -162,7 +162,7 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "pages",
-                    pyhub.db.models.fields.PageNumbersField(
+                    pyhub.core.models.fields.PageNumbersField(
                         blank=True,
                         max_length=255,
                         verbose_name="변환할 페이지 번호 (비워두시면 모든 페이지를 변환합니다.)",

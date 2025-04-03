@@ -57,8 +57,7 @@ def ask(
     """LLM에 질의하고 응답을 출력합니다."""
 
     if query is None:
-        console.print("[bold red]Error: missing query text[/bold red]")
-        raise typer.Exit(1)
+        query = typer.prompt(">>>", prompt_suffix=" ")
 
     # Use stdin as context if available and no context argument was provided
     if context is None and not sys.stdin.isatty():

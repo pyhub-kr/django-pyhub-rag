@@ -2,7 +2,7 @@ from pathlib import Path
 
 from environ import Env
 
-from pyhub import load_envs, load_toml, make_settings
+from pyhub import load_envs, load_toml, make_settings, activate_timezone
 
 BASE_DIR = Path(__file__).resolve().parent
 
@@ -98,3 +98,7 @@ GOOGLE_API_KEY = env.str("GOOGLE_API_KEY", default=None)
 # django-components
 
 COMPONENTS = PYHUB_SETTINGS.COMPONENTS
+
+# https://github.com/adamchainz/django-rich
+
+TEST_RUNNER = PYHUB_SETTINGS.TEST_RUNNER

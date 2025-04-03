@@ -3,7 +3,7 @@ from django.db import models
 from django.forms import ModelForm, TextInput
 from django.test import TestCase
 
-from pyhub.db.models.fields import PageNumbersField
+from pyhub.core.models.fields import PageNumbersField
 
 
 class TestModel(models.Model):

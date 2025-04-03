@@ -1,7 +1,7 @@
 from decimal import Decimal
 from typing import Optional, Union, cast
 
-from ..rag.utils import get_literal_values
+from pyhub.rag.utils import get_literal_values
 from .anthropic import AnthropicLLM
 from .base import BaseLLM, SequentialChain
 from .google import GoogleLLM
@@ -23,7 +23,7 @@ from .types import (
     Price,
     UpstageChatModelType,
     UpstageEmbeddingModelType,
-    Usage,
+    Usage, LLMModelType,
 )
 from .upstage import UpstageLLM
 
@@ -59,7 +59,7 @@ class LLM:
     @classmethod
     def create(
         cls,
-        model: Union[LLMChatModelType, LLMEmbeddingModelType],
+        model: LLMModelType,
         vendor: Optional[LLMVendorType] = None,
         **kwargs,
     ) -> "BaseLLM":

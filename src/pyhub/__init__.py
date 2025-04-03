@@ -5,7 +5,7 @@ from typing import Optional
 import typer
 from rich.console import Console
 
-from .init import PromptTemplates, init, load_envs, load_toml, make_settings
+from .init import PromptTemplates, init, activate_timezone, load_envs, load_toml, make_settings
 
 console = Console()
 
@@ -77,6 +77,7 @@ def print_logo(logo: Optional[str] = None) -> None:
 
 __all__ = [
     "init",
+    "activate_timezone",
     "PromptTemplates",
     "load_envs",
     "load_toml",
