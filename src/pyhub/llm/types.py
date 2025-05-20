@@ -318,7 +318,7 @@ class OpenAIChatModelEnum(TextChoices):
     CHATGPT_4O_LATEST = "chatgpt-4o-latest", "chatgpt-4o-latest"
     O1 = "o1", "o1"
     O1_MINI = "o1-mini", "o1-mini"
-    O3_MINI = "o3-mini", "o3-mini"
+    # O3_MINI = "o3-mini", "o3-mini"
 
 
 class AnthropicChatModelEnum(TextChoices):
