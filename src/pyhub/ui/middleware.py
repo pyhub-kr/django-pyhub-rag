@@ -1,4 +1,4 @@
-from asgiref.sync import iscoroutinefunction, markcoroutinefunction
+from asgiref.sync import iscoroutinefunction, markcoroutinefunction, sync_to_async
 from pyhub import activate_timezone
 
 
@@ -26,7 +26,7 @@ class TimezoneMiddleware:
         return self.get_response(request)
 
     async def __acall__(self, request):
-        self._process_request(request)
+        await sync_to_async(self._process_request)(request)
         return await self.get_response(request)
 
     def _process_request(self, request):
