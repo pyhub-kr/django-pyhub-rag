@@ -373,7 +373,7 @@ class LLMChatModelEnum(TextChoices):
     CHATGPT_4O_LATEST = "chatgpt-4o-latest", "chatgpt-4o-latest"
     O1 = "o1", "o1"
     O1_MINI = "o1-mini", "o1-mini"
-    O3_MINI = "o3-mini", "o3-mini"
+    # O3_MINI = "o3-mini", "o3-mini"
     # anthropic
     CLAUDE_3_7_SONNET_LATEST = "claude-3-7-sonnet-latest", "claude-3-7-sonnet-latest"
     CLAUDE_3_5_HAIKU_LATEST = "claude-3-5-haiku-latest", "claude-3-5-haiku-latest"
