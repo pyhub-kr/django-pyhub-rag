@@ -39,7 +39,7 @@ class LLM:
         LLMChatModelEnum.GPT_4O: ("2.5", "10.0"),
         LLMChatModelEnum.GPT_4O_MINI: ("0.15", "0.60"),
         LLMChatModelEnum.O1: ("15", "60.00"),
-        LLMChatModelEnum.O3_MINI: ("1.10", "4.40"),
+        # LLMChatModelEnum.O3_MINI: ("1.10", "4.40"),
         LLMChatModelEnum.O1_MINI: ("1.10", "4.40"),
         # https://www.anthropic.com/pricing#anthropic-api
         LLMChatModelEnum.CLAUDE_3_7_SONNET_LATEST: ("3", "15"),
