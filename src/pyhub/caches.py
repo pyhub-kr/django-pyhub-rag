@@ -4,7 +4,7 @@ from io import IOBase
 from typing import Any, Optional, Union
 
 from django.core.cache import caches
-from django.core.cache.backends.base import DEFAULT_TIMEOUT
+from django.core.cache.backends.base import DEFAULT_TIMEOUT, InvalidCacheBackendError
 from django.core.files import File
 
 logger = logging.getLogger(__name__)
@@ -122,23 +122,17 @@ def cache_make_key(
 
 
 def cache_get(key, default=None, version=None, alias: str = "default"):
-    # TODO: cache 이전이 완료되었다고 판단이 될 때 제거하기
-    if alias != "default":
-        v = caches["default"].get(key, default, version)
-        if v is not None:
-            return v
-
-    return caches[alias].get(key, default, version)
+    try:
+        return caches[alias].get(key, default, version)
+    except InvalidCacheBackendError:
+        return caches["default"].get(key, default, version)
 
 
 async def cache_get_async(key, default=None, version=None, alias: str = "default"):
-    # TODO: cache 이전이 완료되었다고 판단이 될 때 제거하기
-    if alias != "default":
-        v = await caches["default"].aget(key, default, version)
-        if v is not None:
-            return v
-
-    return await caches[alias].aget(key=key, default=default, version=version)
+    try:
+        return await caches[alias].aget(key=key, default=default, version=version)
+    except InvalidCacheBackendError:
+        return await caches["default"].aget(key=key, default=default, version=version)
 
 
 def cache_set(key, value, timeout=DEFAULT_TIMEOUT, version=None, alias: str = "default"):
