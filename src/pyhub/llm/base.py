@@ -115,7 +115,9 @@ class BaseLLM(abc.ABC):
                 logger.debug("using string template render : %s ...", repr(template))
                 return Template(template).render(Context(context))
             # 일반 문자열 포맷팅
-            return template.format(**context)
+            if context:
+                return template.format(**context)
+            return template
 
         return None
 
