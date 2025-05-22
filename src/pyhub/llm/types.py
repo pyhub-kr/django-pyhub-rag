@@ -71,6 +71,7 @@ AnthropicChatModelType  # noqa
 # https://console.upstage.ai/docs/capabilities/chat
 UpstageChatModelType: TypeAlias = Union[
     Literal[
+        "solar-pro2-preview",
         "solar-pro",
         "solar-mini",
     ]
@@ -329,6 +330,7 @@ class AnthropicChatModelEnum(TextChoices):
 
 
 class UpstageChatModelEnum(TextChoices):
+    UPSTAGE_SOLAR_PRO2_PREVIEW = "solar-pro2-preview"
     UPSTAGE_SOLAR_PRO = "solar-pro", "solar-pro"
     UPSTAGE_SOLAR_MINI = "solar-mini", "solar-mini"
 
@@ -380,6 +382,7 @@ class LLMChatModelEnum(TextChoices):
     CLAUDE_3_5_SONNET_LATEST = "claude-3-5-sonnet-latest", "claude-3-5-sonnet-latest"
     CLAUDE_3_OPUS_LATEST = "claude-3-opus-latest", "claude-3-opus-latest"
     # upstage
+    UPSTAGE_SOLAR_PRO2_PREVIEW = "solar-pro2-preview", "solar-pro2-preview"
     UPSTAGE_SOLAR_PRO = "solar-pro", "solar-pro"
     UPSTAGE_SOLAR_MINI = "solar-mini", "solar-mini"
     # google
