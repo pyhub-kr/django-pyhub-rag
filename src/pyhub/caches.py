@@ -159,12 +159,18 @@ async def cache_make_key_and_get_async(
 
     key_args = dict(type=type, **kwargs)
     cache_key = cache_make_key(key_args)
-    cached_value = await cache_get_async(cache_key, alias=cache_alias)
 
-    if cached_value is None:
-        logger.debug("cache[%s] miss : sending api request", cache_alias)
+    if cache_alias not in caches:
+        logger.warning("The specified cache alias '%s' is not configured. Skipping cache lookup.", cache_alias)
+        cached_value = None
+
     else:
-        logger.debug("cache[%s] hit : not sending api request", cache_alias)
+        cached_value = await cache_get_async(cache_key, alias=cache_alias)
+
+        if cached_value is None:
+            logger.debug("cache[%s] miss : sending api request", cache_alias)
+        else:
+            logger.debug("cache[%s] hit : not sending api request", cache_alias)
 
     return cache_key, cached_value
 
@@ -184,12 +190,18 @@ def cache_make_key_and_get(
 ) -> tuple[str, Optional[bytes]]:
     key_args = dict(type=type, **kwargs)
     cache_key = cache_make_key(key_args)
-    cached_value = cache_get(cache_key, alias=cache_alias)
 
-    if cached_value is None:
-        logger.debug("cache[%s] miss : sending api request", cache_alias)
+    if cache_alias not in caches:
+        logger.warning("The specified cache alias '%s' is not configured. Skipping cache lookup.", cache_alias)
+        cached_value = None
+
     else:
-        logger.debug("cache[%s] hit : not sending api request", cache_alias)
+        cached_value = cache_get(cache_key, alias=cache_alias)
+
+        if cached_value is None:
+            logger.debug("cache[%s] miss : sending api request", cache_alias)
+        else:
+            logger.debug("cache[%s] hit : not sending api request", cache_alias)
 
     return cache_key, cached_value
 
