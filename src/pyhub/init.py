@@ -54,6 +54,7 @@ class PyhubSetting:
     CSRF_TRUSTED_ORIGINS: list[str]
     INSTALLED_APPS: list[str]
     MIDDLEWARE: list[str]
+    ROOT_URLCONF: str
     TEMPLATES: list[TemplateSetting]
     DATABASE_ROUTERS: list[str]
     DATABASES: dict[str, dict]
@@ -196,6 +197,8 @@ def make_settings(
             "django_components.middleware.ComponentDependencyMiddleware",
             "django_htmx.middleware.HtmxMiddleware",
         ],
+        # django-components>=0.139.1 에서는 반드시 ROOT_URLCONF 설정이 필요
+        ROOT_URLCONF="",
         TEMPLATES=[
             {
                 "BACKEND": "django.template.backends.django.DjangoTemplates",
