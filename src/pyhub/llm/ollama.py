@@ -212,7 +212,8 @@ class OllamaLLM(BaseLLM):
         if response is None:
             logger.debug("request to ollama")
             response = sync_client.chat(**request_params)
-            cache_set(cache_key, response.model_dump_json(), alias="ollama")
+            if cache_key is not None:
+                cache_set(cache_key, response.model_dump_json(), alias="ollama")
 
         assert response is not None
         return Reply(text=response.message.content)
@@ -252,7 +253,8 @@ class OllamaLLM(BaseLLM):
         if cached_value is None:
             logger.debug("request to ollama")
             response: ChatResponse = await async_client.chat(**request_params)
-            await cache_set_async(cache_key, response.model_dump_json(), alias="ollama")
+            if cache_key is not None:
+                await cache_set_async(cache_key, response.model_dump_json(), alias="ollama")
 
         assert response is not None
         return Reply(text=response.message.content)
@@ -298,7 +300,8 @@ class OllamaLLM(BaseLLM):
                 reply_list.append(reply)
                 yield reply
 
-            cache_set(cache_key, reply_list, alias="ollama")
+            if cache_key is not None:
+                cache_set(cache_key, reply_list, alias="ollama")
 
     async def _make_ask_stream_async(
         self,
@@ -339,7 +342,8 @@ class OllamaLLM(BaseLLM):
                 reply_list.append(reply)
                 yield reply
 
-            await cache_set_async(cache_key, reply_list, alias="ollama")
+            if cache_key is not None:
+                await cache_set_async(cache_key, reply_list, alias="ollama")
 
     def embed(
         self,
@@ -373,7 +377,8 @@ class OllamaLLM(BaseLLM):
         if response is None:
             logger.debug("request to ollama")
             response = sync_client.embed(**request_params)
-            cache_set(cache_key, response.model_dump_json(), alias="ollama")
+            if cache_key is not None:
+                cache_set(cache_key, response.model_dump_json(), alias="ollama")
 
         if isinstance(input, str):
             return Embed(list(response.embeddings[0]))
@@ -412,7 +417,8 @@ class OllamaLLM(BaseLLM):
         if response is None:
             logger.debug("request to ollama")
             response = await async_client.embed(**request_params)
-            await cache_set_async(cache_key, response.model_dump_json(), alias="ollama")
+            if cache_key is not None:
+                await cache_set_async(cache_key, response.model_dump_json(), alias="ollama")
 
         if isinstance(input, str):
             return Embed(list(response.embeddings[0]))

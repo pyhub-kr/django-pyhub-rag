@@ -176,7 +176,8 @@ class GoogleLLM(BaseLLM):
         if response is None:
             logger.debug("request to google genai")
             response = client.models.generate_content(**request_params)
-            cache_set(cache_key, response.model_dump_json(), alias="google")
+            if cache_key is not None:
+                cache_set(cache_key, response.model_dump_json(), alias="google")
 
         assert response is not None
 
@@ -214,7 +215,8 @@ class GoogleLLM(BaseLLM):
         if response is None:
             logger.debug("request to google genai")
             response = await client.aio.models.generate_content(**request_params)
-            await cache_set_async(cache_key, response.model_dump_json(), alias="google")
+            if cache_key is not None:
+                await cache_set_async(cache_key, response.model_dump_json(), alias="google")
 
         assert response is not None
 
@@ -268,7 +270,8 @@ class GoogleLLM(BaseLLM):
                 reply_list.append(reply)
                 yield reply
 
-            cache_set(cache_key, reply_list, alias="google")
+            if cache_key is not None:
+                cache_set(cache_key, reply_list, alias="google")
 
     async def _make_ask_stream_async(
         self,
@@ -314,7 +317,8 @@ class GoogleLLM(BaseLLM):
                 reply_list.append(reply)
                 yield reply
 
-            await cache_set_async(cache_key, reply_list, alias="google")
+            if cache_key is not None:
+                await cache_set_async(cache_key, reply_list, alias="google")
 
     def ask(
         self,
@@ -388,7 +392,8 @@ class GoogleLLM(BaseLLM):
         if response is None:
             logger.debug("request to google embed")
             response = client.models.embed_content(**request_params)
-            cache_set(cache_key, response.model_dump_json(), alias="google")
+            if cache_key is not None:
+                cache_set(cache_key, response.model_dump_json(), alias="google")
 
         usage = None  # TODO: response에 usage_metadata가 없음
         if isinstance(input, str):
@@ -424,7 +429,8 @@ class GoogleLLM(BaseLLM):
 
         if response is None:
             response = await client.aio.models.embed_content(**request_params)
-            await cache_set_async(cache_key, response.model_dump_json(), alias="google")
+            if cache_key is not None:
+                await cache_set_async(cache_key, response.model_dump_json(), alias="google")
 
         usage = None  # TODO: response에 usage_metadata가 없음
         if isinstance(input, str):

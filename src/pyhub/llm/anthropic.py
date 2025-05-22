@@ -156,7 +156,8 @@ class AnthropicLLM(BaseLLM):
         if response is None:
             logger.debug("request to anthropic")
             response = sync_client.messages.create(**request_params)
-            cache_set(cache_key, response.model_dump_json(), alias="anthropic")
+            if cache_key is not None:
+                cache_set(cache_key, response.model_dump_json(), alias="anthropic")
 
         assert response is not None
 
@@ -193,7 +194,8 @@ class AnthropicLLM(BaseLLM):
         if response is None:
             logger.debug("request to anthropic")
             response = await async_client.messages.create(**request_params)
-            await cache_set_async(cache_key, response.model_dump_json(), alias="anthropic")
+            if cache_key is not None:
+                await cache_set_async(cache_key, response.model_dump_json(), alias="anthropic")
 
         assert response is not None
 
@@ -263,7 +265,8 @@ class AnthropicLLM(BaseLLM):
             reply_list.append(reply)
             yield reply
 
-            cache_set(cache_key, reply_list, alias="anthropic")
+            if cache_key is not None:
+                cache_set(cache_key, reply_list, alias="anthropic")
 
     async def _make_ask_stream_async(
         self,
@@ -325,7 +328,8 @@ class AnthropicLLM(BaseLLM):
             reply_list.append(reply)
             yield reply
 
-            await cache_set_async(cache_key, reply_list, alias="anthropic")
+            if cache_key is not None:
+                await cache_set_async(cache_key, reply_list, alias="anthropic")
 
     def ask(
         self,

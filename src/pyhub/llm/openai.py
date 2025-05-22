@@ -130,7 +130,8 @@ class OpenAIMixin:
         if response is None:
             logger.debug("request to openai")
             response: ChatCompletion = sync_client.chat.completions.create(**request_params)
-            cache_set(cache_key, response.model_dump_json(), alias=self.cache_alias)
+            if cached_value is not None:
+                cache_set(cache_key, response.model_dump_json(), alias=self.cache_alias)
 
         assert response is not None
 
@@ -173,7 +174,8 @@ class OpenAIMixin:
         if response is None:
             logger.debug("request to openai")
             response = await async_client.chat.completions.create(**request_params)
-            await cache_set_async(cache_key, response.model_dump_json(), alias=self.cache_alias)
+            if cache_key is not None:
+                await cache_set_async(cache_key, response.model_dump_json(), alias=self.cache_alias)
 
         assert response is not None
 
@@ -235,7 +237,8 @@ class OpenAIMixin:
                 reply_list.append(reply)
                 yield reply
 
-            cache_set(cache_key, reply_list, alias=self.cache_alias)
+            if cache_key is not None:
+                cache_set(cache_key, reply_list, alias=self.cache_alias)
 
     async def _make_ask_stream_async(
         self,
@@ -287,7 +290,8 @@ class OpenAIMixin:
                 reply_list.append(reply)
                 yield reply
 
-            await cache_set_async(cache_key, reply_list, alias=self.cache_alias)
+            if cache_key is not None:
+                await cache_set_async(cache_key, reply_list, alias=self.cache_alias)
 
     def ask(
         self,
@@ -354,7 +358,8 @@ class OpenAIMixin:
         if response is None:
             logger.debug("request to openai")
             response = sync_client.embeddings.create(**request_params)
-            cache_set(cache_key, response, alias=self.cache_alias)
+            if cache_key is not None:
+                cache_set(cache_key, response, alias=self.cache_alias)
 
         assert response is not None
 
@@ -386,7 +391,8 @@ class OpenAIMixin:
         if response is None:
             logger.debug("request to openai")
             response = await async_client.embeddings.create(**request_params)
-            await cache_set_async(cache_key, response, alias=self.cache_alias)
+            if cache_key is not None:
+                await cache_set_async(cache_key, response, alias=self.cache_alias)
 
         assert response is not None
 
