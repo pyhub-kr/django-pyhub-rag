@@ -102,6 +102,3 @@ COMPONENTS = PYHUB_SETTINGS.COMPONENTS
 # https://github.com/adamchainz/django-rich
 
 TEST_RUNNER = PYHUB_SETTINGS.TEST_RUNNER
-
-# https://modelcontextprotocol.io
-FASTMCP_SETTINGS = PYHUB_SETTINGS.FASTMCP_SETTINGS

@@ -14,7 +14,6 @@ from django.conf import settings
 from django.utils import timezone
 from django_components import ComponentsSettings
 from environ import Env
-from mcp.server.fastmcp.server import Settings as FastmcpSettings
 
 from pyhub.versions import notify_if_update_available
 
@@ -82,7 +81,6 @@ class PyhubSetting:
     CRISPY_TEMPLATE_PACK: Literal["tailwind"]
     COMPONENTS: ComponentsSettings
     TEST_RUNNER: str
-    FASTMCP_SETTINGS: Optional[FastmcpSettings]
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -406,14 +404,6 @@ def make_settings(
         ),
         # https://github.com/adamchainz/django-rich
         TEST_RUNNER="django_rich.test.RichRunner",
-        FASTMCP_SETTINGS=FastmcpSettings(
-            debug=debug,
-            instructions=env.str("FASTMCP_INSTRUCTIONS", default=None),
-            log_level="DEBUG" if debug else "INFO",
-            # Uncomment and configure paths if needed
-            # sse_path="/sse",
-            # message_path="/messages/",
-        ),
     )
 
 

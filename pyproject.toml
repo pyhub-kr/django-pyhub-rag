@@ -46,7 +46,6 @@ dependencies = [
     "typer",
     "colorlog",
     "toml",  # 3.10 지원
-    "mcp",
 ]
 
 [project.optional-dependencies]
@@ -75,7 +74,6 @@ Issues = "https://github.com/pyhub-kr/django-pyhub-rag/issues"
 
 [project.scripts]
 "pyhub.llm" = "pyhub.llm.__main__:app"
-"pyhub.mcp" = "pyhub.mcp.__main__:app"
 "pyhub.rag" = "pyhub.rag.__main__:app"
 "pyhub.parser" = "pyhub.parser.__main__:app"
 "pyhub.web" = "pyhub.web.__main__:app"
