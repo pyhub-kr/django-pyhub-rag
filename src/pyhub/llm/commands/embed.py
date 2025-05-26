@@ -1,45 +1,18 @@
 import logging
 from pathlib import Path
-from typing import Dict, List, Optional, Set
+from typing import Optional
 
 import typer
 from rich.console import Console
 from rich.table import Table
 
-from pyhub import init, print_for_main
+from pyhub import init
 from pyhub.llm import LLM
 from pyhub.llm.json import json_dumps, json_loads, JSONDecodeError
 from pyhub.llm.types import LLMEmbeddingModelEnum, Usage
 
 app = typer.Typer(name="embed", help="LLM 임베딩 관련 명령")
 console = Console()
-
-
-def validate_embeddings(data: List[Dict]) -> Optional[int]:
-    """Validates the dimensions of embedding fields and returns the consistent dimension."""
-    dimensions: Set[int] = set()
-
-    for item in data:
-        if "embedding" in item and item["embedding"]:
-            dimensions.add(len(item["embedding"]))
-
-    if len(dimensions) > 1:
-        typer.echo(f"Error: Inconsistent embedding dimensions found: {dimensions}")
-        raise typer.Exit(1)
-
-    return dimensions.pop() if dimensions else None
-
-
-logo = """
-    ██████╗  ██╗   ██╗ ██╗  ██╗ ██╗   ██╗ ██████╗     ███████╗ ███╗   ███╗ ██████╗ ███████╗ ██████╗ 
-    ██╔══██╗ ╚██╗ ██╔╝ ██║  ██║ ██║   ██║ ██╔══██╗    ██╔════╝ ████╗ ████║ ██╔══██╗ ██╔════╝ ██╔══██╗
-    ██████╔╝  ╚████╔╝  ███████║ ██║   ██║ ██████╔╝    █████╗   ██╔████╔██║ ██████╔╝ █████╗   ██║  ██║
-    ██╔═══╝    ╚██╔╝   ██╔══██║ ██║   ██║ ██╔══██╗    ██╔══╝   ██║╚██╔╝██║ ██╔══██╗ ██╔══╝   ██║  ██║
-    ██║         ██║    ██║  ██║ ╚██████╔╝ ██████╔╝    ███████╗ ██║ ╚═╝ ██║ ██████╔╝ ███████╗ ██████╔╝
-    ╚═╝         ╚═╝    ╚═╝  ╚═╝  ╚═════╝  ╚═════╝     ╚══════╝ ╚═╝     ╚═╝ ╚═════╝  ╚══════╝ ╚═════╝ 
-"""
-
-app.callback(invoke_without_command=True)(print_for_main(logo))
 
 
 @app.command()
@@ -90,7 +63,7 @@ def fill_jsonl(
         log_level = logging.INFO
     init(debug=True, log_level=log_level, toml_path=toml_path, env_path=env_path)
 
-    llm = LLM.create(embedding_model.value)
+    llm = LLM.create(embedding_model)
 
     if is_verbose:
         table = Table(show_header=True, header_style="bold blue")

@@ -10,7 +10,7 @@ from rich.table import Table
 
 from pyhub import init
 from pyhub.llm import LLM
-from pyhub.llm.types import LLMChatModelEnum, LLMVendorEnum
+from pyhub.llm.types import LLMChatModelEnum
 
 console = Console()
 
@@ -35,12 +35,6 @@ def describe(
         ...,
         help="설명을 요청할 이미지 파일 경로",
         callback=validate_image_file,  # 콜백 함수 추가
-    ),
-    vendor: LLMVendorEnum = typer.Option(
-        LLMVendorEnum.OPENAI,
-        "--vendor",
-        "-v",
-        help="LLM 벤더",
     ),
     model: LLMChatModelEnum = typer.Option(
         LLMChatModelEnum.GPT_4O_MINI,
@@ -99,8 +93,7 @@ def describe(
         table.add_column("설정", style="cyan")
         table.add_column("값", style="green")
         table.add_row("image_path", str(image_path.resolve()))
-        table.add_row("vendor", vendor.value)
-        table.add_row("model", model.value)
+        table.add_row("model", model)
         table.add_row("temperature", str(temperature))
         table.add_row("max_tokens", str(max_tokens))
         table.add_row("system prompt", system_prompt)
@@ -113,8 +106,7 @@ def describe(
         files = [File(file=image_file)]
 
         llm = LLM.create(
-            model=model.value,
-            vendor=vendor.value,
+            model=model,
             system_prompt=system_prompt,
             temperature=temperature,
             max_tokens=max_tokens,

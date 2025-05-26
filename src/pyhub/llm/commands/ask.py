@@ -10,19 +10,13 @@ from rich.table import Table
 
 from pyhub import init
 from pyhub.llm import LLM
-from pyhub.llm.types import LLMChatModelEnum, LLMVendorEnum
+from pyhub.llm.types import LLMChatModelEnum
 
 console = Console()
 
 
 def ask(
     query: Optional[str] = typer.Argument(None, help="질의 내용"),
-    vendor: LLMVendorEnum = typer.Option(
-        LLMVendorEnum.OPENAI,
-        "--vendor",
-        "-v",
-        help="LLM 벤더",
-    ),
     model: LLMChatModelEnum = typer.Option(
         LLMChatModelEnum.GPT_4O_MINI,
         "--model",
@@ -87,8 +81,7 @@ def ask(
         table = Table()
         table.add_column("설정", style="cyan")
         table.add_column("값", style="green")
-        table.add_row("vendor", vendor.value)
-        table.add_row("model", model.value)
+        table.add_row("model", model)
         table.add_row("context", context)
         table.add_row("system prompt", system_prompt)
         table.add_row("user prompt", query)
@@ -100,12 +93,13 @@ def ask(
         console.print(table)
 
     llm = LLM.create(
-        model=model.value,
-        vendor=vendor.value,
+        model=model,
         system_prompt=system_prompt,
         temperature=temperature,
         max_tokens=max_tokens,
     )
+    if is_verbose:
+        console.print(f"Using llm {llm.model}")
 
     if not is_multi:
         for chunk in llm.ask(query, stream=True):

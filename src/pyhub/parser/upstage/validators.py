@@ -1,6 +1,6 @@
 import logging
 import os
-from typing import Callable, Dict, List
+from typing import Callable
 
 from django.core.exceptions import ValidationError
 from django.core.files import File
@@ -22,13 +22,13 @@ logger = logging.getLogger(__name__)
 
 
 # Validator registry
-COMMON_VALIDATORS: List[Callable[[File], None]] = [
+COMMON_VALIDATORS: list[Callable[[File], None]] = [
     FileExtensionValidator(SUPPORTED_FILE_EXTENSIONS),
     FileSizeValidator(MAX_FILE_SIZE_MB),
 ]
 
 
-FORMAT_VALIDATORS: Dict[str, List[Callable[[File], None]]] = {
+FORMAT_VALIDATORS: dict[str, list[Callable[[File], None]]] = {
     ".pdf": [PDFValidator()],
     (".jpeg", ".jpg", ".png", ".bmp", ".tiff", ".tif", ".heic"): [ImageConstraintsValidator(MAX_PIXELS_PER_PAGE)],
 }
