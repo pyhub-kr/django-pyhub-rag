@@ -1,5 +1,5 @@
 import logging
-from typing import List
+from typing import List, Optional
 
 from asgiref.sync import sync_to_async
 from django.core import checks
@@ -14,24 +14,41 @@ logger = logging.getLogger(__name__)
 
 
 class SQLiteVectorDocumentQuerySet(BaseDocumentQuerySet):
-    def _prepare_search_query(self, query_embedding: List[float]) -> QuerySet["AbstractDocument"]:
-        return self.extra(
+    def _prepare_search_query(
+        self,
+        query_embedding: List[float],
+        distance_threshold: Optional[float] = None,
+    ) -> QuerySet["AbstractDocument"]:
+        qs = self.extra(
             select={"distance": "distance"},
             where=["embedding MATCH vec_f32(?)"],
             params=[str(query_embedding)],
             order_by=["distance"],
-        ).defer("embedding")
+        )
+        if distance_threshold is not None:
+            qs = qs.filter(distance__lt=distance_threshold)
+        return qs.defer("embedding")
 
     @warn_if_async
-    def similarity_search(self, query: str, k: int = 4) -> QuerySet["AbstractDocument"]:
+    def similarity_search(
+        self,
+        query: str,
+        k: int = 4,
+        distance_threshold: Optional[float] = None,
+    ) -> QuerySet["AbstractDocument"]:
         query_embedding = self.model.embed(query)
-        qs = self._prepare_search_query(query_embedding)
+        qs = self._prepare_search_query(query_embedding, distance_threshold=distance_threshold)
         return qs[:k]
 
-    async def similarity_search_async(self, query: str, k: int = 4) -> List["AbstractDocument"]:
+    async def similarity_search_async(
+        self,
+        query: str,
+        k: int = 4,
+        distance_threshold: Optional[float] = None,
+    ) -> List["AbstractDocument"]:
         query_embedding = await self.model.embed_async(query)
 
-        qs = self._prepare_search_query(query_embedding)
+        qs = self._prepare_search_query(query_embedding, distance_threshold=distance_threshold)
         return await sync_to_async(list, thread_sensitive=True)(qs[:k])  # noqa
 
 

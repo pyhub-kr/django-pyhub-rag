@@ -30,11 +30,19 @@ class BaseDocumentQuerySet(models.QuerySet):
             def __call__(self, input: str) -> list["AbstractDocument"]:
                 return self.invoke(input)
 
-            def invoke(self, input: str) -> list["AbstractDocument"]:
-                return list(queryset.similarity_search(input, k=k))
+            def invoke(
+                self,
+                input: str,
+                distance_threshold: Optional[float] = None,
+            ) -> list["AbstractDocument"]:
+                return list(queryset.similarity_search(input, k=k, distance_threshold=distance_threshold))
 
-            async def ainvoke(self, input: str) -> list["AbstractDocument"]:
-                return await queryset.similarity_search_async(input, k=k)
+            async def ainvoke(
+                self,
+                input: str,
+                distance_threshold: Optional[float] = None,
+            ) -> list["AbstractDocument"]:
+                return await queryset.similarity_search_async(input, k=k, distance_threshold=distance_threshold)
 
         return QuerySetRetriever()
 
@@ -74,10 +82,20 @@ class BaseDocumentQuerySet(models.QuerySet):
             for obj, embedding in zip(non_embedding_objs, embeddings):
                 obj.embedding = embedding
 
-    def similarity_search(self, query: str, k: int = 4) -> list["AbstractDocument"]:
+    def similarity_search(
+        self,
+        query: str,
+        k: int = 4,
+        distance_threshold: Optional[float] = None,
+    ) -> list["AbstractDocument"]:
         raise NotImplementedError
 
-    async def similarity_search_async(self, query: str, k: int = 4) -> list["AbstractDocument"]:
+    async def similarity_search_async(
+        self,
+        query: str,
+        k: int = 4,
+        distance_threshold: Optional[float] = None,
+    ) -> list["AbstractDocument"]:
         raise NotImplementedError
 
     def __repr__(self):

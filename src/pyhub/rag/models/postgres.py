@@ -1,5 +1,5 @@
 import logging
-from typing import List, Literal, Type
+from typing import List, Literal, Type, Optional
 
 from asgiref.sync import sync_to_async
 from django.core import checks
@@ -16,7 +16,11 @@ logger = logging.getLogger(__name__)
 
 
 class PGVectorDocumentQuerySet(BaseDocumentQuerySet):
-    def _prepare_search_query(self, query_embedding: List[float]) -> QuerySet["AbstractDocument"]:
+    def _prepare_search_query(
+        self,
+        query_embedding: List[float],
+        distance_threshold: Optional[float] = None,
+    ) -> QuerySet["AbstractDocument"]:
         """검색 쿼리를 준비하는 내부 메서드"""
 
         model_cls: Type[AbstractDocument] = self.model
@@ -30,11 +34,15 @@ class PGVectorDocumentQuerySet(BaseDocumentQuerySet):
                 if any("_cosine_ops" in op for op in index.opclasses):
                     qs = qs.annotate(distance=CosineDistance(embedding_field_name, query_embedding))
                     qs = qs.order_by("distance")
+                    if distance_threshold is not None:
+                        qs = qs.filter(distance__lt=distance_threshold)
                     return qs
                 # vector_l2_ops, halfvec_l2_ops, etc.
                 elif any("_l2_ops" in op for op in index.opclasses):
                     qs = qs.annotate(distance=L2Distance(embedding_field_name, query_embedding))
                     qs = qs.order_by("distance")
+                    if distance_threshold is not None:
+                        qs = qs.filter(distance__lt=distance_threshold)
                     return qs
                 else:
                     raise NotImplementedError(f"{index.opclasses}에 대한 검색 구현이 필요합니다.")
@@ -44,20 +52,30 @@ class PGVectorDocumentQuerySet(BaseDocumentQuerySet):
         )
 
     @warn_if_async
-    def similarity_search(self, query: str, k: int = 4) -> QuerySet["AbstractDocument"]:
+    def similarity_search(
+        self,
+        query: str,
+        k: int = 4,
+        distance_threshold: Optional[float] = None,
+    ) -> QuerySet["AbstractDocument"]:
         """동기 검색 메서드"""
         model_cls: Type[AbstractDocument] = self.model
         query_embedding = model_cls.embed(query)
 
-        qs = self._prepare_search_query(query_embedding)
+        qs = self._prepare_search_query(query_embedding, distance_threshold=distance_threshold)
         return qs[:k]
 
-    async def similarity_search_async(self, query: str, k: int = 4) -> List["AbstractDocument"]:
+    async def similarity_search_async(
+        self,
+        query: str,
+        k: int = 4,
+        distance_threshold: Optional[float] = None,
+    ) -> List["AbstractDocument"]:
         """비동기 검색 메서드"""
         model_cls: Type[AbstractDocument] = self.model
         query_embedding = await model_cls.embed_async(query)
 
-        qs = self._prepare_search_query(query_embedding)
+        qs = self._prepare_search_query(query_embedding, distance_threshold=distance_threshold)
         return await sync_to_async(list, thread_sensitive=True)(qs[:k])  # noqa
 
 
