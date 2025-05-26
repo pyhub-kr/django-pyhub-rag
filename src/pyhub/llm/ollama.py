@@ -26,6 +26,8 @@ from .types import (
     OllamaChatModelType,
     OllamaEmbeddingModelType,
     Reply,
+    SelectResponse,
+    Usage,
 )
 from .utils.files import FileType, encode_files
 
@@ -344,6 +346,96 @@ class OllamaLLM(BaseLLM):
 
             if cache_key is not None:
                 await cache_set_async(cache_key, reply_list, alias="ollama")
+
+    def _make_select(
+        self,
+        context: dict[str, Any],
+        choices: list[str],
+        model: OllamaChatModelType,
+    ) -> SelectResponse:
+        """Ollama의 프롬프트 기반 선택 구현"""
+        sync_client = SyncClient(host=self.base_url)
+
+        # 시스템 프롬프트
+        system_prompt = "You must select exactly one option from the given list. Respond with ONLY the exact text of your chosen option."
+
+        # 사용자 프롬프트
+        user_context = context.get("user_context", "")
+        user_prompt = f"""Choose from these options:
+{context['choices_formatted']}
+
+{f"Context: {user_context}" if user_context else ""}
+
+Selection:"""
+
+        # 메시지 준비
+        messages = [{"role": "system", "content": system_prompt}, {"role": "user", "content": user_prompt}]
+
+        # API 호출
+        request_params = {
+            "model": model,
+            "messages": messages,
+            "options": {
+                "temperature": 0.1,
+                "num_predict": 100,
+            },
+        }
+
+        # 캐시 확인
+        cache_key, cached_value = cache_make_key_and_get(
+            "ollama_select",
+            request_params,
+            cache_alias="ollama",
+        )
+
+        if cached_value is not None:
+            return cached_value
+
+        try:
+            response = sync_client.chat(**request_params)
+
+            # 응답 텍스트 추출
+            selected_text = response.message.content.strip()
+
+            # Usage 정보는 Ollama에서 제공하지 않으므로 None
+            usage = None
+
+            # 매칭 로직
+            if selected_text in choices:
+                select_response = SelectResponse(choice=selected_text, index=choices.index(selected_text), usage=usage)
+
+                if cache_key is not None:
+                    cache_set(cache_key, select_response, alias="ollama")
+
+                return select_response
+
+            # 대소문자 무시 매칭
+            selected_lower = selected_text.lower()
+            for i, choice in enumerate(choices):
+                if choice.lower() == selected_lower:
+                    select_response = SelectResponse(choice=choice, index=i, usage=usage)
+
+                    if cache_key is not None:
+                        cache_set(cache_key, select_response, alias="ollama")
+
+                    return select_response
+
+            # 부분 매칭
+            for i, choice in enumerate(choices):
+                if choice in selected_text or selected_text in choice:
+                    logger.warning("Partial match for Ollama. Response: '%s', Matched: '%s'", selected_text, choice)
+                    select_response = SelectResponse(choice=choice, index=i, usage=usage)
+
+                    if cache_key is not None:
+                        cache_set(cache_key, select_response, alias="ollama")
+
+                    return select_response
+
+            raise RuntimeError(f"Could not match response '{selected_text}' to any choice: {choices}")
+
+        except Exception as e:
+            logger.error("Error in Ollama select: %s", str(e))
+            raise
 
     def embed(
         self,

@@ -20,6 +20,8 @@ from .types import (
     LLMEmbeddingModelType,
     Message,
     Reply,
+    SelectRequest,
+    SelectResponse,
 )
 
 logger = logging.getLogger(__name__)
@@ -417,6 +419,119 @@ class BaseLLM(abc.ABC):
         model: Optional[LLMEmbeddingModelType] = None,
     ) -> Union[Embed, EmbedList]:
         pass
+
+    #
+    # select
+    #
+
+    @abc.abstractmethod
+    def _make_select(
+        self,
+        context: dict[str, Any],
+        choices: list[str],
+        model: LLMChatModelType,
+    ) -> SelectResponse:
+        """Provider별 선택 구현"""
+        pass
+
+    def select(
+        self,
+        choices: list[str],
+        context: Optional[Union[str, dict[str, Any]]] = None,
+        model: Optional[LLMChatModelType] = None,
+        *,
+        allow_none: bool = False,
+        none_option: str = "None of the above",
+        use_history: bool = False,
+        raise_errors: bool = True,
+    ) -> Optional[str]:
+        """
+        주어진 선택지 중 하나를 선택합니다.
+
+        Args:
+            choices: 선택 가능한 문자열 리스트 (최소 2개 이상)
+            context: 선택을 위한 추가 컨텍스트 정보
+            model: 사용할 LLM 모델
+            allow_none: 적절한 선택지가 없을 때 None 반환 허용
+            none_option: None 선택 시 사용할 텍스트 (내부 처리용)
+            use_history: 대화 히스토리 사용 여부
+            raise_errors: 에러 발생 시 예외 처리 여부
+
+        Returns:
+            choices 중 선택된 하나의 문자열, 또는 None (allow_none=True일 때)
+
+        Raises:
+            ValueError: choices가 2개 미만일 때
+            RuntimeError: LLM이 유효하지 않은 선택을 했을 때
+        """
+        # SelectRequest를 통한 유효성 검사
+        request = SelectRequest(choices=choices, context=context)
+
+        # allow_none이 True면 내부적으로 None 옵션 추가
+        internal_choices = choices.copy()
+        if allow_none:
+            internal_choices.append(none_option)
+
+        # 컨텍스트 준비
+        select_context = {
+            "choices": internal_choices,
+            "choices_formatted": "\n".join([f"{i+1}. {choice}" for i, choice in enumerate(internal_choices)]),
+            "allow_none": allow_none,
+            "none_option": none_option,
+            "original_choices": choices,  # 원본 선택지 보관
+        }
+
+        if isinstance(context, str):
+            select_context["user_context"] = context
+        elif isinstance(context, dict):
+            select_context.update(context)
+
+        if allow_none:
+            select_context["instruction_none"] = f"If none of the options are suitable, you may select '{none_option}'."
+
+        current_model: LLMChatModelType = cast(LLMChatModelType, model or self.model)
+
+        try:
+            # Provider별 처리
+            response = self._make_select(
+                context=select_context,
+                choices=internal_choices,  # None 옵션이 포함된 내부 선택지 사용
+                model=current_model,
+            )
+
+            # None 선택 처리
+            if allow_none and response.choice == none_option:
+                if use_history:
+                    human_message = Message(
+                        role="user", content=f"Select from: {select_context['choices_formatted']}\nContext: {context}"
+                    )
+                    ai_message = Message(role="assistant", content="None (no suitable option)")
+                    self._update_history(human_message, ai_message)
+                return None
+
+            # 응답 검증 (원본 choices에 있는지 확인)
+            if response.choice not in choices:
+                if raise_errors:
+                    raise RuntimeError(f"Invalid choice: {response.choice}. Must be one of {choices}")
+                # 첫 번째 선택지 반환
+                logger.warning("Invalid choice '%s', returning first option", response.choice)
+                return choices[0]
+
+            # 히스토리 업데이트
+            if use_history:
+                human_message = Message(
+                    role="user", content=f"Select from: {select_context['choices_formatted']}\nContext: {context}"
+                )
+                ai_message = Message(role="assistant", content=response.choice)
+                self._update_history(human_message, ai_message)
+
+            return response.choice
+
+        except Exception as e:
+            if raise_errors:
+                raise
+            logger.error("Error in select: %s", str(e))
+            return choices[0]
 
     #
     # describe images / tables

@@ -237,6 +237,29 @@ class Reply:
 
 
 @dataclass
+class SelectRequest:
+    choices: list[str]
+    context: Optional[Union[str, dict[str, Any]]] = None
+
+    def __post_init__(self):
+        if len(self.choices) < 2:
+            raise ValueError("choices must contain at least 2 items")
+
+
+@dataclass
+class SelectResponse:
+    choice: Optional[str]  # None이 가능하도록 변경
+    index: Optional[int]  # None인 경우 index도 None
+    usage: Optional[Usage] = None
+    confidence: Optional[float] = None  # 선택의 신뢰도 (0.0 ~ 1.0)
+
+    @property
+    def is_none_selection(self) -> bool:
+        """선택하지 않은 경우인지 확인"""
+        return self.choice is None
+
+
+@dataclass
 class ChainReply:
     values: dict[str, Any] = field(default_factory=dict)
     reply_list: list[Reply] = field(default_factory=list)

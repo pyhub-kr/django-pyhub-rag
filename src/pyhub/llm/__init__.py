@@ -23,7 +23,8 @@ from .types import (
     Price,
     UpstageChatModelType,
     UpstageEmbeddingModelType,
-    Usage, LLMModelType,
+    Usage,
+    LLMModelType,
 )
 from .upstage import UpstageLLM
 
