@@ -305,7 +305,7 @@ class OpenAIMixin:
         stream: bool = False,
         use_history: bool = True,
         raise_errors: bool = False,
-    ) -> Reply:
+    ) -> Union[Reply, Generator[Reply, None, None]]:
         return super().ask(
             input=input,
             files=files,
@@ -326,7 +326,7 @@ class OpenAIMixin:
         stream: bool = False,
         use_history: bool = True,
         raise_errors: bool = False,
-    ) -> Reply:
+    ) -> Union[Reply, AsyncGenerator[Reply, None]]:
         return await super().ask_async(
             input=input,
             files=files,
