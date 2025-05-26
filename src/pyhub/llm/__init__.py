@@ -42,9 +42,11 @@ class LLM:
         # LLMChatModelEnum.O3_MINI: ("1.10", "4.40"),
         LLMChatModelEnum.O1_MINI: ("1.10", "4.40"),
         # https://www.anthropic.com/pricing#anthropic-api
-        LLMChatModelEnum.CLAUDE_3_7_SONNET_LATEST: ("3", "15"),
-        LLMChatModelEnum.CLAUDE_3_5_HAIKU_LATEST: ("0.80", "4"),
-        LLMChatModelEnum.CLAUDE_3_OPUS_LATEST: ("15", "75"),
+        # LLMChatModelEnum.CLAUDE_OPUS_4_LATEST: ("15", "75"),
+        # LLMChatModelEnum.CLAUDE_SONNET_4_20250514: ("3", "15"),
+        LLMChatModelEnum.CLAUDE_SONNET_3_7_LATEST: ("3", "15"),
+        LLMChatModelEnum.CLAUDE_HAIKU_3_5_LATEST: ("0.80", "4"),
+        LLMChatModelEnum.CLAUDE_OPUS_3_LATEST: ("15", "75"),
         # https://www.upstage.ai/pricing
         LLMChatModelEnum.UPSTAGE_SOLAR_MINI: ("0.15", "0.15"),  # TODO: 가격 확인
         LLMChatModelEnum.UPSTAGE_SOLAR_PRO: ("0.25", "0.15"),

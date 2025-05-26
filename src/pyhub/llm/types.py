@@ -7,7 +7,7 @@ from anthropic.types import ModelParam as AnthropicChatModelType
 from django.core.exceptions import ValidationError
 from django.core.files import File
 from django.db.models import TextChoices
-from openai.types import ChatModel as OpenAIChatModelType
+from openai.types import ChatModel as _OpenAIChatModel
 from typing_extensions import Optional
 
 from pyhub.core.utils import enum_to_flatten_set, type_to_flatten_set
@@ -31,10 +31,13 @@ LanguageType: TypeAlias = Union[
 # Embedding
 #
 
-OpenAIEmbeddingModelType: TypeAlias = Literal[
-    "text-embedding-ada-002",  # 1536 차원
-    "text-embedding-3-small",  # 1536 차원
-    "text-embedding-3-large",  # 3072 차원
+OpenAIEmbeddingModelType: TypeAlias = Union[
+    Literal[
+        "text-embedding-ada-002",  # 1536 차원
+        "text-embedding-3-small",  # 1536 차원
+        "text-embedding-3-large",  # 3072 차원
+    ],
+    str,
 ]
 
 # https://console.upstage.ai/docs/capabilities/embeddings
@@ -56,7 +59,11 @@ OllamaEmbeddingModelType: TypeAlias = Union[
 GoogleEmbeddingModelType: TypeAlias = Literal["text-embedding-004"]  # 768 차원
 
 LLMEmbeddingModelType = Union[
-    OpenAIEmbeddingModelType, UpstageEmbeddingModelType, OllamaEmbeddingModelType, GoogleEmbeddingModelType
+    OpenAIEmbeddingModelType,
+    UpstageEmbeddingModelType,
+    OllamaEmbeddingModelType,
+    GoogleEmbeddingModelType,
+    str,
 ]
 
 
@@ -64,9 +71,9 @@ LLMEmbeddingModelType = Union[
 # Chat
 #
 
-OpenAIChatModelType  # noqa
+OpenAIChatModelType: TypeAlias = Union[_OpenAIChatModel, str]
 
-AnthropicChatModelType  # noqa
+AnthropicChatModelType: TypeAlias = Union[AnthropicChatModelType, str]
 
 # https://console.upstage.ai/docs/capabilities/chat
 UpstageChatModelType: TypeAlias = Union[
@@ -74,7 +81,8 @@ UpstageChatModelType: TypeAlias = Union[
         "solar-pro2-preview",
         "solar-pro",
         "solar-mini",
-    ]
+    ],
+    str,
 ]
 
 OllamaChatModelType: TypeAlias = Union[
@@ -119,11 +127,16 @@ GoogleChatModelType: TypeAlias = Union[
         "gemini-1.5-flash-8b",
         "gemini-1.5-pro",
     ],
+    str,
 ]
 
 
 LLMChatModelType: TypeAlias = Union[
-    OpenAIChatModelType, AnthropicChatModelType, UpstageChatModelType, GoogleChatModelType, OllamaChatModelType
+    OpenAIChatModelType,
+    AnthropicChatModelType,
+    UpstageChatModelType,
+    GoogleChatModelType,
+    OllamaChatModelType,
 ]
 
 
@@ -322,11 +335,20 @@ class OpenAIChatModelEnum(TextChoices):
     # O3_MINI = "o3-mini", "o3-mini"
 
 
+# https://docs.anthropic.com/en/docs/about-claude/models/overview
 class AnthropicChatModelEnum(TextChoices):
-    CLAUDE_3_7_SONNET_LATEST = "claude-3-7-sonnet-latest", "claude-3-7-sonnet-latest"
-    CLAUDE_3_5_HAIKU_LATEST = "claude-3-5-haiku-latest", "claude-3-5-haiku-latest"
-    CLAUDE_3_5_SONNET_LATEST = "claude-3-5-sonnet-latest", "claude-3-5-sonnet-latest"
-    CLAUDE_3_OPUS_LATEST = "claude-3-opus-latest", "claude-3-opus-latest"
+    # CLAUDE_OPUS_4_LATEST = "claude-opus-4-latest", "claude-opus-4-latest"
+    # CLAUDE_OPUS_4_20250514 = "claude-opus-4-20250514", "claude-opus-4-20250514"
+    CLAUDE_OPUS_3_LATEST = "claude-3-opus-latest", "claude-3-opus-latest"
+
+    # CLAUDE_SONNET_4_20250514 = "claude-sonnet-4-20250514", "claude-sonnet-4-20250514"
+    CLAUDE_SONNET_3_7_LATEST = "claude-3-7-sonnet-latest", "claude-3-7-sonnet-latest"
+    CLAUDE_SONNET_3_7_20250219 = "claude-3-7-sonnet-20250219", "claude-3-7-sonnet-20250219"
+    CLAUDE_SONNET_3_5_LATEST = "claude-3-5-sonnet-latest", "claude-3-5-sonnet-latest"
+    CLAUDE_SONNET_3_5_20241022 = "claude-3-5-sonnet-20241022", "claude-3-5-sonnet-20241022"
+
+    CLAUDE_HAIKU_3_5_LATEST = "claude-3-5-haiku-latest", "claude-3-5-haiku-latest"
+    CLAUDE_HAIKU_3_5_20241022 = "claude-3-5-haiku-20241022", "claude-3-5-haiku-20241022"
 
 
 class UpstageChatModelEnum(TextChoices):
@@ -376,11 +398,17 @@ class LLMChatModelEnum(TextChoices):
     O1 = "o1", "o1"
     O1_MINI = "o1-mini", "o1-mini"
     # O3_MINI = "o3-mini", "o3-mini"
-    # anthropic
-    CLAUDE_3_7_SONNET_LATEST = "claude-3-7-sonnet-latest", "claude-3-7-sonnet-latest"
-    CLAUDE_3_5_HAIKU_LATEST = "claude-3-5-haiku-latest", "claude-3-5-haiku-latest"
-    CLAUDE_3_5_SONNET_LATEST = "claude-3-5-sonnet-latest", "claude-3-5-sonnet-latest"
-    CLAUDE_3_OPUS_LATEST = "claude-3-opus-latest", "claude-3-opus-latest"
+    # AnthropicChatModelEnum
+    # CLAUDE_OPUS_4_LATEST = "claude-opus-4-latest", "claude-opus-4-latest"
+    # CLAUDE_OPUS_4_20250514 = "claude-opus-4-20250514", "claude-opus-4-20250514"
+    CLAUDE_OPUS_3_LATEST = "claude-3-opus-latest", "claude-3-opus-latest"
+    # CLAUDE_SONNET_4_20250514 = "claude-sonnet-4-20250514", "claude-sonnet-4-20250514"
+    CLAUDE_SONNET_3_7_LATEST = "claude-3-7-sonnet-latest", "claude-3-7-sonnet-latest"
+    CLAUDE_SONNET_3_7_20250219 = "claude-3-7-sonnet-20250219", "claude-3-7-sonnet-20250219"
+    CLAUDE_SONNET_3_5_LATEST = "claude-3-5-sonnet-latest", "claude-3-5-sonnet-latest"
+    CLAUDE_SONNET_3_5_20241022 = "claude-3-5-sonnet-20241022", "claude-3-5-sonnet-20241022"
+    CLAUDE_HAIKU_3_5_LATEST = "claude-3-5-haiku-latest", "claude-3-5-haiku-latest"
+    CLAUDE_HAIKU_3_5_20241022 = "claude-3-5-haiku-20241022", "claude-3-5-haiku-20241022"
     # upstage
     UPSTAGE_SOLAR_PRO2_PREVIEW = "solar-pro2-preview", "solar-pro2-preview"
     UPSTAGE_SOLAR_PRO = "solar-pro", "solar-pro"
@@ -446,33 +474,48 @@ class LLMChatModelEnum(TextChoices):
             raise ValueError(f"Unknown llm vendor: {llm_vendor}")
 
 
-assert enum_to_flatten_set(LLMVendorEnum) == type_to_flatten_set(
-    LLMVendorType
-), "Values in LLMVendorEnum and LLMVendorType do not match."
-assert enum_to_flatten_set(LanguageEnum) == type_to_flatten_set(
-    LanguageType
-), "Values in LanguageEnum and LanguageType do not match."
+def check():
+    assert enum_to_flatten_set(LLMVendorEnum) == type_to_flatten_set(
+        LLMVendorType
+    ), "Values in LLMVendorEnum and LLMVendorType do not match."
+    assert enum_to_flatten_set(LanguageEnum) == type_to_flatten_set(
+        LanguageType
+    ), "Values in LanguageEnum and LanguageType do not match."
 
-assert enum_to_flatten_set(OpenAIChatModelEnum).issubset(
-    type_to_flatten_set(OpenAIChatModelType)
-), "OpenAIChatModelEnum is not a subset of OpenAIChatModelType."
-assert enum_to_flatten_set(UpstageChatModelEnum) == type_to_flatten_set(
-    UpstageChatModelType
-), "Values in UpstageChatModelEnum and UpstageChatModelType do not match."
-assert enum_to_flatten_set(AnthropicChatModelEnum).issubset(
-    type_to_flatten_set(AnthropicChatModelType)
-), "AnthropicChatModelEnum is not a subset of AnthropicChatModelType."
-assert enum_to_flatten_set(GoogleChatModelEnum) == type_to_flatten_set(
-    GoogleChatModelType
-), "Values in GoogleChatModelEnum and GoogleChatModelType do not match."
-assert enum_to_flatten_set(OllamaChatModelEnum) == type_to_flatten_set(
-    OllamaChatModelType
-), "Values in OllamaChatModelEnum and OllamaChatModelType do not match."
+    set1 = enum_to_flatten_set(OpenAIChatModelEnum)
+    set2 = type_to_flatten_set(OpenAIChatModelType)
+    assert set1.issubset(set2), "OpenAIChatModelEnum is not a subset of OpenAIChatModelType."
 
-assert enum_to_flatten_set(LLMChatModelEnum) == (
-    enum_to_flatten_set(OpenAIChatModelEnum)
-    | enum_to_flatten_set(AnthropicChatModelEnum)
-    | enum_to_flatten_set(UpstageChatModelEnum)
-    | enum_to_flatten_set(GoogleChatModelEnum)
-    | enum_to_flatten_set(OllamaChatModelEnum)
-), "LLMChatModelEnum does not match the union of all vendor-specific ChatModelEnums."
+    assert enum_to_flatten_set(UpstageChatModelEnum) == type_to_flatten_set(
+        UpstageChatModelType
+    ), "Values in UpstageChatModelEnum and UpstageChatModelType do not match."
+
+    set1 = enum_to_flatten_set(AnthropicChatModelEnum)
+    set2 = type_to_flatten_set(AnthropicChatModelType)
+    assert set1.issubset(set2), f"AnthropicChatModelEnum is not a subset of AnthropicChatModelType. ({set1 - set2})"
+    assert enum_to_flatten_set(GoogleChatModelEnum) == type_to_flatten_set(
+        GoogleChatModelType
+    ), "Values in GoogleChatModelEnum and GoogleChatModelType do not match."
+    assert enum_to_flatten_set(OllamaChatModelEnum) == type_to_flatten_set(
+        OllamaChatModelType
+    ), "Values in OllamaChatModelEnum and OllamaChatModelType do not match."
+
+    set1 = enum_to_flatten_set(LLMChatModelEnum)
+    set2 = (
+        enum_to_flatten_set(OpenAIChatModelEnum)
+        | enum_to_flatten_set(AnthropicChatModelEnum)
+        | enum_to_flatten_set(UpstageChatModelEnum)
+        | enum_to_flatten_set(GoogleChatModelEnum)
+        | enum_to_flatten_set(OllamaChatModelEnum)
+    )
+    if set1 - set2:
+        assert (
+            False
+        ), f"LLMChatModelEnum does not match the union of all vendor-specific ChatModelEnums. ({set1 - set2})"
+    elif set2 - set1:
+        assert (
+            False
+        ), f"LLMChatModelEnum does not match the union of all vendor-specific ChatModelEnums. ({set2 - set1})"
+
+
+check()
