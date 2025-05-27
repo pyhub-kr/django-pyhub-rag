@@ -21,7 +21,7 @@ from pyhub.caches import (
 from pyhub.rag.settings import rag_settings
 
 from .base import BaseLLM
-from .types import AnthropicChatModelType, Embed, EmbedList, Message, Reply, SelectResponse, Usage
+from .types import AnthropicChatModelType, Embed, EmbedList, Message, Reply, Usage
 from .utils.files import FileType, encode_files
 
 logger = logging.getLogger(__name__)
@@ -73,6 +73,19 @@ class AnthropicLLM(BaseLLM):
     ) -> dict:
         message_history = [dict(message) for message in messages]
 
+        # choices가 있으면 시스템 프롬프트 수정
+        system_prompt = self.get_system_prompt(input_context, default=ANTHROPIC_NOT_GIVEN)
+        if "choices" in input_context:
+            choices_instruction = f"\n\nYou MUST select exactly one option from: {', '.join(input_context['choices'])}."
+            if input_context.get("allow_none"):
+                choices_instruction += " If none are suitable, select 'None of the above'."
+            choices_instruction += "\nRespond with ONLY the chosen option text, nothing else."
+
+            if system_prompt == ANTHROPIC_NOT_GIVEN:
+                system_prompt = choices_instruction
+            else:
+                system_prompt += choices_instruction
+
         # https://docs.anthropic.com/en/docs/build-with-claude/vision
         image_urls = encode_files(
             human_message.files,
@@ -122,9 +135,11 @@ class AnthropicLLM(BaseLLM):
 
         return dict(
             model=model,
-            system=self.get_system_prompt(input_context, default=ANTHROPIC_NOT_GIVEN),
+            system=system_prompt,  # 위에서 계산한 system_prompt 사용
             messages=message_history,
-            temperature=self.temperature,
+            temperature=(
+                self.temperature if "choices" not in input_context else 0.1
+            ),  # choices가 있으면 낮은 temperature
             max_tokens=self.max_tokens,
         )
 
@@ -338,6 +353,8 @@ class AnthropicLLM(BaseLLM):
         model: Optional[AnthropicChatModelType] = None,
         context: Optional[dict[str, Any]] = None,
         *,
+        choices: Optional[list[str]] = None,
+        choices_optional: bool = False,
         stream: bool = False,
         use_history: bool = True,
         raise_errors: bool = False,
@@ -347,6 +364,8 @@ class AnthropicLLM(BaseLLM):
             files=files,
             model=model,
             context=context,
+            choices=choices,
+            choices_optional=choices_optional,
             stream=stream,
             use_history=use_history,
             raise_errors=raise_errors,
@@ -359,6 +378,8 @@ class AnthropicLLM(BaseLLM):
         model: Optional[AnthropicChatModelType] = None,
         context: Optional[dict[str, Any]] = None,
         *,
+        choices: Optional[list[str]] = None,
+        choices_optional: bool = False,
         stream: bool = False,
         raise_errors: bool = False,
         use_history: bool = True,
@@ -368,117 +389,12 @@ class AnthropicLLM(BaseLLM):
             files=files,
             model=model,
             context=context,
+            choices=choices,
+            choices_optional=choices_optional,
             stream=stream,
             use_history=use_history,
             raise_errors=raise_errors,
         )
-
-    def _make_select(
-        self,
-        context: dict[str, Any],
-        choices: list[str],
-        model: AnthropicChatModelType,
-    ) -> SelectResponse:
-        """Anthropic의 프롬프트 엔지니어링을 통한 선택 구현"""
-        sync_client = SyncAnthropic(api_key=self.api_key)
-
-        # 강력한 시스템 프롬프트
-        allow_none = context.get("allow_none", False)
-        system_prompt = """You are a selection assistant. Your task is to choose exactly ONE option from a given list.
-
-CRITICAL RULES:
-1. You MUST respond with ONLY the exact text of your chosen option
-2. Do NOT add any explanation, punctuation, or additional text
-3. Do NOT modify the option text in any way
-4. Your entire response should be the chosen option, nothing more
-
-If you add anything other than the exact option text, your response will be considered invalid."""
-
-        if allow_none:
-            system_prompt += f"\n\nIMPORTANT: {context.get('instruction_none', '')}"
-
-        # 사용자 프롬프트
-        user_context = context.get("user_context", "")
-        user_prompt = f"""Choose ONE option from this list:
-{context['choices_formatted']}
-
-{f"Context to consider: {user_context}" if user_context else ""}
-
-Remember: Respond with ONLY the exact text of your chosen option."""
-
-        # API 호출
-        messages = [{"role": "user", "content": user_prompt}]
-
-        request_params = {
-            "model": model,
-            "messages": messages,
-            "system": system_prompt,
-            "temperature": 0.1,  # 일관된 선택을 위해 낮은 temperature
-            "max_tokens": 100,
-        }
-
-        # 캐시 확인
-        cache_key, cached_value = cache_make_key_and_get(
-            "anthropic_select",
-            request_params,
-            cache_alias="anthropic",
-        )
-
-        if cached_value is not None:
-            return cached_value
-
-        try:
-            response = sync_client.messages.create(**request_params)
-
-            # 응답 텍스트 추출 및 정리
-            selected_text = response.content[0].text.strip()
-
-            # Usage 정보 추출
-            usage = None
-            if response.usage:
-                usage = Usage(
-                    input=response.usage.input_tokens or 0,
-                    output=response.usage.output_tokens or 0,
-                )
-
-            # 정확한 매칭 시도
-            if selected_text in choices:
-                select_response = SelectResponse(choice=selected_text, index=choices.index(selected_text), usage=usage)
-
-                # 캐시 저장
-                if cache_key is not None:
-                    cache_set(cache_key, select_response, alias="anthropic")
-
-                return select_response
-
-            # 부분 매칭 시도 (대소문자 무시)
-            selected_lower = selected_text.lower()
-            for i, choice in enumerate(choices):
-                if choice.lower() == selected_lower:
-                    select_response = SelectResponse(choice=choice, index=i, usage=usage)
-
-                    if cache_key is not None:
-                        cache_set(cache_key, select_response, alias="anthropic")
-
-                    return select_response
-
-            # 부분 포함 매칭 시도
-            for i, choice in enumerate(choices):
-                if choice in selected_text or selected_text in choice:
-                    logger.warning("Partial match found. Response: '%s', Matched: '%s'", selected_text, choice)
-                    select_response = SelectResponse(choice=choice, index=i, usage=usage)
-
-                    if cache_key is not None:
-                        cache_set(cache_key, select_response, alias="anthropic")
-
-                    return select_response
-
-            # 매칭 실패
-            raise RuntimeError(f"Could not match response '{selected_text}' to any of the choices: {choices}")
-
-        except Exception as e:
-            logger.error("Error in Anthropic select: %s", str(e))
-            raise
 
     def embed(
         self,

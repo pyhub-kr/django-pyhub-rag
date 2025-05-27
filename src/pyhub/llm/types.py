@@ -228,35 +228,22 @@ class Price:
 class Reply:
     text: str = ""
     usage: Optional[Usage] = None
+    # choices가 제공된 경우에만 설정
+    choice: Optional[str] = None  # 선택된 값 (choices 중 하나 또는 None)
+    choice_index: Optional[int] = None  # 선택된 인덱스
+    confidence: Optional[float] = None  # 선택 신뢰도 (0.0 ~ 1.0)
 
     def __str__(self) -> str:
-        return self.text
+        # choice가 있으면 choice를 반환, 없으면 text 반환
+        return self.choice if self.choice is not None else self.text
 
     def __format__(self, format_spec: str) -> str:
-        return format(self.text, format_spec)
-
-
-@dataclass
-class SelectRequest:
-    choices: list[str]
-    context: Optional[Union[str, dict[str, Any]]] = None
-
-    def __post_init__(self):
-        if len(self.choices) < 2:
-            raise ValueError("choices must contain at least 2 items")
-
-
-@dataclass
-class SelectResponse:
-    choice: Optional[str]  # None이 가능하도록 변경
-    index: Optional[int]  # None인 경우 index도 None
-    usage: Optional[Usage] = None
-    confidence: Optional[float] = None  # 선택의 신뢰도 (0.0 ~ 1.0)
+        return format(str(self), format_spec)
 
     @property
-    def is_none_selection(self) -> bool:
-        """선택하지 않은 경우인지 확인"""
-        return self.choice is None
+    def is_choice_response(self) -> bool:
+        """choices 제약이 적용된 응답인지 확인"""
+        return self.choice is not None or self.choice_index is not None
 
 
 @dataclass

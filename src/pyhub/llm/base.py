@@ -20,8 +20,6 @@ from .types import (
     LLMEmbeddingModelType,
     Message,
     Reply,
-    SelectRequest,
-    SelectResponse,
 )
 
 logger = logging.getLogger(__name__)
@@ -136,12 +134,22 @@ class BaseLLM(abc.ABC):
                 return result
 
         elif isinstance(input, dict):
-            if not self.prompt:
-                raise ValueError("prompt is required when human_message is a dict")
-
-            result = self._process_template(self.prompt, context)
-            if result is not None:
-                return result
+            if self.prompt:
+                # prompt가 있으면 템플릿 렌더링
+                result = self._process_template(self.prompt, context)
+                if result is not None:
+                    return result
+            else:
+                # prompt가 없으면 dict를 자동으로 포맷팅
+                # context에서 'user_message' 키가 있으면 그것을 사용
+                if 'user_message' in context:
+                    return str(context['user_message'])
+                # 아니면 dict의 내용을 읽기 쉬운 형태로 변환
+                formatted_parts = []
+                for key, value in context.items():
+                    if key not in ['choices', 'choices_formatted', 'choices_optional', 'original_choices']:
+                        formatted_parts.append(f"{key}: {value}")
+                return "\n".join(formatted_parts) if formatted_parts else ""
 
         raise ValueError(f"input must be a str, Template, or dict, but got {type(input)}")
 
@@ -162,6 +170,54 @@ class BaseLLM(abc.ABC):
 
     def get_output_key(self) -> str:
         return self.output_key
+
+    def _process_choice_response(
+        self, text: str, choices: list[str], choices_optional: bool
+    ) -> tuple[Optional[str], Optional[int], float]:
+        """
+        응답 텍스트에서 choice를 추출하고 검증
+
+        Returns:
+            (choice, index, confidence) 튜플
+        """
+        # JSON 응답 파싱 시도 (OpenAI, Google 등)
+        try:
+            import json
+
+            data = json.loads(text)
+            if isinstance(data, dict) and "choice" in data:
+                choice = data["choice"]
+                if choice in choices:
+                    return choice, choices.index(choice), data.get("confidence", 1.0)
+        except (json.JSONDecodeError, KeyError, TypeError):
+            pass
+
+        # 텍스트 매칭
+        text_clean = text.strip()
+
+        # 정확한 매칭
+        if text_clean in choices:
+            return text_clean, choices.index(text_clean), 1.0
+
+        # 대소문자 무시 매칭
+        text_lower = text_clean.lower()
+        for i, choice in enumerate(choices):
+            if choice.lower() == text_lower:
+                return choice, i, 0.9
+
+        # 부분 매칭
+        for i, choice in enumerate(choices):
+            if choice in text_clean or text_clean in choice:
+                logger.warning("Partial match found. Response: '%s', Matched: '%s'", text_clean, choice)
+                return choice, i, 0.7
+
+        # choices_optional이 True이고 "None of the above"가 포함된 경우
+        if choices_optional and ("none of the above" in text_lower or "해당 없음" in text_clean):
+            return None, None, 0.8
+
+        # 매칭 실패
+        logger.warning("No valid choice found in response: %s", text_clean)
+        return None, None, 0.0
 
     @abc.abstractmethod
     def _make_request_params(
@@ -224,6 +280,8 @@ class BaseLLM(abc.ABC):
         model: Optional[LLMChatModelType] = None,
         context: Optional[dict[str, Any]] = None,
         *,
+        choices: Optional[list[str]] = None,
+        choices_optional: bool = False,
         is_async: bool = False,
         stream: bool = False,
         use_history: bool = True,
@@ -240,6 +298,22 @@ class BaseLLM(abc.ABC):
 
         if context:
             input_context.update(context)
+
+        # choices 처리
+        if choices:
+            if len(choices) < 2:
+                raise ValueError("choices must contain at least 2 items")
+
+            # choices_optional이 True면 None 옵션 추가
+            internal_choices = choices.copy()
+            if choices_optional:
+                internal_choices.append("None of the above")
+
+            # choices 관련 컨텍스트 추가
+            input_context["choices"] = internal_choices
+            input_context["choices_formatted"] = "\n".join([f"{i+1}. {c}" for i, c in enumerate(internal_choices)])
+            input_context["choices_optional"] = choices_optional
+            input_context["original_choices"] = choices
 
         human_prompt = self.get_human_prompt(input, input_context)
         human_message = Message(role="user", content=human_prompt, files=files)
@@ -258,6 +332,15 @@ class BaseLLM(abc.ABC):
                     ):
                         text_list.append(ask.text)
                         yield ask
+
+                    # 스트리밍 완료 후 choices 처리
+                    if choices and text_list:
+                        full_text = "".join(text_list)
+                        choice, index, confidence = self._process_choice_response(
+                            full_text, input_context["original_choices"], choices_optional
+                        )
+                        # 마지막에 choice 정보를 포함한 Reply 전송
+                        yield Reply(text="", choice=choice, choice_index=index, confidence=confidence)
 
                     if use_history:
                         ai_text = "".join(text_list)
@@ -278,6 +361,15 @@ class BaseLLM(abc.ABC):
                     ):
                         text_list.append(ask.text)
                         yield ask
+
+                    # 스트리밍 완료 후 choices 처리
+                    if choices and text_list:
+                        full_text = "".join(text_list)
+                        choice, index, confidence = self._process_choice_response(
+                            full_text, input_context["original_choices"], choices_optional
+                        )
+                        # 마지막에 choice 정보를 포함한 Reply 전송
+                        yield Reply(text="", choice=choice, choice_index=index, confidence=confidence)
 
                     if use_history:
                         ai_text = "".join(text_list)
@@ -305,6 +397,15 @@ class BaseLLM(abc.ABC):
                         raise e
                     return Reply(text=f"Error: {str(e)}")
                 else:
+                    # choices가 있으면 처리
+                    if choices:
+                        choice, index, confidence = self._process_choice_response(
+                            ask.text, input_context["original_choices"], choices_optional
+                        )
+                        ask.choice = choice
+                        ask.choice_index = index
+                        ask.confidence = confidence
+
                     if use_history:
                         self._update_history(human_message=human_message, ai_message=ask.text)
                     return ask
@@ -322,6 +423,15 @@ class BaseLLM(abc.ABC):
                         raise e
                     return Reply(text=f"Error: {str(e)}")
                 else:
+                    # choices가 있으면 처리
+                    if choices:
+                        choice, index, confidence = self._process_choice_response(
+                            ask.text, input_context["original_choices"], choices_optional
+                        )
+                        ask.choice = choice
+                        ask.choice_index = index
+                        ask.confidence = confidence
+
                     if use_history:
                         self._update_history(human_message=human_message, ai_message=ask.text)
                     return ask
@@ -354,6 +464,8 @@ class BaseLLM(abc.ABC):
         model: Optional[LLMChatModelType] = None,
         context: Optional[dict[str, Any]] = None,
         *,
+        choices: Optional[list[str]] = None,
+        choices_optional: bool = False,
         stream: bool = False,
         use_history: bool = True,
         raise_errors: bool = False,
@@ -363,6 +475,8 @@ class BaseLLM(abc.ABC):
             files=files,
             model=model,
             context=context,
+            choices=choices,
+            choices_optional=choices_optional,
             is_async=False,
             stream=stream,
             use_history=use_history,
@@ -376,6 +490,8 @@ class BaseLLM(abc.ABC):
         model: Optional[LLMChatModelType] = None,
         context: Optional[dict[str, Any]] = None,
         *,
+        choices: Optional[list[str]] = None,
+        choices_optional: bool = False,
         stream: bool = False,
         raise_errors: bool = False,
         use_history: bool = True,
@@ -385,6 +501,8 @@ class BaseLLM(abc.ABC):
             files=files,
             model=model,
             context=context,
+            choices=choices,
+            choices_optional=choices_optional,
             is_async=True,
             stream=stream,
             use_history=use_history,
@@ -419,119 +537,6 @@ class BaseLLM(abc.ABC):
         model: Optional[LLMEmbeddingModelType] = None,
     ) -> Union[Embed, EmbedList]:
         pass
-
-    #
-    # select
-    #
-
-    @abc.abstractmethod
-    def _make_select(
-        self,
-        context: dict[str, Any],
-        choices: list[str],
-        model: LLMChatModelType,
-    ) -> SelectResponse:
-        """Provider별 선택 구현"""
-        pass
-
-    def select(
-        self,
-        choices: list[str],
-        context: Optional[Union[str, dict[str, Any]]] = None,
-        model: Optional[LLMChatModelType] = None,
-        *,
-        allow_none: bool = False,
-        none_option: str = "None of the above",
-        use_history: bool = False,
-        raise_errors: bool = True,
-    ) -> Optional[str]:
-        """
-        주어진 선택지 중 하나를 선택합니다.
-
-        Args:
-            choices: 선택 가능한 문자열 리스트 (최소 2개 이상)
-            context: 선택을 위한 추가 컨텍스트 정보
-            model: 사용할 LLM 모델
-            allow_none: 적절한 선택지가 없을 때 None 반환 허용
-            none_option: None 선택 시 사용할 텍스트 (내부 처리용)
-            use_history: 대화 히스토리 사용 여부
-            raise_errors: 에러 발생 시 예외 처리 여부
-
-        Returns:
-            choices 중 선택된 하나의 문자열, 또는 None (allow_none=True일 때)
-
-        Raises:
-            ValueError: choices가 2개 미만일 때
-            RuntimeError: LLM이 유효하지 않은 선택을 했을 때
-        """
-        # SelectRequest를 통한 유효성 검사
-        request = SelectRequest(choices=choices, context=context)
-
-        # allow_none이 True면 내부적으로 None 옵션 추가
-        internal_choices = choices.copy()
-        if allow_none:
-            internal_choices.append(none_option)
-
-        # 컨텍스트 준비
-        select_context = {
-            "choices": internal_choices,
-            "choices_formatted": "\n".join([f"{i+1}. {choice}" for i, choice in enumerate(internal_choices)]),
-            "allow_none": allow_none,
-            "none_option": none_option,
-            "original_choices": choices,  # 원본 선택지 보관
-        }
-
-        if isinstance(context, str):
-            select_context["user_context"] = context
-        elif isinstance(context, dict):
-            select_context.update(context)
-
-        if allow_none:
-            select_context["instruction_none"] = f"If none of the options are suitable, you may select '{none_option}'."
-
-        current_model: LLMChatModelType = cast(LLMChatModelType, model or self.model)
-
-        try:
-            # Provider별 처리
-            response = self._make_select(
-                context=select_context,
-                choices=internal_choices,  # None 옵션이 포함된 내부 선택지 사용
-                model=current_model,
-            )
-
-            # None 선택 처리
-            if allow_none and response.choice == none_option:
-                if use_history:
-                    human_message = Message(
-                        role="user", content=f"Select from: {select_context['choices_formatted']}\nContext: {context}"
-                    )
-                    ai_message = Message(role="assistant", content="None (no suitable option)")
-                    self._update_history(human_message, ai_message)
-                return None
-
-            # 응답 검증 (원본 choices에 있는지 확인)
-            if response.choice not in choices:
-                if raise_errors:
-                    raise RuntimeError(f"Invalid choice: {response.choice}. Must be one of {choices}")
-                # 첫 번째 선택지 반환
-                logger.warning("Invalid choice '%s', returning first option", response.choice)
-                return choices[0]
-
-            # 히스토리 업데이트
-            if use_history:
-                human_message = Message(
-                    role="user", content=f"Select from: {select_context['choices_formatted']}\nContext: {context}"
-                )
-                ai_message = Message(role="assistant", content=response.choice)
-                self._update_history(human_message, ai_message)
-
-            return response.choice
-
-        except Exception as e:
-            if raise_errors:
-                raise
-            logger.error("Error in select: %s", str(e))
-            return choices[0]
 
     #
     # describe images / tables

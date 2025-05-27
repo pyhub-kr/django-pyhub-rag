@@ -12,7 +12,6 @@ from .openai import OpenAIMixin
 from .types import (
     GroundednessCheck,
     Message,
-    SelectResponse,
     UpstageChatModelType,
     UpstageEmbeddingModelType,
     UpstageGroundednessCheckModel,
@@ -85,55 +84,6 @@ class UpstageLLM(OpenAIMixin, BaseLLM):
             model,  # noqa
             use_files=False,
         )
-
-    def _make_select(
-        self,
-        context: dict[str, Any],
-        choices: list[str],
-        model: UpstageChatModelType,
-    ) -> SelectResponse:
-        """Upstage의 프롬프트 기반 선택 구현 (OpenAI 호환 API 사용)"""
-        # Upstage는 OpenAI 호환 API를 사용하므로 기본적인 프롬프트 방식 사용
-        system_prompt = "Select exactly one option from the given list. Respond with ONLY the chosen option text."
-
-        user_context = context.get("user_context", "")
-        user_prompt = f"""Options:
-{context['choices_formatted']}
-
-{f"Context: {user_context}" if user_context else ""}
-
-Your selection:"""
-
-        # OpenAI 호환 메서드 사용
-        human_message = Message(role="user", content=user_prompt)
-        messages = [Message(role="system", content=system_prompt)]
-
-        reply = self._make_ask(
-            input_context=context,
-            human_message=human_message,
-            messages=messages,
-            model=model,
-        )
-
-        selected_text = reply.text.strip()
-
-        # 매칭 로직
-        if selected_text in choices:
-            return SelectResponse(choice=selected_text, index=choices.index(selected_text), usage=reply.usage)
-
-        # 대소문자 무시 매칭
-        selected_lower = selected_text.lower()
-        for i, choice in enumerate(choices):
-            if choice.lower() == selected_lower:
-                return SelectResponse(choice=choice, index=i, usage=reply.usage)
-
-        # 부분 매칭
-        for i, choice in enumerate(choices):
-            if choice in selected_text or selected_text in choice:
-                logger.warning("Partial match for Upstage. Response: '%s', Matched: '%s'", selected_text, choice)
-                return SelectResponse(choice=choice, index=i, usage=reply.usage)
-
-        raise RuntimeError(f"Could not match response '{selected_text}' to any choice: {choices}")
 
     def is_grounded(
         self,

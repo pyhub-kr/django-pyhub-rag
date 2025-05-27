@@ -1,4 +1,3 @@
-import json
 import logging
 from pathlib import Path
 from typing import Any, AsyncGenerator, Generator, Optional, Union, cast
@@ -28,7 +27,6 @@ from .types import (
     OpenAIChatModelType,
     OpenAIEmbeddingModelType,
     Reply,
-    SelectResponse,
     Usage,
 )
 from .utils.files import FileType, encode_files
@@ -52,6 +50,15 @@ class OpenAIMixin:
         system_prompt = self.get_system_prompt(input_context)
 
         if system_prompt:
+            # choices가 있으면 시스템 프롬프트에 지시사항 추가
+            if "choices" in input_context:
+                choices_instruction = (
+                    f"\n\nYou must select one option from the given choices: {', '.join(input_context['choices'])}. "
+                )
+                if input_context.get("allow_none"):
+                    choices_instruction += "If none of the options are suitable, you may select 'None of the above'."
+                system_prompt += choices_instruction
+
             # history에는 system prompt는 누적되지 않고, 매 요청 시마다 적용합니다.
             system_message = {"role": "system", "content": system_prompt}
             message_history.insert(0, system_message)
@@ -94,12 +101,39 @@ class OpenAIMixin:
             }
         )
 
-        return {
+        request_params = {
             "model": model,
             "messages": message_history,
             "temperature": self.temperature,
             "max_tokens": self.max_tokens,
         }
+
+        # choices가 있으면 response_format 추가
+        if "choices" in input_context:
+            request_params["response_format"] = {
+                "type": "json_schema",
+                "json_schema": {
+                    "name": "choice_response",
+                    "schema": {
+                        "type": "object",
+                        "properties": {
+                            "choice": {"type": "string", "enum": input_context["choices"]},
+                            "confidence": {
+                                "type": "number",
+                                "minimum": 0.0,
+                                "maximum": 1.0,
+                                "description": "Confidence level in the selection",
+                            },
+                        },
+                        "required": ["choice"],
+                        "additionalProperties": False,
+                    },
+                },
+            }
+            # structured output을 위해 낮은 temperature 사용
+            request_params["temperature"] = 0.1
+
+        return request_params
 
     def _make_ask(
         self,
@@ -302,6 +336,8 @@ class OpenAIMixin:
         model: Optional[OpenAIChatModelType] = None,
         context: Optional[dict[str, Any]] = None,
         *,
+        choices: Optional[list[str]] = None,
+        choices_optional: bool = False,
         stream: bool = False,
         use_history: bool = True,
         raise_errors: bool = False,
@@ -311,6 +347,8 @@ class OpenAIMixin:
             files=files,
             model=model,
             context=context,
+            choices=choices,
+            choices_optional=choices_optional,
             stream=stream,
             use_history=use_history,
             raise_errors=raise_errors,
@@ -323,6 +361,8 @@ class OpenAIMixin:
         model: Optional[OpenAIChatModelType] = None,
         context: Optional[dict[str, Any]] = None,
         *,
+        choices: Optional[list[str]] = None,
+        choices_optional: bool = False,
         stream: bool = False,
         use_history: bool = True,
         raise_errors: bool = False,
@@ -332,6 +372,8 @@ class OpenAIMixin:
             files=files,
             model=model,
             context=context,
+            choices=choices,
+            choices_optional=choices_optional,
             stream=stream,
             use_history=use_history,
             raise_errors=raise_errors,
@@ -452,112 +494,3 @@ class OpenAILLM(OpenAIMixin, BaseLLM):
             )
 
         return errors
-
-    def _make_select(
-        self,
-        context: dict[str, Any],
-        choices: list[str],
-        model: OpenAIChatModelType,
-    ) -> SelectResponse:
-        """OpenAI의 structured output을 사용한 선택 구현"""
-        sync_client = SyncOpenAI(api_key=self.api_key, base_url=self.base_url)
-
-        # JSON Schema 정의
-        response_format = {
-            "type": "json_schema",
-            "json_schema": {
-                "name": "selection",
-                "schema": {
-                    "type": "object",
-                    "properties": {
-                        "choice": {"type": "string", "enum": choices},
-                        "index": {"type": "integer", "minimum": 0, "maximum": len(choices) - 1},
-                        "reasoning": {
-                            "type": "string",
-                            "description": "Brief explanation of why this choice was selected",
-                        },
-                        "confidence": {
-                            "type": "number",
-                            "minimum": 0.0,
-                            "maximum": 1.0,
-                            "description": "Confidence level in the selection",
-                        },
-                    },
-                    "required": ["choice", "index", "reasoning", "confidence"],
-                    "additionalProperties": False,
-                },
-            },
-        }
-
-        # 시스템 프롬프트
-        allow_none = context.get("allow_none", False)
-        system_prompt = """You are a helpful assistant that selects the most appropriate option from a given list.
-You must respond with a JSON object containing:
-- choice: the exact text of your selected option
-- index: the 0-based index of your selection
-- reasoning: a brief explanation of your selection
-- confidence: your confidence in this selection (0.0 to 1.0)"""
-
-        if allow_none:
-            system_prompt += f"\n\nIMPORTANT: {context.get('instruction_none', '')}"
-
-        # 사용자 프롬프트
-        user_context = context.get("user_context", "")
-        user_prompt = f"""Given the following options:
-{context['choices_formatted']}
-
-{f"Context: {user_context}" if user_context else "Select the most appropriate option."}
-
-{f"Note: {context.get('instruction_none', '')}" if allow_none else ""}
-
-Make your selection."""
-
-        # API 호출
-        request_params = {
-            "model": model,
-            "messages": [{"role": "system", "content": system_prompt}, {"role": "user", "content": user_prompt}],
-            "temperature": 0.1,  # 선택을 위해 낮은 temperature 사용
-            "max_tokens": 200,
-            "response_format": response_format,
-        }
-
-        # 캐시 확인
-        cache_key, cached_value = cache_make_key_and_get(
-            "openai_select",
-            request_params,
-            cache_alias=self.cache_alias,
-        )
-
-        if cached_value is not None:
-            return cached_value
-
-        try:
-            response = sync_client.chat.completions.create(**request_params)
-
-            # 응답 파싱
-            result = json.loads(response.choices[0].message.content)
-
-            # Usage 정보 추출
-            usage = None
-            if response.usage:
-                usage = Usage(
-                    input=response.usage.prompt_tokens or 0,
-                    output=response.usage.completion_tokens or 0,
-                )
-
-            select_response = SelectResponse(
-                choice=result["choice"], index=result["index"], usage=usage, confidence=result.get("confidence", 1.0)
-            )
-
-            # 캐시 저장
-            if cache_key is not None:
-                cache_set(cache_key, select_response, alias=self.cache_alias)
-
-            return select_response
-
-        except json.JSONDecodeError as e:
-            logger.error("Failed to parse JSON response: %s", str(e))
-            raise RuntimeError(f"Invalid JSON response from OpenAI: {str(e)}")
-        except Exception as e:
-            logger.error("Error in OpenAI select: %s", str(e))
-            raise

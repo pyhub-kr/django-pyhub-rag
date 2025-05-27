@@ -33,7 +33,6 @@ from .types import (
     GoogleEmbeddingModelType,
     Message,
     Reply,
-    SelectResponse,
     Usage,
 )
 from .utils.files import FileType, encode_files
@@ -328,6 +327,8 @@ class GoogleLLM(BaseLLM):
         model: Optional[GoogleChatModelType] = None,
         context: Optional[dict[str, Any]] = None,
         *,
+        choices: Optional[list[str]] = None,
+        choices_optional: bool = False,
         stream: bool = False,
         use_history: bool = True,
         raise_errors: bool = False,
@@ -337,6 +338,8 @@ class GoogleLLM(BaseLLM):
             files=files,
             model=model,
             context=context,
+            choices=choices,
+            choices_optional=choices_optional,
             stream=stream,
             use_history=use_history,
             raise_errors=raise_errors,
@@ -349,6 +352,8 @@ class GoogleLLM(BaseLLM):
         model: Optional[GoogleChatModelType] = None,
         context: Optional[dict[str, Any]] = None,
         *,
+        choices: Optional[list[str]] = None,
+        choices_optional: bool = False,
         stream: bool = False,
         use_history: bool = True,
         raise_errors: bool = False,
@@ -358,107 +363,12 @@ class GoogleLLM(BaseLLM):
             files=files,
             model=model,
             context=context,
+            choices=choices,
+            choices_optional=choices_optional,
             stream=stream,
             use_history=use_history,
             raise_errors=raise_errors,
         )
-
-    def _make_select(
-        self,
-        context: dict[str, Any],
-        choices: list[str],
-        model: GoogleChatModelType,
-    ) -> SelectResponse:
-        """Google Gemini의 프롬프트 기반 선택 구현"""
-        client = genai.Client(api_key=self.api_key)
-
-        # 시스템 지시사항
-        system_instruction = """You must select exactly one option from the given list.
-Respond with ONLY the exact text of your chosen option, nothing else.
-Do not add explanations, punctuation, or modify the text."""
-
-        # 사용자 프롬프트
-        user_context = context.get("user_context", "")
-        user_prompt = f"""Select one option from this list:
-{context['choices_formatted']}
-
-{f"Context: {user_context}" if user_context else ""}
-
-Your selection:"""
-
-        # API 호출
-        config = GenerateContentConfig(
-            system_instruction=Content(parts=[Part(text=system_instruction)]),
-            temperature=0.1,
-            max_output_tokens=100,
-        )
-
-        request_params = {
-            "model": model,
-            "contents": [Content(role="user", parts=[Part(text=user_prompt)])],
-            "config": config,
-        }
-
-        # 캐시 확인
-        cache_key, cached_value = cache_make_key_and_get(
-            "google_select",
-            request_params,
-            cache_alias="google",
-        )
-
-        if cached_value is not None:
-            return cached_value
-
-        try:
-            response = client.models.generate_content(**request_params)
-
-            # 응답 텍스트 추출
-            selected_text = response.text.strip()
-
-            # Usage 정보 추출 (Google은 usage_metadata 제공)
-            usage = None
-            if hasattr(response, "usage_metadata") and response.usage_metadata:
-                usage = Usage(
-                    input=getattr(response.usage_metadata, "prompt_token_count", 0),
-                    output=getattr(response.usage_metadata, "candidates_token_count", 0),
-                )
-
-            # 정확한 매칭 시도
-            if selected_text in choices:
-                select_response = SelectResponse(choice=selected_text, index=choices.index(selected_text), usage=usage)
-
-                if cache_key is not None:
-                    cache_set(cache_key, select_response, alias="google")
-
-                return select_response
-
-            # 대소문자 무시 매칭
-            selected_lower = selected_text.lower()
-            for i, choice in enumerate(choices):
-                if choice.lower() == selected_lower:
-                    select_response = SelectResponse(choice=choice, index=i, usage=usage)
-
-                    if cache_key is not None:
-                        cache_set(cache_key, select_response, alias="google")
-
-                    return select_response
-
-            # 부분 매칭
-            for i, choice in enumerate(choices):
-                if choice in selected_text or selected_text in choice:
-                    logger.warning("Partial match for Google. Response: '%s', Matched: '%s'", selected_text, choice)
-                    select_response = SelectResponse(choice=choice, index=i, usage=usage)
-
-                    if cache_key is not None:
-                        cache_set(cache_key, select_response, alias="google")
-
-                    return select_response
-
-            raise RuntimeError(f"Could not match response '{selected_text}' to any choice: {choices}")
-
-        except Exception as e:
-            logger.error("Error in Google select: %s", str(e))
-            raise
 
     def embed(
         self,
