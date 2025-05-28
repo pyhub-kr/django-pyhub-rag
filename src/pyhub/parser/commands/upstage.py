@@ -14,6 +14,7 @@ from rich.table import Table
 
 from pyhub import init
 from pyhub.caches import cache_clear_all
+from pyhub.config import DEFAULT_TOML_PATH, DEFAULT_ENV_PATH
 from pyhub.llm.json import json_dumps
 from pyhub.llm.types import (
     LanguageEnum,
@@ -187,14 +188,14 @@ def upstage(
         None, help="Upstage API Key. 지정하지 않으면 UPSTAGE_API_KEY 환경 변수 사용"
     ),
     toml_path: Optional[Path] = typer.Option(
-        Path.home() / ".pyhub.toml",
+        DEFAULT_TOML_PATH,
         "--toml-file",
-        help="toml 설정 파일 경로 (디폴트: ~/.pyhub.toml)",
+        help="toml 설정 파일 경로",
     ),
     env_path: Optional[Path] = typer.Option(
-        Path.home() / ".pyhub.env",
+        DEFAULT_ENV_PATH,
         "--env-file",
-        help="환경 변수 파일(.env) 경로 (디폴트: ~/.pyhub.env)",
+        help="환경 변수 파일(.env) 경로",
     ),
     is_debug: bool = typer.Option(False, "--debug"),
 ):

@@ -17,6 +17,7 @@ from rich.prompt import Prompt
 from rich.table import Table
 
 from pyhub import print_for_main
+from pyhub.config import DEFAULT_TOML_PATH, DEFAULT_ENV_PATH
 
 app = typer.Typer()
 console = Console()
@@ -43,14 +44,14 @@ def run(
     is_dev_server: bool = typer.Option(False, "--dev-server", help="Run django dev server"),
     is_disable_check: bool = typer.Option(False, "--disable-check", help="Disable django system check"),
     toml_path: Optional[Path] = typer.Option(
-        Path.home() / ".pyhub.toml",
+        DEFAULT_TOML_PATH,
         "--toml-file",
-        help="toml 설정 파일 경로 (디폴트: ~/.pyhub.toml)",
+        help="toml 설정 파일 경로",
     ),
     env_path: Optional[Path] = typer.Option(
-        Path.home() / ".pyhub.env",
+        DEFAULT_ENV_PATH,
         "--env-file",
-        help="환경 변수 파일(.env) 경로 (디폴트: ~/.pyhub.env)",
+        help="환경 변수 파일(.env) 경로",
     ),
     is_debug: bool = typer.Option(False, "--debug"),
 ):
@@ -110,12 +111,12 @@ def migrate(
     app_label: Optional[str] = typer.Argument(None),
     migration_name: Optional[str] = typer.Argument(None),
     toml_path: Optional[Path] = typer.Option(
-        Path.home() / ".pyhub.toml",
-        help="toml 설정 파일 경로 (디폴트: ~/.pyhub.toml)",
+        DEFAULT_TOML_PATH,
+        help="toml 설정 파일 경로",
     ),
     env_path: Optional[Path] = typer.Option(
-        Path.home() / ".pyhub.env",
-        help="환경 변수 파일(.env) 경로 (디폴트: ~/.pyhub.env)",
+        DEFAULT_ENV_PATH,
+        help="환경 변수 파일(.env) 경로",
     ),
     db_alias: str = typer.Option(
         "default",
@@ -144,12 +145,12 @@ def migrate(
 def showmigrations(
     app_label: list[str] = typer.Argument(None),
     toml_path: Optional[Path] = typer.Option(
-        Path.home() / ".pyhub.toml",
-        help="toml 설정 파일 경로 (디폴트: ~/.pyhub.toml)",
+        DEFAULT_TOML_PATH,
+        help="toml 설정 파일 경로",
     ),
     env_path: Optional[Path] = typer.Option(
-        Path.home() / ".pyhub.env",
-        help="환경 변수 파일(.env) 경로 (디폴트: ~/.pyhub.env)",
+        DEFAULT_ENV_PATH,
+        help="환경 변수 파일(.env) 경로",
     ),
     db_alias: str = typer.Option(
         "default",
@@ -177,12 +178,12 @@ def sqlmigrate(
     app_label: str = typer.Argument(...),
     migration_name: str = typer.Argument(...),
     toml_path: Optional[Path] = typer.Option(
-        Path.home() / ".pyhub.toml",
-        help="toml 설정 파일 경로 (디폴트: ~/.pyhub.toml)",
+        DEFAULT_TOML_PATH,
+        help="toml 설정 파일 경로",
     ),
     env_path: Optional[Path] = typer.Option(
-        Path.home() / ".pyhub.env",
-        help="환경 변수 파일(.env) 경로 (디폴트: ~/.pyhub.env)",
+        DEFAULT_ENV_PATH,
+        help="환경 변수 파일(.env) 경로",
     ),
     db_alias: str = typer.Option(
         "default",
@@ -204,12 +205,12 @@ def sqlmigrate(
 @app.command()
 def createuser(
     toml_path: Optional[Path] = typer.Option(
-        Path.home() / ".pyhub.toml",
-        help="toml 설정 파일 경로 (디폴트: ~/.pyhub.toml)",
+        DEFAULT_TOML_PATH,
+        help="toml 설정 파일 경로",
     ),
     env_path: Optional[Path] = typer.Option(
-        Path.home() / ".pyhub.env",
-        help="환경 변수 파일(.env) 경로 (디폴트: ~/.pyhub.env)",
+        DEFAULT_ENV_PATH,
+        help="환경 변수 파일(.env) 경로",
     ),
     is_debug: bool = typer.Option(False, "--debug"),
 ):
@@ -245,12 +246,12 @@ def createuser(
 @app.command()
 def createsuperuser(
     toml_path: Optional[Path] = typer.Option(
-        Path.home() / ".pyhub.toml",
-        help="toml 설정 파일 경로 (디폴트: ~/.pyhub.toml)",
+        DEFAULT_TOML_PATH,
+        help="toml 설정 파일 경로",
     ),
     env_path: Optional[Path] = typer.Option(
-        Path.home() / ".pyhub.env",
-        help="환경 변수 파일(.env) 경로 (디폴트: ~/.pyhub.env)",
+        DEFAULT_ENV_PATH,
+        help="환경 변수 파일(.env) 경로",
     ),
     is_debug: bool = typer.Option(False, "--debug"),
 ):
@@ -263,12 +264,12 @@ def createsuperuser(
 @app.command()
 def shell(
     toml_path: Optional[Path] = typer.Option(
-        Path.home() / ".pyhub.toml",
-        help="toml 설정 파일 경로 (디폴트: ~/.pyhub.toml)",
+        DEFAULT_TOML_PATH,
+        help="toml 설정 파일 경로",
     ),
     env_path: Optional[Path] = typer.Option(
-        Path.home() / ".pyhub.env",
-        help="환경 변수 파일(.env) 경로 (디폴트: ~/.pyhub.env)",
+        DEFAULT_ENV_PATH,
+        help="환경 변수 파일(.env) 경로",
     ),
     is_debug: bool = typer.Option(False, "--debug"),
 ):
@@ -282,12 +283,12 @@ def shell(
 def print_settings(
     settings_names: list[str] = typer.Argument(..., help="출력할 settings 이름을 지정"),
     toml_path: Optional[Path] = typer.Option(
-        Path.home() / ".pyhub.toml",
-        help="toml 설정 파일 경로 (디폴트: ~/.pyhub.toml)",
+        DEFAULT_TOML_PATH,
+        help="toml 설정 파일 경로",
     ),
     env_path: Optional[Path] = typer.Option(
-        Path.home() / ".pyhub.env",
-        help="환경 변수 파일(.env) 경로 (디폴트: ~/.pyhub.env)",
+        DEFAULT_ENV_PATH,
+        help="환경 변수 파일(.env) 경로",
     ),
     # format: Optional[] = typer.Option(None, help=""),
     is_debug: bool = typer.Option(False, "--debug"),

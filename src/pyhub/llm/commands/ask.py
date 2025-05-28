@@ -9,6 +9,7 @@ from rich.prompt import Prompt
 from rich.table import Table
 
 from pyhub import init
+from pyhub.config import DEFAULT_TOML_PATH, DEFAULT_ENV_PATH
 from pyhub.llm import LLM
 from pyhub.llm.types import LLMChatModelEnum
 
@@ -37,14 +38,14 @@ def ask(
         help="멀티 턴 대화",
     ),
     toml_path: Optional[Path] = typer.Option(
-        Path.home() / ".pyhub.toml",
+        DEFAULT_TOML_PATH,
         "--toml-file",
-        help="toml 설정 파일 경로 (디폴트: ~/.pyhub.toml)",
+        help="toml 설정 파일 경로",
     ),
     env_path: Optional[Path] = typer.Option(
-        Path.home() / ".pyhub.env",
+        DEFAULT_ENV_PATH,
         "--env-file",
-        help="환경 변수 파일(.env) 경로 (디폴트: ~/.pyhub.env)",
+        help="환경 변수 파일(.env) 경로",
     ),
     is_verbose: bool = typer.Option(False, "--verbose", help="상세한 처리 정보 표시"),
 ):

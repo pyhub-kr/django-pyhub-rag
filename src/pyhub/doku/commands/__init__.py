@@ -7,6 +7,7 @@ from django.core.management import call_command
 from rich.console import Console
 
 from pyhub import init, print_for_main
+from pyhub.config import DEFAULT_TOML_PATH, DEFAULT_ENV_PATH
 
 app = typer.Typer()
 console = Console()
@@ -28,14 +29,14 @@ app.callback(invoke_without_command=True)(print_for_main(logo))
 def run_document_parse_job(
     is_once: bool = typer.Option(False, "--once", help="1회 실행 여부"),
     toml_path: Optional[Path] = typer.Option(
-        Path.home() / ".pyhub.toml",
+        DEFAULT_TOML_PATH,
         "--toml-file",
-        help="toml 설정 파일 경로 (디폴트: ~/.pyhub.toml)",
+        help="toml 설정 파일 경로",
     ),
     env_path: Optional[Path] = typer.Option(
-        Path.home() / ".pyhub.env",
+        DEFAULT_ENV_PATH,
         "--env-file",
-        help="환경 변수 파일(.env) 경로 (디폴트: ~/.pyhub.env)",
+        help="환경 변수 파일(.env) 경로",
     ),
     is_verbose: bool = typer.Option(False, "--verbose"),
     is_debug: bool = typer.Option(False, "--debug"),

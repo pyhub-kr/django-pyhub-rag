@@ -9,6 +9,7 @@ from rich.console import Console
 from rich.table import Table
 
 from pyhub import init
+from pyhub.config import DEFAULT_TOML_PATH, DEFAULT_ENV_PATH
 from pyhub.llm import LLM
 from pyhub.llm.types import LLMChatModelEnum
 
@@ -45,19 +46,19 @@ def describe(
     prompt_type: Optional[str] = typer.Option(
         None,
         "--prompt-type",
-        help="~/.pyhub.toml 에서 prompt_templates 내의 프롬프트 타입. (디폴트: describe_image)",
+        help="toml 내 prompt_templates 프롬프트 타입. (디폴트: describe_image)",
     ),
     temperature: float = typer.Option(0.2, help="LLM 응답의 온도 설정 (0.0-2.0, 높을수록 다양한 응답)"),
     max_tokens: int = typer.Option(1000, help="응답의 최대 토큰 수"),
     toml_path: Optional[Path] = typer.Option(
-        Path.home() / ".pyhub.toml",
+        DEFAULT_TOML_PATH,
         "--toml-file",
-        help="toml 설정 파일 경로 (디폴트: ~/.pyhub.toml)",
+        help="toml 설정 파일 경로",
     ),
     env_path: Optional[Path] = typer.Option(
-        Path.home() / ".pyhub.env",
+        DEFAULT_ENV_PATH,
         "--env-file",
-        help="환경 변수 파일(.env) 경로 (디폴트: ~/.pyhub.env)",
+        help="환경 변수 파일(.env) 경로",
     ),
     is_verbose: bool = typer.Option(False, "--verbose", help="상세한 처리 정보 표시"),
 ):

@@ -9,13 +9,15 @@ from django_rich.management import RichCommand
 from django_typer.management import TyperCommand
 from typer import Option, BadParameter, Exit, Argument
 
+from pyhub import load_toml
+from pyhub.config import DEFAULT_TOML_PATH
 from pyhub.parser.upstage.parser import ImageDescriptor
 
 
 class Command(RichCommand, TyperCommand):
     def handle(
         self,
-        toml_path: Annotated[Optional[Path], Argument(help="toml 파일 경로. 디폴트: ~/.pyhub.toml")] = None,
+        toml_path: Annotated[Path, Argument(help="toml 파일 경로")] = DEFAULT_TOML_PATH,
         is_create: Annotated[bool, Option("--create", "-c", help="지정 경로에 toml 설정 파일을 생성합니다.")] = False,
         is_force_create: Annotated[
             bool,
@@ -27,33 +29,44 @@ class Command(RichCommand, TyperCommand):
         ] = False,
         is_print: Annotated[bool, Option("--print", "-p", help="지정 경로의 toml 설정 파일을 출력합니다.")] = False,
         is_test: Annotated[bool, Option("--test", "-t", help="지정 경로의 toml 파일을 검증합니다.")] = False,
-        is_open: Annotated[
-            bool, Option("--open", "-o", help="지정 경로의 toml 파일을 디폴트 편집기로 엽니다.")
+        is_edit: Annotated[
+            bool, Option("--edit", "-e", help="지정 경로의 toml 파일을 디폴트 편집기로 편집합니다.")
         ] = False,
     ):
-        if toml_path is None:
-            toml_path = Path.home() / ".pyhub.toml"
-
         if toml_path.suffix != ".toml":
-            raise BadParameter("확장자를 .toml로 지정해주세요.")
+            self.console.print(f"[red]오류: 파일 확장자는 .toml이어야 합니다.[/red]")
+            self.console.print(f"[dim]입력된 파일: {toml_path}[/dim]")
+            raise Exit(code=1)
 
         if is_create or is_force_create:
             if toml_path.exists():
                 if is_force_create:
-                    self.console.print(f"[red]{toml_path} 경로의 파일을 덮어쓰기 합니다.[/red]")
+                    self.console.print(f"[yellow]경고: {toml_path} 파일을 덮어쓰기 합니다.[/yellow]")
                 else:
-                    raise BadParameter(f"{toml_path} 경로에 파일이 이미 있습니다.")
+                    self.console.print(f"[red]오류: {toml_path} 파일이 이미 존재합니다.[/red]")
+                    self.console.print(f"[dim]다음 중 하나를 선택하세요:[/dim]")
+                    self.console.print(f"  • 기존 파일을 덮어쓰려면: [cyan]pyhub toml create --force[/cyan]")
+                    self.console.print(f"  • 기존 파일을 편집하려면: [cyan]pyhub toml edit[/cyan]")
+                    self.console.print(f"  • 기존 파일을 확인하려면: [cyan]pyhub toml show[/cyan]")
+                    raise Exit(code=1)
 
             try:
+                # 디렉토리가 없으면 생성
+                toml_path.parent.mkdir(parents=True, exist_ok=True)
                 with toml_path.open("wt", encoding="utf-8") as f:
                     f.write(self._get_toml_str())
-            except Exception as e:
-                self.console.print(f"[red]{e}[/red]")
+            except PermissionError:
+                self.console.print(f"[red]오류: 파일을 생성할 권한이 없습니다.[/red]")
+                self.console.print(f"[dim]경로: {toml_path}[/dim]")
+                raise Exit(code=1)
+            except OSError as e:
+                self.console.print(f"[red]오류: 파일을 생성할 수 없습니다.[/red]")
+                self.console.print(f"[dim]상세: {e}[/dim]")
                 raise Exit(code=1)
             else:
-                self.console.print(
-                    f"[green]{toml_path} 경로에 설정 파일 초안을 생성했습니다. 목적에 맞게 수정해주세요.[/green]"
-                )
+                self.console.print(f"[green]✓ 설정 파일이 생성되었습니다: {toml_path}[/green]")
+                self.console.print(f"[dim]다음 명령으로 파일을 편집할 수 있습니다:[/dim]")
+                self.console.print(f"  [cyan]pyhub toml edit[/cyan]")
 
             raise Exit(code=0)
 
@@ -70,7 +83,7 @@ class Command(RichCommand, TyperCommand):
 
             self.console.print(f"{toml_path} 경로의 파일을 확인하겠습니다.")
 
-            toml_settings = self.load_toml(toml_path=toml_path)
+            toml_settings = load_toml(toml_path=toml_path)
             if not toml_settings:
                 raise BadParameter(f"{toml_path} 파일을 읽을 수 없습니다.")
 
@@ -108,11 +121,11 @@ class Command(RichCommand, TyperCommand):
 
             raise Exit(code=0)
 
-        if is_open:
+        if is_edit:
             if not toml_path.exists():
                 raise BadParameter(f"{toml_path} 경로에 파일이 없습니다.")
 
-            self.console.print(f"{toml_path} 경로의 파일을 열겠습니다.")
+            self.console.print(f"{toml_path} 경로의 파일을 편집합니다.")
 
             try:
                 self.open_with_default_editor(toml_path)

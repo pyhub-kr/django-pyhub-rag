@@ -7,6 +7,7 @@ from rich.console import Console
 from rich.table import Table
 
 from pyhub import init
+from pyhub.config import DEFAULT_TOML_PATH, DEFAULT_ENV_PATH
 from pyhub.llm import LLM
 from pyhub.llm.json import json_dumps, json_loads, JSONDecodeError
 from pyhub.llm.types import LLMEmbeddingModelEnum, Usage
@@ -31,14 +32,14 @@ def fill_jsonl(
         help="임베딩 모델",
     ),
     toml_path: Optional[Path] = typer.Option(
-        Path.home() / ".pyhub.toml",
+        DEFAULT_TOML_PATH,
         "--toml-file",
-        help="toml 설정 파일 경로 (디폴트: ~/.pyhub.toml)",
+        help="toml 설정 파일 경로",
     ),
     env_path: Optional[Path] = typer.Option(
-        Path.home() / ".pyhub.env",
+        DEFAULT_ENV_PATH,
         "--env-file",
-        help="환경 변수 파일(.env) 경로 (디폴트: ~/.pyhub.env)",
+        help="환경 변수 파일(.env) 경로",
     ),
     is_force: bool = typer.Option(False, "--force", "-f", help="확인 없이 출력 폴더 삭제 후 재생성"),
     is_verbose: bool = typer.Option(False, "--verbose", help="상세한 처리 정보 표시"),

@@ -484,10 +484,9 @@ def make_filecache_setting(
 
 
 def load_envs(env_path: Optional[Union[str, Path]] = None, overwrite: bool = True) -> None:
-    if env_path is None:
-        env_path = Path.home() / ".pyhub.env"
-    elif isinstance(env_path, str):
-        env_path = Path(env_path)
+    from .config import Config
+
+    env_path = Config.resolve_path(env_path, Config.get_default_env_path)
 
     env = Env()
 
@@ -504,10 +503,9 @@ def load_toml(
     toml_path: Optional[Union[str, Path]] = None,
     load_env: bool = False,
 ) -> Optional[PyhubTomlSetting]:
-    if toml_path is None:
-        toml_path = Path.home() / ".pyhub.toml"
-    elif isinstance(toml_path, str):
-        toml_path = Path(toml_path)
+    from .config import Config
+
+    toml_path = Config.resolve_path(toml_path, Config.get_default_toml_path)
 
     if toml_path.is_file() is False:
         return None

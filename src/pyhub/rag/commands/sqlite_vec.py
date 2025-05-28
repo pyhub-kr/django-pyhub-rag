@@ -8,6 +8,7 @@ import typer
 from rich.console import Console
 
 from pyhub import init
+from pyhub.config import DEFAULT_TOML_PATH, DEFAULT_ENV_PATH
 from pyhub.llm.types import EmbeddingDimensionsEnum, LLMEmbeddingModelEnum
 from pyhub.rag.db.sqlite_vec import (
     DistanceMetric,
@@ -82,14 +83,14 @@ def command_create_table(
     ),
     distance_metric: DistanceMetric = typer.Option(DistanceMetric.COSINE, help="유사도 검색을 위한 거리 메트릭"),
     toml_path: Optional[Path] = typer.Option(
-        Path.home() / ".pyhub.toml",
+        DEFAULT_TOML_PATH,
         "--toml-file",
-        help="toml 설정 파일 경로 (디폴트: ~/.pyhub.toml)",
+        help="toml 설정 파일 경로",
     ),
     env_path: Optional[Path] = typer.Option(
-        Path.home() / ".pyhub.env",
+        DEFAULT_ENV_PATH,
         "--env-file",
-        help="환경 변수 파일(.env) 경로 (디폴트: ~/.pyhub.env)",
+        help="환경 변수 파일(.env) 경로",
     ),
     is_verbose: bool = typer.Option(False, "--verbose", help="추가 디버그 정보 출력"),
 ):
@@ -128,14 +129,14 @@ def command_import_jsonl(
     table_name: str = typer.Option(None, "--table", "-t", help="테이블 이름 (선택사항, 미지정시 자동 감지)"),
     clear: bool = typer.Option(False, "--clear", "-c", help="로딩 전 테이블의 기존 데이터 삭제"),
     toml_path: Optional[Path] = typer.Option(
-        Path.home() / ".pyhub.toml",
+        DEFAULT_TOML_PATH,
         "--toml-file",
-        help="toml 설정 파일 경로 (디폴트: ~/.pyhub.toml)",
+        help="toml 설정 파일 경로",
     ),
     env_path: Optional[Path] = typer.Option(
-        Path.home() / ".pyhub.env",
+        DEFAULT_ENV_PATH,
         "--env-file",
-        help="환경 변수 파일(.env) 경로 (디폴트: ~/.pyhub.env)",
+        help="환경 변수 파일(.env) 경로",
     ),
     is_verbose: bool = typer.Option(False, "--verbose", help="추가 디버그 정보 출력"),
 ):
@@ -182,14 +183,14 @@ def command_similarity_search(
     limit: int = typer.Option(4, help="반환할 최대 결과 수"),
     no_metadata: bool = typer.Option(False, help="결과에서 메타데이터 숨김"),
     toml_path: Optional[Path] = typer.Option(
-        Path.home() / ".pyhub.toml",
+        DEFAULT_TOML_PATH,
         "--toml-file",
-        help="toml 설정 파일 경로 (디폴트: ~/.pyhub.toml)",
+        help="toml 설정 파일 경로",
     ),
     env_path: Optional[Path] = typer.Option(
-        Path.home() / ".pyhub.env",
+        DEFAULT_ENV_PATH,
         "--env-file",
-        help="환경 변수 파일(.env) 경로 (디폴트: ~/.pyhub.env)",
+        help="환경 변수 파일(.env) 경로",
     ),
     is_verbose: bool = typer.Option(False, "--verbose", help="추가 디버그 정보 출력"),
 ):
