@@ -47,6 +47,7 @@ console = Console()
 
 
 def upstage(
+    ctx: typer.Context,
     input_path: Optional[Path] = typer.Argument(
         None,
         help=f"입력 파일 경로 (지원 포맷: {', '.join(SUPPORTED_FILE_EXTENSIONS)})",
@@ -199,6 +200,11 @@ def upstage(
     ),
     is_debug: bool = typer.Option(False, "--debug"),
 ):
+    # input_path가 없으면 help를 출력하고 종료 (Django 초기화 전에 처리)
+    if input_path is None:
+        console.print(ctx.get_help())
+        raise typer.Exit()
+
     log_level = logging.DEBUG if is_verbose else logging.INFO
     init(debug=True, log_level=log_level, toml_path=toml_path, env_path=env_path)
 
@@ -216,12 +222,6 @@ def upstage(
                 "[bold red]오류: Upstage API Key 형식이 올바르지 않습니다. Upstage API Key는 'up_'로 시작합니다.[/bold red]"
             )
             raise typer.Exit(code=1)
-
-    if input_path is None:
-        console.print(
-            "[bold red]오류: 입력 파일 경로가 지정되지 않았습니다. 처리할 문서 파일 경로를 지정해주세요.[/bold red]"
-        )
-        raise typer.Exit(1)
 
     is_pdf = input_path.suffix.lower() == ".pdf"
 

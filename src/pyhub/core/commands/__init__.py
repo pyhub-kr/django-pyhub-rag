@@ -31,7 +31,41 @@ console = Console()
 
 def get_default_toml_content() -> str:
     """기본 TOML 템플릿 내용을 반환합니다."""
-    return '''[env]
+    from pathlib import Path
+
+    # 실제 프롬프트 템플릿 파일 경로
+    prompt_base = Path(__file__).parent.parent.parent / "parser" / "templates" / "prompts" / "describe"
+
+    # 기본 프롬프트 내용 읽기
+    image_system = ""
+    image_user = ""
+    table_system = ""
+    table_user = ""
+
+    try:
+        image_system_path = prompt_base / "image" / "system.md"
+        if image_system_path.exists():
+            image_system = image_system_path.read_text(encoding="utf-8").strip()
+
+        image_user_path = prompt_base / "image" / "user.md"
+        if image_user_path.exists():
+            image_user = image_user_path.read_text(encoding="utf-8").strip()
+
+        table_system_path = prompt_base / "table" / "system.md"
+        if table_system_path.exists():
+            table_system = table_system_path.read_text(encoding="utf-8").strip()
+
+        table_user_path = prompt_base / "table" / "user.md"
+        if table_user_path.exists():
+            table_user = table_user_path.read_text(encoding="utf-8").strip()
+    except Exception:
+        # 파일을 읽을 수 없는 경우 기본값 사용
+        image_system = "Analyze the given image and provide a structured output."
+        image_user = "Describe this image."
+        table_system = "Analyze the given table and extract structured information."
+        table_user = "Describe this table."
+
+    return f'''[env]
 # UPSTAGE_API_KEY = "up_xxxxx..."
 # OPENAI_API_KEY = "sk-xxxxx..."
 # ANTHROPIC_API_KEY = "sk-ant-xxxxx..."
@@ -43,14 +77,14 @@ def get_default_toml_content() -> str:
 USER_DEFAULT_TIME_ZONE = "Asia/Seoul"
 
 [prompt_templates.describe_image]
-system = """이미지에 무엇이 있는지 자세히 설명해주세요. 텍스트, 도형, 색상, 레이아웃 등 모든 세부 사항을 포함하세요."""
+system = """{image_system}"""
 
-user = """이 이미지를 설명해주세요."""
+user = """{image_user}"""
 
 [prompt_templates.describe_table]
-system = """테이블 또는 표 형태의 데이터를 자세히 설명해주세요. 헤더, 행, 열, 그리고 포함된 데이터를 모두 설명하세요."""
+system = """{table_system}"""
 
-user = """이 테이블을 설명해주세요."""
+user = """{table_user}"""
 '''
 
 

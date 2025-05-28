@@ -151,7 +151,14 @@ CREATE VIRTUAL TABLE {table_name} using vec0(
         try:
             cursor.execute(sql)
         except sqlite3.OperationalError as e:
-            raise SQLiteVecError(f"Error: {e}")
+            error_msg = str(e)
+            if "already exists" in error_msg:
+                raise SQLiteVecError(
+                    f"테이블 생성 실패: '{table_name}' 테이블이 이미 존재합니다.\n"
+                    f"데이터베이스: {db_path.resolve()}"
+                )
+            else:
+                raise SQLiteVecError(f"테이블 생성 중 오류 발생: {error_msg}")
 
 
 def import_jsonl(

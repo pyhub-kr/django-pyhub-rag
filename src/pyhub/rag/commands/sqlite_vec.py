@@ -25,8 +25,21 @@ except ImportError:
     sqlite_vec = None
 
 # Create SQLite-vec subcommand group
-app = typer.Typer(name="sqlite-vec", help="SQLite-vec 관련 명령어")
+app = typer.Typer(
+    name="sqlite-vec", 
+    help="SQLite-vec 관련 명령어",
+    invoke_without_command=True,
+)
 console = Console()
+
+
+@app.callback()
+def sqlite_vec_callback(ctx: typer.Context):
+    """SQLite-vec 벡터 데이터베이스 관리를 위한 서브커맨드입니다."""
+    if ctx.invoked_subcommand is None:
+        # 서브커맨드가 없으면 help 출력
+        console.print(ctx.get_help())
+        raise typer.Exit()
 
 
 @app.command()
@@ -116,10 +129,24 @@ def command_create_table(
             distance_metric=distance_metric,
         )
     except SQLiteVecError as e:
-        console.print(f"[red]{e}")
+        error_msg = str(e)
+        if "이미 존재합니다" in error_msg:
+            lines = error_msg.split('\n')
+            console.print(f"[red]❌ {lines[0]}[/red]")
+            if len(lines) > 1:
+                console.print(f"[dim]{lines[1]}[/dim]")
+            console.print(f"\n[yellow]💡 해결 방법:[/yellow]")
+            console.print(f"  • 다른 테이블 이름을 사용하세요")
+            console.print(f"  • 기존 테이블을 삭제하려면 SQLite 클라이언트를 사용하세요")
+            console.print(f"  • 기존 데이터를 유지하려면 import-jsonl 명령을 사용하세요")
+        else:
+            console.print(f"[red]❌ {error_msg}[/red]")
         raise typer.Exit(code=1)
     else:
-        console.print(f"[bold green]'{table_name}' 가상 테이블을 {db_path}에 성공적으로 생성했습니다.[/bold green]")
+        # 절대 경로로 변환
+        abs_db_path = db_path.resolve()
+        console.print(f"[bold green]✓ '{table_name}' 가상 테이블을 성공적으로 생성했습니다.[/bold green]")
+        console.print(f"[dim]데이터베이스: {abs_db_path}[/dim]")
 
 
 @app.command(name="import-jsonl")
@@ -174,7 +201,8 @@ def command_import_jsonl(
 
 @app.command(name="similarity-search")
 def command_similarity_search(
-    query: str = typer.Argument(..., help="유사한 문서를 검색할 텍스트"),
+    ctx: typer.Context,
+    query: str = typer.Argument(None, help="유사한 문서를 검색할 텍스트"),
     db_path: Path = typer.Option(Path("db.sqlite3"), "--db-path", "-d", help="SQLite DB 경로"),
     table_name: str = typer.Option(None, "--table", "-t", help="테이블 이름 (선택사항, 미지정시 자동 감지)"),
     embedding_model: LLMEmbeddingModelEnum = typer.Option(
@@ -197,6 +225,11 @@ def command_similarity_search(
     """
     SQLite 벡터 데이터베이스에서 의미적 유사도 검색을 수행합니다.
     """
+
+    # query가 없으면 help 출력
+    if query is None:
+        console.print(ctx.get_help())
+        raise typer.Exit()
 
     if not db_path.exists():
         console.print(f"Not found : {db_path}")
