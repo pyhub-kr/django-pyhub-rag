@@ -15,14 +15,14 @@ from PyPDF2.errors import PdfReadError
 
 from pyhub import PromptTemplates
 from pyhub.http import cached_http_async
-from pyhub.llm import AnthropicLLM, GoogleLLM, OllamaLLM, OpenAILLM
+from pyhub.llm import AnthropicLLM, GoogleLLM, OllamaLLM, OpenAILLM, LLM
 from pyhub.llm.base import BaseLLM, DescribeImageRequest
 from pyhub.llm.types import (
     GoogleChatModelType,
     LLMChatModelType,
-    LLMVendorType,
     OpenAIChatModelType,
     Reply,
+    LLMVendorType,
 )
 from pyhub.parser.documents import Document
 
@@ -47,7 +47,6 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class ImageDescriptor:
-    llm_vendor: LLMVendorType = "openai"
     llm_model: LLMChatModelType = "gpt-4o-mini"
     llm_api_key: Optional[str] = None
     llm_base_url: Optional[str] = None
@@ -101,27 +100,28 @@ class ImageDescriptor:
     def __str__(self) -> str:
         """인스턴스 정보를 문자열로 반환합니다. API 키는 제외됩니다."""
         return (
-            f"ImageDescriptor(vendor={self.llm_vendor}, model={self.llm_model}, "
+            f"ImageDescriptor(model={self.llm_model}, "
             f"temperature={self.temperature}, max_tokens={self.max_tokens}, "
             f"system_prompts={list(self.system_prompts.keys())}, "
             f"user_prompts={list(self.user_prompts.keys())})"
         )
 
     def get_llm(self) -> BaseLLM:
-        if "openai" == self.llm_vendor:
-            llm = OpenAILLM(
-                model=cast(OpenAIChatModelType, self.llm_model),
-                api_key=self.llm_api_key,
-                base_url=self.llm_base_url,
-            )
-        elif "anthropic" == self.llm_vendor:
-            llm = AnthropicLLM(model=self.llm_model, api_key=self.llm_api_key)
-        elif "google" == self.llm_vendor:
-            llm = GoogleLLM(model=cast(GoogleChatModelType, self.llm_model), api_key=self.llm_api_key)
-        elif "ollama" == self.llm_vendor:
-            llm = OllamaLLM(model=self.llm_model, base_url=self.llm_base_url)
-        else:
-            raise ValueError(f"Not Implemented llm vendor: {self.llm_vendor}")
+        match LLM.get_vendor_from_model(self.llm_model):
+            case "openai":
+                llm = OpenAILLM(
+                    model=cast(OpenAIChatModelType, self.llm_model),
+                    api_key=self.llm_api_key,
+                    base_url=self.llm_base_url,
+                )
+            case "anthropic":
+                llm = AnthropicLLM(model=self.llm_model, api_key=self.llm_api_key)
+            case "google":
+                llm = GoogleLLM(model=cast(GoogleChatModelType, self.llm_model), api_key=self.llm_api_key)
+            case "ollama":
+                llm = OllamaLLM(model=self.llm_model, base_url=self.llm_base_url)
+            case _:
+                raise ValueError(f"Not Implemented llm vendor for {self.llm_model}")
 
         return llm
 
@@ -583,8 +583,7 @@ class UpstageDocumentParseParser:
                 len(request_list),
             )
             logger.info(
-                "%s %s 모델을 통해 이미지 설명을 생성합니다.",
-                self.image_descriptor.llm_vendor,
+                "%s 모델을 통해 이미지 설명을 생성합니다.",
                 self.image_descriptor.llm_model,
             )
 

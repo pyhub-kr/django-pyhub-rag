@@ -1,5 +1,5 @@
 from decimal import Decimal
-from typing import Optional, Union, cast
+from typing import Union, cast
 
 from pyhub.rag.utils import get_literal_values
 from .anthropic import AnthropicLLM
@@ -60,25 +60,28 @@ class LLM:
     }
 
     @classmethod
+    def get_vendor_from_model(cls, model: LLMModelType) -> LLMVendorType:
+        """주어진 model로부터 해당하는 vendor를 찾아 반환합니다."""
+        if model in get_literal_values(OpenAIChatModelType, OpenAIEmbeddingModelType):
+            return "openai"
+        elif model in get_literal_values(UpstageChatModelType, UpstageEmbeddingModelType):
+            return "upstage"
+        elif model in get_literal_values(AnthropicChatModelType):
+            return "anthropic"
+        elif model in get_literal_values(GoogleChatModelType, GoogleEmbeddingModelType):
+            return "google"
+        elif model in get_literal_values(OllamaChatModelType, OllamaEmbeddingModelType):
+            return "ollama"
+        else:
+            raise ValueError(f"Unknown model: {model}")
+
+    @classmethod
     def create(
         cls,
         model: LLMModelType,
-        vendor: Optional[LLMVendorType] = None,
         **kwargs,
     ) -> "BaseLLM":
-        if vendor is None:
-            if model in get_literal_values(OpenAIChatModelType, OpenAIEmbeddingModelType):
-                vendor = "openai"
-            elif model in get_literal_values(UpstageChatModelType, UpstageEmbeddingModelType):
-                vendor = "upstage"
-            elif model in get_literal_values(AnthropicChatModelType):
-                vendor = "anthropic"
-            elif model in get_literal_values(GoogleChatModelType, GoogleEmbeddingModelType):
-                vendor = "google"
-            elif model in get_literal_values(OllamaChatModelType, OllamaEmbeddingModelType):
-                vendor = "ollama"
-            else:
-                raise ValueError(f"Unknown model: {model}")
+        vendor = cls.get_vendor_from_model(model)
 
         #
         # chat

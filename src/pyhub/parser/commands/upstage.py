@@ -129,12 +129,6 @@ def upstage(
             "LLM을 통해 자동으로 생성하고, Document metadata의 image_descriptions 필드에 저장합니다."
         ),
     ),
-    image_descriptor_llm_vendor: LLMVendorEnum = typer.Option(
-        LLMVendorEnum.OPENAI,
-        "--image-descriptor-llm-vendor",
-        "-v",
-        help="이미지 설명 생성에 사용할 LLM Vendor",
-    ),
     image_descriptor_llm_model: LLMChatModelEnum = typer.Option(
         LLMChatModelEnum.GPT_4O_MINI,
         "--image-descriptor-llm-model",
@@ -291,7 +285,6 @@ def upstage(
         # Add image descriptor information if enabled
         if is_enable_image_descriptor:
             table.add_row("이미지 설명 활성화", "예")
-            table.add_row("이미지 설명 LLM", f"{image_descriptor_llm_vendor.value} {image_descriptor_llm_model.value}")
             if image_descriptor_base_url:
                 table.add_row("이미지 설명 LLM 기본 URL", image_descriptor_base_url)
             table.add_row("이미지 설명 언어", image_descriptor_language)
@@ -315,7 +308,6 @@ def upstage(
 
     if is_enable_image_descriptor:
         image_descriptor = ImageDescriptor(
-            llm_vendor=cast(LLMVendorType, image_descriptor_llm_vendor.value),
             llm_model=cast(LLMChatModelType, image_descriptor_llm_model.value),
             llm_api_key=image_descriptor_api_key,
             llm_base_url=image_descriptor_base_url,
