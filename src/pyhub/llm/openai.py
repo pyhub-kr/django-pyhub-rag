@@ -36,6 +36,7 @@ logger = logging.getLogger(__name__)
 
 class OpenAIMixin:
     cache_alias = "openai"
+    supports_stream_options = True  # Override in subclasses if not supported
 
     def _make_request_params(
         self,
@@ -244,34 +245,50 @@ class OpenAIMixin:
             request_params,
             cache_alias=self.cache_alias,
         )
+        
+        # Add stream_options after cache key generation (if supported)
+        if self.supports_stream_options:
+            request_params["stream_options"] = {"include_usage": True}
 
         if cached_value is not None:
+            logger.debug("Using cached response - usage info will not be available")
             reply_list = cast(list[Reply], cached_value)
             for reply in reply_list:
                 reply.usage = None  # cache 된 응답이기에 usage 내역 제거
                 yield reply
         else:
-            logger.debug("request to openai")
+            logger.info("Request to %s (supports_stream_options=%s, stream_options=%s)", 
+                       self.__class__.__name__, self.supports_stream_options, request_params.get("stream_options"))
 
             response_stream = sync_client.chat.completions.create(**request_params)
             usage = None
 
             reply_list: list[Reply] = []
+            chunk_count = 0
             for chunk in response_stream:
+                chunk_count += 1
                 if chunk.choices and chunk.choices[0].delta.content:  # noqa
                     reply = Reply(text=chunk.choices[0].delta.content)
                     reply_list.append(reply)
                     yield reply
                 if chunk.usage:
+                    logger.info("Found usage in sync stream: input=%s, output=%s", chunk.usage.prompt_tokens, chunk.usage.completion_tokens)
                     usage = Usage(
                         input=chunk.usage.prompt_tokens or 0,
                         output=chunk.usage.completion_tokens or 0,
                     )
 
+            logger.info("Processed %d chunks from OpenAI stream", chunk_count)
             if usage:
+                logger.info("Yielding final usage chunk with usage info: input=%d, output=%d", usage.input, usage.output)
                 reply = Reply(text="", usage=usage)
                 reply_list.append(reply)
                 yield reply
+            else:
+                if self.supports_stream_options:
+                    logger.warning("No usage information received from %s stream despite stream_options", self.__class__.__name__)
+                else:
+                    logger.info("No usage information received from %s stream (stream_options not supported)", self.__class__.__name__)
 
             if cache_key is not None:
                 cache_set(cache_key, reply_list, alias=self.cache_alias)
@@ -297,6 +314,10 @@ class OpenAIMixin:
             request_params,
             cache_alias=self.cache_alias,
         )
+        
+        # Add stream_options after cache key generation (if supported)
+        if self.supports_stream_options:
+            request_params["stream_options"] = {"include_usage": True}
 
         if cached_value is not None:
             reply_list = cast(list[Reply], cached_value)
@@ -322,9 +343,15 @@ class OpenAIMixin:
                     )
 
             if usage:
+                logger.info("Yielding final usage chunk with usage info: input=%d, output=%d", usage.input, usage.output)
                 reply = Reply(text="", usage=usage)
                 reply_list.append(reply)
                 yield reply
+            else:
+                if self.supports_stream_options:
+                    logger.warning("No usage information received from %s stream despite stream_options", self.__class__.__name__)
+                else:
+                    logger.info("No usage information received from %s stream (stream_options not supported)", self.__class__.__name__)
 
             if cache_key is not None:
                 await cache_set_async(cache_key, reply_list, alias=self.cache_alias)

@@ -27,6 +27,7 @@ class UpstageLLM(OpenAIMixin, BaseLLM):
         "embedding-passage": 4096,
     }
     cache_alias = "upstage"
+    supports_stream_options = False  # Upstage doesn't support stream_options
 
     def __init__(
         self,

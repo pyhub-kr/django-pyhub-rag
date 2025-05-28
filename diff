@@ -1,0 +1,2881 @@
+diff --git a/src/pyhub/llm/commands/__init__.py b/src/pyhub/llm/commands/__init__.py
+index ae98af2..188a360 100644
+--- a/src/pyhub/llm/commands/__init__.py
++++ b/src/pyhub/llm/commands/__init__.py
+@@ -6,6 +6,8 @@ from pyhub import print_for_main
+ from .ask import ask
+ from .describe import describe
+ from .embed import app as embed_app
++from .chat import chat
++from .compare import compare
+ 
+ app = typer.Typer()
+ console = Console()
+@@ -14,6 +16,8 @@ app.add_typer(embed_app)
+ 
+ app.command()(ask)
+ app.command()(describe)
++app.command()(chat)
++app.command()(compare)
+ 
+ 
+ logo = """
+diff --git a/src/pyhub/llm/commands/ask.py b/src/pyhub/llm/commands/ask.py
+index 0650f20..099eef4 100644
+--- a/src/pyhub/llm/commands/ask.py
++++ b/src/pyhub/llm/commands/ask.py
+@@ -9,7 +9,6 @@ from rich.prompt import Prompt
+ from rich.table import Table
+ 
+ from pyhub import init
+-from pyhub.config import DEFAULT_TOML_PATH, DEFAULT_ENV_PATH
+ from pyhub.llm import LLM
+ from pyhub.llm.types import LLMChatModelEnum
+ 
+@@ -17,6 +16,7 @@ console = Console()
+ 
+ 
+ def ask(
++    ctx: typer.Context,
+     query: Optional[str] = typer.Argument(None, help="질의 내용"),
+     model: LLMChatModelEnum = typer.Option(
+         LLMChatModelEnum.GPT_4O_MINI,
+@@ -37,22 +37,69 @@ def ask(
+         "--multi",
+         help="멀티 턴 대화",
+     ),
+-    toml_path: Optional[Path] = typer.Option(
+-        DEFAULT_TOML_PATH,
+-        "--toml-file",
+-        help="toml 설정 파일 경로",
++    output_json: bool = typer.Option(
++        False,
++        "--json",
++        help="JSON 형식으로 출력 (구조화된 응답)",
++    ),
++    schema_path: Optional[Path] = typer.Option(
++        None,
++        "--schema",
++        help="JSON Schema 파일 경로 (구조화된 응답 형식 정의). "
++        "OpenAI와 Upstage는 완전한 구조화된 출력을 지원하며, "
++        "Anthropic, Google, Ollama는 프롬프트 엔지니어링을 통한 제한적 지원만 제공합니다.",
++    ),
++    output_path: Optional[Path] = typer.Option(
++        None,
++        "--output",
++        "-o",
++        help="응답을 저장할 파일 경로",
++    ),
++    template_name: Optional[str] = typer.Option(
++        None,
++        "--template",
++        "-t",
++        help="프롬프트 템플릿 이름 (toml 파일에서 로드)",
+     ),
+-    env_path: Optional[Path] = typer.Option(
+-        DEFAULT_ENV_PATH,
+-        "--env-file",
+-        help="환경 변수 파일(.env) 경로",
++    show_cost: bool = typer.Option(
++        False,
++        "--cost",
++        help="예상 비용 표시",
++    ),
++    show_stats: bool = typer.Option(
++        False,
++        "--stats",
++        help="토큰 사용량 및 응답 시간 통계 표시",
+     ),
+     is_verbose: bool = typer.Option(False, "--verbose", help="상세한 처리 정보 표시"),
+ ):
+-    """LLM에 질의하고 응답을 출력합니다."""
++    """LLM에 질의하고 응답을 출력합니다.
++
++    Examples:
++        # 기본 사용
++        pyhub.llm ask "What is Python?"
++
++        # 파일로 저장
++        pyhub.llm ask "Explain AI" --output response.txt
++
++        # 템플릿 사용
++        pyhub.llm ask "Fix this code" --template code_review
++
++        # JSON 형식 출력
++        pyhub.llm ask "List 3 colors" --json
++    """
+ 
+     if query is None:
+-        query = typer.prompt(">>>", prompt_suffix=" ")
++        if sys.stdin.isatty():
++            # stdin이 터미널인 경우 (파이프라인이 아닌 경우) - help 출력
++            console.print(ctx.get_help())
++            raise typer.Exit()
++        else:
++            # stdin에서 입력을 받는 경우
++            console.print("[red]오류: 질문이 제공되지 않았습니다.[/red]")
++            console.print('[dim]사용법: pyhub.llm ask "질문"[/dim]')
++            console.print('[dim]또는: echo "컨텍스트" | pyhub.llm ask "질문"[/dim]')
++            raise typer.Exit(1)
+ 
+     # Use stdin as context if available and no context argument was provided
+     if context is None and not sys.stdin.isatty():
+@@ -76,7 +123,39 @@ def ask(
+         log_level = logging.DEBUG
+     else:
+         log_level = logging.INFO
+-    init(debug=True, log_level=log_level, toml_path=toml_path, env_path=env_path)
++    init(debug=True, log_level=log_level)
++
++    # 템플릿 로드
++    if template_name:
++        try:
++            import toml
++            from pyhub.config import Config
++
++            toml_path = Config.get_default_toml_path()
++            if toml_path.exists():
++                with toml_path.open("r", encoding="utf-8") as f:
++                    config = toml.load(f)
++                    templates = config.get("prompt_templates", {}).get(template_name, {})
++                    if templates:
++                        system_prompt = templates.get("system", system_prompt)
++                        if "user" in templates and "{query}" in templates["user"]:
++                            query = templates["user"].format(query=query)
++                    else:
++                        console.print(f"[yellow]경고: 템플릿 '{template_name}'을 찾을 수 없습니다.[/yellow]")
++        except Exception as e:
++            console.print(f"[yellow]템플릿 로드 오류: {e}[/yellow]")
++
++    # JSON Schema 로드
++    choices = None
++    if schema_path and schema_path.exists():
++        try:
++            import json
++
++            with schema_path.open("r", encoding="utf-8") as f:
++                choices = json.load(f)
++        except Exception as e:
++            console.print(f"[red]JSON Schema 파일 읽기 오류: {e}[/red]")
++            raise typer.Exit(1)
+ 
+     if is_verbose:
+         table = Table()
+@@ -89,8 +168,9 @@ def ask(
+         table.add_row("temperature", str(temperature))
+         table.add_row("max_tokens", str(max_tokens))
+         table.add_row("멀티 턴 여부", "O" if is_multi else "X")
+-        table.add_row("toml_path", f"{toml_path.resolve()} ({"Found" if toml_path.exists() else "Not found"})")
+-        table.add_row("env_path", f"{env_path.resolve()} ({"Found" if env_path.exists() else "Not found"})")
++        table.add_row("JSON 출력", "O" if output_json else "X")
++        if schema_path:
++            table.add_row("JSON Schema", str(schema_path))
+         console.print(table)
+ 
+     llm = LLM.create(
+@@ -102,10 +182,78 @@ def ask(
+     if is_verbose:
+         console.print(f"Using llm {llm.model}")
+ 
++    import time
++
++    start_time = time.time()
++
+     if not is_multi:
+-        for chunk in llm.ask(query, stream=True):
+-            console.print(chunk.text, end="")
+-        console.print()
++        response_text = ""
++        usage = None
++
++        if output_json or choices:
++            # 구조화된 응답
++            response = llm.ask(query, choices=choices)
++            usage = response.usage if hasattr(response, "usage") else None
++            if output_json:
++                import json
++
++                response_text = json.dumps(
++                    response.model_dump() if hasattr(response, "model_dump") else response, ensure_ascii=False, indent=2
++                )
++                console.print(response_text)
++            else:
++                response_text = str(response)
++                console.print(response_text)
++        else:
++            # 일반 텍스트 응답 (항상 스트리밍)
++            for chunk in llm.ask(query, stream=True):
++                if chunk.text:  # 텍스트가 있는 경우에만 출력
++                    console.print(chunk.text, end="")
++                    response_text += chunk.text
++                if hasattr(chunk, "usage") and chunk.usage:
++                    usage = chunk.usage
++            console.print()
++
++        # 응답 시간 계산
++        elapsed_time = time.time() - start_time
++
++        # 파일로 저장
++        if output_path:
++            try:
++                with output_path.open("w", encoding="utf-8") as f:
++                    f.write(response_text)
++                console.print(f"[green]응답이 저장되었습니다: {output_path}[/green]")
++            except Exception as e:
++                console.print(f"[red]파일 저장 오류: {e}[/red]")
++
++        # 통계 표시
++        if show_stats and usage:
++            stats_table = Table(title="통계")
++            stats_table.add_column("항목", style="cyan")
++            stats_table.add_column("값", style="green")
++            stats_table.add_row("입력 토큰", str(usage.input))
++            stats_table.add_row("출력 토큰", str(usage.output))
++            stats_table.add_row("총 토큰", str(usage.total))
++            stats_table.add_row("응답 시간", f"{elapsed_time:.2f}초")
++            console.print(stats_table)
++
++        # 비용 표시
++        if show_cost and usage:
++            try:
++                from pyhub.llm.utils.pricing import calculate_cost
++
++                cost = calculate_cost(model.value, usage.input, usage.output)
++                cost_table = Table(title="예상 비용")
++                cost_table.add_column("항목", style="cyan")
++                cost_table.add_column("값", style="green")
++                cost_table.add_row("입력 비용", f"${cost['input_cost']:.6f}")
++                cost_table.add_row("출력 비용", f"${cost['output_cost']:.6f}")
++                cost_table.add_row("총 비용", f"${cost['total_cost']:.6f}")
++                cost_table.add_row("원화 환산", f"₩{cost['total_cost'] * 1300:.0f}")
++                console.print(cost_table)
++            except Exception as e:
++                if is_verbose:
++                    console.print(f"[yellow]비용 계산 실패: {e}[/yellow]")
+ 
+     else:
+         console.print("Human:", query)
+diff --git a/src/pyhub/llm/commands/chat.py b/src/pyhub/llm/commands/chat.py
+index de1ba1b..760c8d1 100644
+--- a/src/pyhub/llm/commands/chat.py
++++ b/src/pyhub/llm/commands/chat.py
+@@ -58,42 +58,48 @@ def chat(
+     is_verbose: bool = typer.Option(False, "--verbose", help="상세 정보 표시"),
+ ):
+     """대화형 LLM 세션을 시작합니다."""
+-    
++
+     if is_verbose:
+         log_level = logging.DEBUG
+     else:
+         log_level = logging.INFO
+     init(debug=True, log_level=log_level)
+-    
++
+     # 세션 정보 표시
+     console.print("\n[bold blue]💬 LLM Chat Session[/bold blue]")
+     console.print(f"[dim]모델: {model.value} | 온도: {temperature} | 최대 토큰: {max_tokens}[/dim]")
+     if system_prompt:
+-        console.print(f"[dim]시스템 프롬프트: {system_prompt[:50]}...[/dim]" if len(system_prompt) > 50 else f"[dim]시스템 프롬프트: {system_prompt}[/dim]")
++        console.print(
++            f"[dim]시스템 프롬프트: {system_prompt[:50]}...[/dim]"
++            if len(system_prompt) > 50
++            else f"[dim]시스템 프롬프트: {system_prompt}[/dim]"
++        )
+     console.print("[dim]종료하려면 'exit', 'quit', Ctrl+C 또는 Ctrl+D를 입력하세요.[/dim]")
+     console.print("[dim]대화를 초기화하려면 'clear'를 입력하세요.[/dim]")
+     console.print("[dim]현재 설정을 보려면 'settings'를 입력하세요.[/dim]")
+     console.print()
+-    
++
+     # 초기 시스템 프롬프트 저장
+     base_system_prompt = system_prompt or ""
+-    
++
+     # 대화 히스토리
+     messages = []
+     if history_path and history_path.exists():
+         try:
+             import json
++
+             with history_path.open("r", encoding="utf-8") as f:
+                 messages = json.load(f)
+                 console.print(f"[green]히스토리 로드: {len(messages)} 메시지[/green]\n")
+         except Exception as e:
+             console.print(f"[yellow]히스토리 로드 실패: {e}[/yellow]\n")
+-    
++
+     # 총 사용량 추적
+     from pyhub.llm.types import Usage
++
+     total_usage = Usage()
+     turn_count = 0
+-    
++
+     # 대화 루프
+     while True:
+         try:
+@@ -104,7 +110,7 @@ def chat(
+                 # Ctrl-D 처리
+                 console.print("\n[yellow]대화를 종료합니다...[/yellow]")
+                 break
+-            
++
+             # 특수 명령 처리
+             if user_input.lower() in ["exit", "quit", "bye"]:
+                 break
+@@ -127,13 +133,13 @@ def chat(
+                 settings_table.add_row("총 출력 토큰", str(total_usage.output))
+                 console.print(settings_table)
+                 continue
+-            
++
+             # AI 응답
+             console.print("\n[bold green]AI[/bold green]: ", end="")
+-            
++
+             response_text = ""
+             usage = None
+-            
++
+             # 대화 컨텍스트를 시스템 프롬프트에 포함
+             conversation_context = ""
+             if messages:
+@@ -141,19 +147,19 @@ def chat(
+                 for msg in messages[-10:]:  # 최근 10개 메시지만 포함
+                     role = "Human" if msg["role"] == "user" else "AI"
+                     conversation_context += f"{role}: {msg['content']}\n"
+-            
++
+             # LLM 재생성 with 대화 컨텍스트
+             current_system_prompt = base_system_prompt
+             if conversation_context:
+                 current_system_prompt = base_system_prompt + conversation_context
+-            
++
+             llm = LLM.create(
+                 model=model,
+                 system_prompt=current_system_prompt,
+                 temperature=temperature,
+                 max_tokens=max_tokens,
+             )
+-            
++
+             # 스트리밍 응답
+             for chunk in llm.ask(user_input, stream=True):
+                 if markdown_mode and "\n" in chunk.text:
+@@ -162,30 +168,31 @@ def chat(
+                 else:
+                     console.print(chunk.text, end="")
+                     response_text += chunk.text
+-                
+-                if hasattr(chunk, 'usage') and chunk.usage:
++
++                if hasattr(chunk, "usage") and chunk.usage:
+                     usage = chunk.usage
+-            
++
+             # 마크다운 렌더링
+             if markdown_mode and response_text:
+                 console.print()  # 줄바꿈
+                 console.print(Markdown(response_text))
+             else:
+                 console.print()  # 줄바꿈
+-            
++
+             # 메시지 히스토리 업데이트
+             messages.append({"role": "user", "content": user_input})
+             messages.append({"role": "assistant", "content": response_text})
+             turn_count += 1
+-            
++
+             # 사용량 업데이트
+             if usage:
+                 total_usage += usage
+-                
++
+                 # 비용 표시
+                 if show_cost:
+                     try:
+                         from pyhub.llm.utils.pricing import calculate_cost
++
+                         cost = calculate_cost(model.value, usage.input, usage.output)
+                         console.print(
+                             f"[dim]토큰: 입력 {usage.input}, 출력 {usage.output} | "
+@@ -193,18 +200,19 @@ def chat(
+                         )
+                     except:
+                         pass
+-            
++
+             # 히스토리 저장
+             if history_path:
+                 try:
+                     import json
++
+                     history_path.parent.mkdir(parents=True, exist_ok=True)
+                     with history_path.open("w", encoding="utf-8") as f:
+                         json.dump(messages, f, ensure_ascii=False, indent=2)
+                 except Exception as e:
+                     if is_verbose:
+                         console.print(f"[yellow]히스토리 저장 실패: {e}[/yellow]")
+-        
++
+         except KeyboardInterrupt:
+             console.print("\n[yellow]대화를 종료합니다...[/yellow]")
+             break
+@@ -212,7 +220,7 @@ def chat(
+             console.print(f"\n[red]오류: {e}[/red]")
+             if is_verbose:
+                 console.print_exception()
+-    
++
+     # 세션 종료
+     console.print(f"\n[bold blue]세션 종료[/bold blue]")
+     if turn_count > 0:
+@@ -222,16 +230,17 @@ def chat(
+         stats_table.add_row("대화 턴", str(turn_count))
+         stats_table.add_row("총 입력 토큰", str(total_usage.input))
+         stats_table.add_row("총 출력 토큰", str(total_usage.output))
+-        
++
+         if show_cost:
+             try:
+                 from pyhub.llm.utils.pricing import calculate_cost
++
+                 total_cost = calculate_cost(model.value, total_usage.input, total_usage.output)
+                 stats_table.add_row("총 비용", f"${total_cost['total_cost']:.4f}")
+                 stats_table.add_row("원화 환산", f"₩{total_cost['total_cost'] * 1300:.0f}")
+             except:
+                 pass
+-        
++
+         console.print(stats_table)
+-    
++
+     console.print("\n👋 안녕히 가세요!")
+diff --git a/src/pyhub/llm/commands/compare.py b/src/pyhub/llm/commands/compare.py
+index eba00b7..f692916 100644
+--- a/src/pyhub/llm/commands/compare.py
++++ b/src/pyhub/llm/commands/compare.py
+@@ -66,34 +66,34 @@ def compare(
+     is_verbose: bool = typer.Option(False, "--verbose", help="상세 정보 표시"),
+ ):
+     """여러 LLM 모델의 응답을 비교합니다."""
+-    
++
+     # query가 없으면 help 출력
+     if not query:
+         console.print(ctx.get_help())
+         raise typer.Exit()
+-    
++
+     if len(models) < 2:
+         console.print("[red]오류: 최소 2개 이상의 모델을 지정해야 합니다.[/red]")
+-        console.print("[dim]예: pyhub.llm compare \"질문\" -m gpt-4o-mini -m claude-3-5-haiku-latest[/dim]")
++        console.print('[dim]예: pyhub.llm compare "질문" -m gpt-4o-mini -m claude-3-5-haiku-latest[/dim]')
+         raise typer.Exit(1)
+-    
++
+     if is_verbose:
+         log_level = logging.DEBUG
+     else:
+         log_level = logging.INFO
+     init(debug=True, log_level=log_level)
+-    
++
+     # 비교 시작
+     console.print(f"\n[bold blue]🔍 모델 비교[/bold blue]")
+     console.print(f"[dim]질문: {query}[/dim]")
+     console.print(f"[dim]모델: {', '.join([m.value for m in models])}[/dim]\n")
+-    
++
+     results = []
+-    
++
+     # 각 모델로 질의
+     import time
+     from concurrent.futures import ThreadPoolExecutor, as_completed
+-    
++
+     def query_model(model_enum):
+         """단일 모델에 질의"""
+         try:
+@@ -103,36 +103,41 @@ def compare(
+                 temperature=temperature,
+                 max_tokens=max_tokens,
+             )
+-            
++
+             start_time = time.time()
+             response_text = ""
+             usage = None
+-            
++
+             # 스트리밍 대신 일반 응답으로 받기 (비교를 위해)
+             response = llm.ask(query, stream=False)
+             response_text = response.text
+-            usage = response.usage if hasattr(response, 'usage') else None
+-            
++            usage = response.usage if hasattr(response, "usage") else None
++
+             elapsed_time = time.time() - start_time
+-            
++
+             # 비용 계산
+             cost_info = None
+             if show_cost and usage:
+                 try:
+                     from pyhub.llm.utils.pricing import calculate_cost
++
+                     cost_info = calculate_cost(model_enum.value, usage.input, usage.output)
+                 except:
+                     pass
+-            
++
+             return {
+                 "model": model_enum.value,
+                 "response": response_text,
+                 "time": elapsed_time,
+-                "usage": {
+-                    "input": usage.input if usage else 0,
+-                    "output": usage.output if usage else 0,
+-                    "total": usage.total if usage else 0,
+-                } if usage else None,
++                "usage": (
++                    {
++                        "input": usage.input if usage else 0,
++                        "output": usage.output if usage else 0,
++                        "total": usage.total if usage else 0,
++                    }
++                    if usage
++                    else None
++                ),
+                 "cost": cost_info,
+                 "success": True,
+                 "error": None,
+@@ -147,12 +152,12 @@ def compare(
+                 "success": False,
+                 "error": str(e),
+             }
+-    
++
+     # 병렬 처리
+     with console.status("[bold green]모델들에게 질의 중...") as status:
+         with ThreadPoolExecutor(max_workers=len(models)) as executor:
+             future_to_model = {executor.submit(query_model, model): model for model in models}
+-            
++
+             for future in as_completed(future_to_model):
+                 result = future.result()
+                 results.append(result)
+@@ -160,10 +165,10 @@ def compare(
+                     status.update(f"[bold green]✓ {result['model']} 완료[/bold green]")
+                 else:
+                     status.update(f"[bold red]✗ {result['model']} 실패[/bold red]")
+-    
++
+     # 모델 순서대로 정렬
+     results = sorted(results, key=lambda x: [m.value for m in models].index(x["model"]))
+-    
++
+     # 결과 출력
+     if output_format == "side-by-side":
+         # 나란히 표시
+@@ -177,11 +182,11 @@ def compare(
+                     content += f"\n[dim]비용: ${result['cost']['total_cost']:.6f}[/dim]"
+             else:
+                 content = f"[red]오류: {result['error']}[/red]"
+-            
++
+             panels.append(Panel(content, title=result["model"], expand=True))
+-        
++
+         console.print(Columns(panels, equal=True))
+-    
++
+     elif output_format == "sequential":
+         # 순차적 표시
+         for result in results:
+@@ -194,7 +199,7 @@ def compare(
+                     console.print(f"[dim]비용: ${result['cost']['total_cost']:.6f}[/dim]")
+             else:
+                 console.print(f"[red]오류: {result['error']}[/red]")
+-    
++
+     elif output_format == "table":
+         # 테이블 형식
+         table = Table(title="모델 비교 결과")
+@@ -205,7 +210,7 @@ def compare(
+         if show_cost:
+             table.add_column("비용($)", style="magenta")
+         table.add_column("토큰", style="blue")
+-        
++
+         for result in results:
+             if result["success"]:
+                 response = result["response"][:100] + "..." if len(result["response"]) > 100 else result["response"]
+@@ -222,39 +227,45 @@ def compare(
+                 if show_cost:
+                     row.append("N/A")
+                 row.append("N/A")
+-            
++
+             table.add_row(*row)
+-        
++
+         console.print(table)
+-    
++
+     # 통계 요약
+     if show_time or show_cost:
+         console.print("\n[bold]통계 요약[/bold]")
+-        
++
+         if show_time:
+             times = [r["time"] for r in results if r["success"]]
+             if times:
+-                fastest = min(results, key=lambda x: x["time"] if x["success"] else float('inf'))
++                fastest = min(results, key=lambda x: x["time"] if x["success"] else float("inf"))
+                 console.print(f"가장 빠른 모델: [green]{fastest['model']}[/green] ({fastest['time']:.2f}초)")
+-        
++
+         if show_cost:
+             costs = [(r["model"], r["cost"]["total_cost"]) for r in results if r["success"] and r["cost"]]
+             if costs:
+                 cheapest = min(costs, key=lambda x: x[1])
+                 console.print(f"가장 저렴한 모델: [green]{cheapest[0]}[/green] (${cheapest[1]:.6f})")
+-    
++
+     # 결과 저장
+     if output_path:
+         try:
+             import json
++
+             with output_path.open("w", encoding="utf-8") as f:
+-                json.dump({
+-                    "query": query,
+-                    "system_prompt": system_prompt,
+-                    "temperature": temperature,
+-                    "max_tokens": max_tokens,
+-                    "results": results,
+-                }, f, ensure_ascii=False, indent=2)
++                json.dump(
++                    {
++                        "query": query,
++                        "system_prompt": system_prompt,
++                        "temperature": temperature,
++                        "max_tokens": max_tokens,
++                        "results": results,
++                    },
++                    f,
++                    ensure_ascii=False,
++                    indent=2,
++                )
+             console.print(f"\n[green]결과가 저장되었습니다: {output_path}[/green]")
+         except Exception as e:
+-            console.print(f"\n[red]결과 저장 실패: {e}[/red]")
+\ No newline at end of file
++            console.print(f"\n[red]결과 저장 실패: {e}[/red]")
+diff --git a/src/pyhub/llm/commands/describe.py b/src/pyhub/llm/commands/describe.py
+index 7f5faba..cf2da7e 100644
+--- a/src/pyhub/llm/commands/describe.py
++++ b/src/pyhub/llm/commands/describe.py
+@@ -9,7 +9,6 @@ from rich.console import Console
+ from rich.table import Table
+ 
+ from pyhub import init
+-from pyhub.config import DEFAULT_TOML_PATH, DEFAULT_ENV_PATH
+ from pyhub.llm import LLM
+ from pyhub.llm.types import LLMChatModelEnum
+ 
+@@ -32,10 +31,10 @@ def validate_image_file(image_path: Path) -> Path:
+ 
+ 
+ def describe(
+-    image_path: Path = typer.Argument(
+-        ...,
+-        help="설명을 요청할 이미지 파일 경로",
+-        callback=validate_image_file,  # 콜백 함수 추가
++    ctx: typer.Context,
++    image_paths: Optional[list[Path]] = typer.Argument(
++        None,
++        help="설명을 요청할 이미지 파일 경로 (여러 개 가능)",
+     ),
+     model: LLMChatModelEnum = typer.Option(
+         LLMChatModelEnum.GPT_4O_MINI,
+@@ -50,25 +49,56 @@ def describe(
+     ),
+     temperature: float = typer.Option(0.2, help="LLM 응답의 온도 설정 (0.0-2.0, 높을수록 다양한 응답)"),
+     max_tokens: int = typer.Option(1000, help="응답의 최대 토큰 수"),
+-    toml_path: Optional[Path] = typer.Option(
+-        DEFAULT_TOML_PATH,
+-        "--toml-file",
+-        help="toml 설정 파일 경로",
++    output_format: str = typer.Option(
++        "text",
++        "--format",
++        "-f",
++        help="출력 형식 (text, json, markdown)",
++    ),
++    output_path: Optional[Path] = typer.Option(
++        None,
++        "--output",
++        "-o",
++        help="결과를 저장할 파일 경로",
++    ),
++    batch_output_dir: Optional[Path] = typer.Option(
++        None,
++        "--batch-output-dir",
++        help="배치 처리 시 결과를 저장할 디렉토리",
+     ),
+-    env_path: Optional[Path] = typer.Option(
+-        DEFAULT_ENV_PATH,
+-        "--env-file",
+-        help="환경 변수 파일(.env) 경로",
++    show_stats: bool = typer.Option(
++        False,
++        "--stats",
++        help="토큰 사용량 통계 표시",
+     ),
+     is_verbose: bool = typer.Option(False, "--verbose", help="상세한 처리 정보 표시"),
+ ):
+     """LLM에게 이미지 설명을 요청합니다."""
+ 
++    # 이미지 경로가 제공되지 않은 경우 help 출력
++    if not image_paths:
++        console.print(ctx.get_help())
++        raise typer.Exit()
++
++    # 모든 이미지 파일 유효성 검사
++    valid_image_paths = []
++    for image_path in image_paths:
++        try:
++            valid_path = validate_image_file(image_path)
++            valid_image_paths.append(valid_path)
++        except typer.BadParameter as e:
++            console.print(f"[red]오류: {e}[/red]")
++            continue
++
++    if not valid_image_paths:
++        console.print("[red]처리할 수 있는 유효한 이미지 파일이 없습니다.[/red]")
++        raise typer.Exit(1)
++
+     if is_verbose:
+         log_level = logging.DEBUG
+     else:
+         log_level = logging.INFO
+-    init(debug=True, log_level=log_level, toml_path=toml_path, env_path=env_path)
++    init(debug=True, log_level=log_level)
+ 
+     # LLM 명령 시에 PyPDF2 라이브러리 의존성이 걸리지 않도록 임포트 위치 조정
+     from pyhub.parser.upstage.parser import ImageDescriptor
+@@ -76,6 +106,7 @@ def describe(
+     if prompt_type is None:
+         prompt_templates = ImageDescriptor.get_prompts("describe_image")
+     else:
++        toml_path = Path.home() / ".pyhub.toml"
+         if not toml_path.exists():
+             raise typer.BadParameter(f"{toml_path} 파일을 먼저 생성해주세요. (명령 예: pyhub toml --create)")
+ 
+@@ -89,30 +120,141 @@ def describe(
+     system_prompt = prompt_templates["system"]
+     query = prompt_templates["user"]
+ 
+-    if is_verbose:
+-        table = Table()
+-        table.add_column("설정", style="cyan")
+-        table.add_column("값", style="green")
+-        table.add_row("image_path", str(image_path.resolve()))
+-        table.add_row("model", model)
+-        table.add_row("temperature", str(temperature))
+-        table.add_row("max_tokens", str(max_tokens))
+-        table.add_row("system prompt", system_prompt)
+-        table.add_row("user prompt", query)
+-        table.add_row("toml_path", f"{toml_path.resolve()} ({"Found" if toml_path.exists() else "Not found"})")
+-        table.add_row("env_path", f"{env_path.resolve()} ({"Found" if env_path.exists() else "Not found"})")
+-        console.print(table)
+-
+-    with image_path.open("rb") as image_file:
+-        files = [File(file=image_file)]
+-
+-        llm = LLM.create(
+-            model=model,
+-            system_prompt=system_prompt,
+-            temperature=temperature,
+-            max_tokens=max_tokens,
+-        )
+-
+-        for chunk in llm.ask(query, files=files, stream=True):
+-            print(chunk.text, end="", flush=True)
+-        print()
++    # 배치 출력 디렉토리 생성
++    if batch_output_dir and len(valid_image_paths) > 1:
++        batch_output_dir.mkdir(parents=True, exist_ok=True)
++
++    # LLM 생성
++    llm = LLM.create(
++        model=model,
++        system_prompt=system_prompt,
++        temperature=temperature,
++        max_tokens=max_tokens,
++    )
++
++    # 전체 통계
++    total_usage = None
++    results = []
++
++    import time
++    from pyhub.llm.types import Usage
++
++    # 각 이미지 처리
++    for idx, image_path in enumerate(valid_image_paths, 1):
++        if len(valid_image_paths) > 1:
++            console.print(f"\n[bold blue]처리 중 ({idx}/{len(valid_image_paths)}): {image_path.name}[/bold blue]")
++
++        start_time = time.time()
++
++        try:
++            with image_path.open("rb") as image_file:
++                files = [File(file=image_file)]
++
++                # 응답 받기
++                response_text = ""
++                usage = None
++
++                for chunk in llm.ask(query, files=files, stream=True):
++                    response_text += chunk.text
++                    if hasattr(chunk, "usage") and chunk.usage:
++                        usage = chunk.usage
++
++                    # 단일 파일 처리 시에만 실시간 출력
++                    if len(valid_image_paths) == 1:
++                        console.print(chunk.text, end="")
++
++                elapsed_time = time.time() - start_time
++
++                # 결과 저장
++                result = {
++                    "image": str(image_path),
++                    "description": response_text,
++                    "model": model.value,
++                    "elapsed_time": elapsed_time,
++                }
++
++                if usage:
++                    result["usage"] = {
++                        "input_tokens": usage.input,
++                        "output_tokens": usage.output,
++                        "total_tokens": usage.total,
++                    }
++                    # 전체 통계 업데이트
++                    if total_usage is None:
++                        total_usage = Usage()
++                    total_usage += usage
++
++                results.append(result)
++
++                # 배치 출력 시 개별 파일 저장
++                if batch_output_dir and len(valid_image_paths) > 1:
++                    output_file = batch_output_dir / f"{image_path.stem}_description.{output_format}"
++                    save_result(output_file, result, output_format)
++                    if is_verbose:
++                        console.print(f"[dim]저장됨: {output_file}[/dim]")
++
++                # 배치 처리 시 간단한 결과 표시
++                if len(valid_image_paths) > 1:
++                    if output_format == "text":
++                        console.print(response_text[:200] + "..." if len(response_text) > 200 else response_text)
++                    else:
++                        console.print(f"[green]✓ 완료 ({elapsed_time:.2f}초)[/green]")
++
++        except Exception as e:
++            console.print(f"[red]오류 처리 중 {image_path}: {e}[/red]")
++            continue
++
++    # 단일 파일 처리 시 줄바꿈
++    if len(valid_image_paths) == 1:
++        console.print()
++
++    # 전체 결과 저장
++    if output_path:
++        if len(valid_image_paths) == 1:
++            save_result(output_path, results[0], output_format)
++        else:
++            # 배치 처리 결과는 항상 JSON으로 저장
++            save_result(output_path, results, "json")
++        console.print(f"[green]결과가 저장되었습니다: {output_path}[/green]")
++
++    # 통계 표시
++    if show_stats and total_usage:
++        stats_table = Table(title="전체 통계")
++        stats_table.add_column("항목", style="cyan")
++        stats_table.add_column("값", style="green")
++        stats_table.add_row("처리된 이미지", str(len(results)))
++        stats_table.add_row("총 입력 토큰", str(total_usage.input))
++        stats_table.add_row("총 출력 토큰", str(total_usage.output))
++        stats_table.add_row("총 토큰", str(total_usage.total))
++        console.print(stats_table)
++
++
++def save_result(output_path: Path, result: dict, format: str):
++    """결과를 지정된 형식으로 저장"""
++    import json
++
++    if format == "json":
++        with output_path.open("w", encoding="utf-8") as f:
++            json.dump(result, f, ensure_ascii=False, indent=2)
++    elif format == "markdown":
++        with output_path.open("w", encoding="utf-8") as f:
++            if isinstance(result, list):
++                # 배치 결과
++                for item in result:
++                    f.write(f"## {Path(item['image']).name}\n\n")
++                    f.write(f"{item['description']}\n\n")
++                    f.write("---\n\n")
++            else:
++                # 단일 결과
++                f.write(f"# {Path(result['image']).name}\n\n")
++                f.write(f"{result['description']}\n")
++    else:  # text
++        with output_path.open("w", encoding="utf-8") as f:
++            if isinstance(result, list):
++                # 배치 결과
++                for item in result:
++                    f.write(f"=== {Path(item['image']).name} ===\n\n")
++                    f.write(f"{item['description']}\n\n")
++            else:
++                # 단일 결과
++                f.write(result["description"])
+diff --git a/src/pyhub/llm/commands/embed.py b/src/pyhub/llm/commands/embed.py
+index 320e18f..3c75adb 100644
+--- a/src/pyhub/llm/commands/embed.py
++++ b/src/pyhub/llm/commands/embed.py
+@@ -7,15 +7,27 @@ from rich.console import Console
+ from rich.table import Table
+ 
+ from pyhub import init
+-from pyhub.config import DEFAULT_TOML_PATH, DEFAULT_ENV_PATH
+ from pyhub.llm import LLM
+ from pyhub.llm.json import json_dumps, json_loads, JSONDecodeError
+ from pyhub.llm.types import LLMEmbeddingModelEnum, Usage
+ 
+-app = typer.Typer(name="embed", help="LLM 임베딩 관련 명령")
++app = typer.Typer(
++    name="embed",
++    help="LLM 임베딩 관련 명령",
++    invoke_without_command=True,
++)
+ console = Console()
+ 
+ 
++@app.callback()
++def embed_callback(ctx: typer.Context):
++    """임베딩 관련 명령어를 제공합니다."""
++    if ctx.invoked_subcommand is None:
++        # 서브커맨드가 없으면 help 출력
++        console.print(ctx.get_help())
++        raise typer.Exit()
++
++
+ @app.command()
+ def fill_jsonl(
+     jsonl_path: Path = typer.Argument(..., help="소스 JSONL 파일 경로"),
+@@ -31,16 +43,6 @@ def fill_jsonl(
+         "-m",
+         help="임베딩 모델",
+     ),
+-    toml_path: Optional[Path] = typer.Option(
+-        DEFAULT_TOML_PATH,
+-        "--toml-file",
+-        help="toml 설정 파일 경로",
+-    ),
+-    env_path: Optional[Path] = typer.Option(
+-        DEFAULT_ENV_PATH,
+-        "--env-file",
+-        help="환경 변수 파일(.env) 경로",
+-    ),
+     is_force: bool = typer.Option(False, "--force", "-f", help="확인 없이 출력 폴더 삭제 후 재생성"),
+     is_verbose: bool = typer.Option(False, "--verbose", help="상세한 처리 정보 표시"),
+ ):
+@@ -62,7 +64,7 @@ def fill_jsonl(
+         log_level = logging.DEBUG
+     else:
+         log_level = logging.INFO
+-    init(debug=True, log_level=log_level, toml_path=toml_path, env_path=env_path)
++    init(debug=True, log_level=log_level)
+ 
+     llm = LLM.create(embedding_model)
+ 
+@@ -72,8 +74,6 @@ def fill_jsonl(
+         table.add_column("값", style="green")
+         table.add_row("임베딩된 jsonl 파일 생성 경로", str(jsonl_out_path))
+         table.add_row("임베딩 모델", f"{llm.embedding_model} ({llm.get_embed_size()})")
+-        table.add_row("toml 파일 경로", str(toml_path))
+-        table.add_row("환경변수 파일 경로", str(env_path))
+         console.print(table)
+ 
+     console.print(f"{jsonl_path} ...")
+@@ -118,3 +118,340 @@ def fill_jsonl(
+     except (IOError, JSONDecodeError) as e:
+         console.print(f"[red]파일 읽기 오류: {e}[/red]")
+         raise typer.Exit(1)
++
++
++@app.command()
++def text(
++    ctx: typer.Context,
++    query: Optional[str] = typer.Argument(None, help="임베딩할 텍스트"),
++    embedding_model: LLMEmbeddingModelEnum = typer.Option(
++        LLMEmbeddingModelEnum.TEXT_EMBEDDING_3_SMALL,
++        "--model",
++        "-m",
++        help="임베딩 모델",
++    ),
++    output_format: str = typer.Option(
++        "json",
++        "--format",
++        "-f",
++        help="출력 형식 (json, list, numpy)",
++    ),
++    is_verbose: bool = typer.Option(False, "--verbose", help="상세한 처리 정보 표시"),
++):
++    """텍스트를 임베딩하여 벡터를 출력합니다."""
++
++    # query가 없으면 help 출력
++    if query is None:
++        console.print(ctx.get_help())
++        raise typer.Exit()
++
++    if is_verbose:
++        log_level = logging.DEBUG
++    else:
++        log_level = logging.INFO
++    init(debug=True, log_level=log_level)
++
++    llm = LLM.create(embedding_model)
++
++    if is_verbose:
++        console.print(f"[dim]임베딩 모델: {llm.embedding_model} (차원: {llm.get_embed_size()})[/dim]")
++        console.print(f"[dim]입력 텍스트 길이: {len(query)} 문자[/dim]")
++
++    # 임베딩 생성
++    embedding_result = llm.embed(query)
++
++    # 출력 형식에 따라 처리
++    if output_format == "json":
++        output = {
++            "text": query,
++            "embedding": embedding_result.array,
++            "model": str(llm.embedding_model),
++            "dimensions": len(embedding_result.array),
++            "usage": (
++                {
++                    "input_tokens": embedding_result.usage.input,
++                    "total_tokens": embedding_result.usage.total,
++                }
++                if embedding_result.usage
++                else None
++            ),
++        }
++        console.print(json_dumps(output, indent=2))
++    elif output_format == "list":
++        console.print(embedding_result.array)
++    elif output_format == "numpy":
++        console.print(f"array({embedding_result.array})")
++    else:
++        console.print(f"[red]오류: 지원하지 않는 출력 형식입니다: {output_format}[/red]")
++        raise typer.Exit(1)
++
++
++@app.command()
++def similarity(
++    ctx: typer.Context,
++    text1: Optional[str] = typer.Argument(None, help="첫 번째 텍스트"),
++    text2: Optional[str] = typer.Argument(None, help="두 번째 텍스트"),
++    vector1_path: Optional[Path] = typer.Option(
++        None,
++        "--vector1",
++        help="첫 번째 벡터 파일 (JSON 형식)",
++    ),
++    vector2_path: Optional[Path] = typer.Option(
++        None,
++        "--vector2",
++        help="두 번째 벡터 파일 (JSON 형식)",
++    ),
++    embedding_model: LLMEmbeddingModelEnum = typer.Option(
++        LLMEmbeddingModelEnum.TEXT_EMBEDDING_3_SMALL,
++        "--model",
++        "-m",
++        help="임베딩 모델 (텍스트 입력 시)",
++    ),
++    metric: str = typer.Option(
++        "cosine",
++        "--metric",
++        help="유사도 측정 방식 (cosine, euclidean, dot)",
++    ),
++    is_verbose: bool = typer.Option(False, "--verbose", help="상세한 처리 정보 표시"),
++):
++    """두 텍스트 또는 벡터 간의 유사도를 계산합니다."""
++
++    # 입력 검증
++    if not any([text1, text2, vector1_path, vector2_path]):
++        console.print(ctx.get_help())
++        raise typer.Exit()
++
++    if (text1 or text2) and (vector1_path or vector2_path):
++        console.print("[red]오류: 텍스트와 벡터 파일을 동시에 지정할 수 없습니다.[/red]")
++        raise typer.Exit(1)
++
++    if (text1 and not text2) or (text2 and not text1):
++        console.print("[red]오류: 두 개의 텍스트를 모두 입력해주세요.[/red]")
++        raise typer.Exit(1)
++
++    if (vector1_path and not vector2_path) or (vector2_path and not vector1_path):
++        console.print("[red]오류: 두 개의 벡터 파일을 모두 지정해주세요.[/red]")
++        raise typer.Exit(1)
++
++    if is_verbose:
++        log_level = logging.DEBUG
++    else:
++        log_level = logging.INFO
++    init(debug=True, log_level=log_level)
++
++    # 벡터 준비
++    import numpy as np
++
++    if text1 and text2:
++        # 텍스트를 임베딩으로 변환
++        llm = LLM.create(embedding_model)
++        if is_verbose:
++            console.print(f"[dim]임베딩 모델: {llm.embedding_model}[/dim]")
++            console.print(f"[dim]텍스트 1 길이: {len(text1)} 문자[/dim]")
++            console.print(f"[dim]텍스트 2 길이: {len(text2)} 문자[/dim]")
++
++        embed1 = llm.embed(text1)
++        embed2 = llm.embed(text2)
++        vec1 = np.array(embed1.array)
++        vec2 = np.array(embed2.array)
++    else:
++        # 벡터 파일 로드
++        try:
++            import json
++
++            with vector1_path.open("r") as f:
++                data1 = json.load(f)
++                vec1 = np.array(data1.get("embedding", data1))
++
++            with vector2_path.open("r") as f:
++                data2 = json.load(f)
++                vec2 = np.array(data2.get("embedding", data2))
++
++        except Exception as e:
++            console.print(f"[red]벡터 파일 로드 오류: {e}[/red]")
++            raise typer.Exit(1)
++
++    # 유사도 계산
++    if metric == "cosine":
++        # 코사인 유사도
++        dot_product = np.dot(vec1, vec2)
++        norm1 = np.linalg.norm(vec1)
++        norm2 = np.linalg.norm(vec2)
++        similarity = dot_product / (norm1 * norm2)
++        distance = 1 - similarity
++    elif metric == "euclidean":
++        # 유클리디안 거리
++        distance = np.linalg.norm(vec1 - vec2)
++        # 유사도로 변환 (0~1 범위)
++        similarity = 1 / (1 + distance)
++    elif metric == "dot":
++        # 내적
++        similarity = np.dot(vec1, vec2)
++        distance = -similarity
++    else:
++        console.print(f"[red]오류: 지원하지 않는 측정 방식입니다: {metric}[/red]")
++        raise typer.Exit(1)
++
++    # 결과 출력
++    result_table = Table(title="유사도 계산 결과")
++    result_table.add_column("측정 방식", style="cyan")
++    result_table.add_column("유사도", style="green")
++    result_table.add_column("거리", style="yellow")
++    result_table.add_row(metric.capitalize(), f"{similarity:.6f}", f"{distance:.6f}")
++    console.print(result_table)
++
++    # 해석
++    if metric == "cosine":
++        if similarity > 0.9:
++            interpretation = "매우 유사함"
++        elif similarity > 0.7:
++            interpretation = "유사함"
++        elif similarity > 0.5:
++            interpretation = "어느 정도 유사함"
++        elif similarity > 0.3:
++            interpretation = "약간 유사함"
++        else:
++            interpretation = "유사하지 않음"
++        console.print(f"\n해석: [bold]{interpretation}[/bold]")
++        console.print("[dim]코사인 유사도: -1 (정반대) ~ 0 (무관) ~ 1 (동일)[/dim]")
++
++
++@app.command()
++def batch(
++    ctx: typer.Context,
++    input_file: Optional[Path] = typer.Argument(
++        None,
++        help="입력 파일 경로 (텍스트 파일, 한 줄에 하나씩)",
++    ),
++    output_path: Path = typer.Option(
++        Path("embeddings.jsonl"),
++        "--output",
++        "-o",
++        help="출력 파일 경로 (JSONL 형식)",
++    ),
++    embedding_model: LLMEmbeddingModelEnum = typer.Option(
++        LLMEmbeddingModelEnum.TEXT_EMBEDDING_3_SMALL,
++        "--model",
++        "-m",
++        help="임베딩 모델",
++    ),
++    batch_size: int = typer.Option(
++        100,
++        "--batch-size",
++        "-b",
++        help="배치 크기",
++    ),
++    is_force: bool = typer.Option(False, "--force", "-f", help="기존 파일 덮어쓰기"),
++    is_verbose: bool = typer.Option(False, "--verbose", help="상세한 처리 정보 표시"),
++):
++    """여러 텍스트를 일괄적으로 임베딩합니다."""
++
++    # 입력 파일 확인
++    if not input_file:
++        console.print(ctx.get_help())
++        raise typer.Exit()
++
++    if not input_file.exists():
++        console.print(f"[red]오류: 입력 파일이 존재하지 않습니다: {input_file}[/red]")
++        raise typer.Exit(1)
++
++    # 출력 파일 확인
++    if output_path.exists() and not is_force:
++        console.print(f"[red]오류: 출력 파일이 이미 존재합니다: {output_path}[/red]")
++        console.print("[dim]덮어쓰려면 --force 옵션을 사용하세요.[/dim]")
++        raise typer.Exit(1)
++
++    if is_verbose:
++        log_level = logging.DEBUG
++    else:
++        log_level = logging.INFO
++    init(debug=True, log_level=log_level)
++
++    # LLM 생성
++    llm = LLM.create(embedding_model)
++
++    if is_verbose:
++        console.print(f"[dim]임베딩 모델: {llm.embedding_model} (차원: {llm.get_embed_size()})[/dim]")
++        console.print(f"[dim]배치 크기: {batch_size}[/dim]")
++
++    # 텍스트 로드
++    try:
++        with input_file.open("r", encoding="utf-8") as f:
++            texts = [line.strip() for line in f if line.strip()]
++    except Exception as e:
++        console.print(f"[red]입력 파일 읽기 오류: {e}[/red]")
++        raise typer.Exit(1)
++
++    if not texts:
++        console.print("[yellow]경고: 입력 파일에 텍스트가 없습니다.[/yellow]")
++        raise typer.Exit()
++
++    console.print(f"[blue]총 {len(texts)}개의 텍스트를 처리합니다.[/blue]")
++
++    # 배치 처리
++    total_usage = Usage()
++    results = []
++
++    import time
++
++    start_time = time.time()
++
++    try:
++        with output_path.open("w", encoding="utf-8") as out_f:
++            for i in range(0, len(texts), batch_size):
++                batch = texts[i : i + batch_size]
++                batch_start = time.time()
++
++                # 배치 임베딩 (현재는 개별 처리, 추후 배치 API 지원 시 수정)
++                batch_results = []
++                batch_usage = Usage()
++
++                for text in batch:
++                    embed_result = llm.embed(text)
++                    batch_results.append(
++                        {
++                            "text": text,
++                            "embedding": embed_result.array,
++                            "model": str(llm.embedding_model),
++                        }
++                    )
++                    if embed_result.usage:
++                        batch_usage += embed_result.usage
++
++                # 결과 저장
++                for result in batch_results:
++                    out_f.write(json_dumps(result) + "\n")
++                    results.append(result)
++
++                total_usage += batch_usage
++                batch_time = time.time() - batch_start
++
++                # 진행 상황 표시
++                progress = min(i + batch_size, len(texts))
++                percentage = (progress / len(texts)) * 100
++                console.print(
++                    f"진행: {percentage:.1f}% ({progress}/{len(texts)}) - "
++                    f"배치 시간: {batch_time:.2f}초 - "
++                    f"총 토큰: {total_usage.input}",
++                    end="\r",
++                )
++
++        # 완료
++        total_time = time.time() - start_time
++        console.print()  # 줄바꿈
++        console.print(f"[green]✓ 임베딩 완료![/green]")
++
++        # 통계
++        stats_table = Table(title="처리 통계")
++        stats_table.add_column("항목", style="cyan")
++        stats_table.add_column("값", style="green")
++        stats_table.add_row("처리된 텍스트", str(len(texts)))
++        stats_table.add_row("총 입력 토큰", str(total_usage.input))
++        stats_table.add_row("처리 시간", f"{total_time:.2f}초")
++        stats_table.add_row("평균 처리 속도", f"{len(texts) / total_time:.1f} 텍스트/초")
++        stats_table.add_row("출력 파일", str(output_path))
++        console.print(stats_table)
++
++    except Exception as e:
++        console.print(f"\n[red]처리 중 오류 발생: {e}[/red]")
++        raise typer.Exit(1)
+diff --git a/src/pyhub/llm/openai.py b/src/pyhub/llm/openai.py
+index 9fec12e..78c60d2 100644
+--- a/src/pyhub/llm/openai.py
++++ b/src/pyhub/llm/openai.py
+@@ -244,6 +244,9 @@ class OpenAIMixin:
+             request_params,
+             cache_alias=self.cache_alias,
+         )
++        
++        # Add stream_options after cache key generation
++        request_params["stream_options"] = {"include_usage": True}
+ 
+         if cached_value is not None:
+             reply_list = cast(list[Reply], cached_value)
+@@ -297,6 +300,9 @@ class OpenAIMixin:
+             request_params,
+             cache_alias=self.cache_alias,
+         )
++        
++        # Add stream_options after cache key generation
++        request_params["stream_options"] = {"include_usage": True}
+ 
+         if cached_value is not None:
+             reply_list = cast(list[Reply], cached_value)
+diff --git a/src/pyhub/llm/types.py b/src/pyhub/llm/types.py
+index 5f61d79..0f3ced8 100644
+--- a/src/pyhub/llm/types.py
++++ b/src/pyhub/llm/types.py
+@@ -185,6 +185,11 @@ class Usage:
+     input: int = 0
+     output: int = 0
+ 
++    @property
++    def total(self) -> int:
++        """총 토큰 수 (input + output)"""
++        return self.input + self.output
++
+     def __add__(self, other):
+         if isinstance(other, Usage):
+             return Usage(input=self.input + other.input, output=self.output + other.output)
+diff --git a/src/pyhub/llm/utils/mixins.py b/src/pyhub/llm/utils/mixins.py
+index 208df8d..9aa3082 100644
+--- a/src/pyhub/llm/utils/mixins.py
++++ b/src/pyhub/llm/utils/mixins.py
+@@ -15,17 +15,17 @@ console = Console()
+ 
+ class RetryMixin:
+     """API 호출에 재시도 로직을 추가하는 믹스인"""
+-    
++
+     def __init__(self, *args, enable_retry: bool = True, retry_verbose: bool = False, **kwargs):
+         super().__init__(*args, **kwargs)
+         self.enable_retry = enable_retry
+         self.retry_verbose = retry_verbose
+-    
++
+     def _wrap_with_retry(self, func: Callable) -> Callable:
+         """함수에 재시도 로직을 래핑"""
+         if not self.enable_retry:
+             return func
+-        
++
+         @wraps(func)
+         def wrapper(*args, **kwargs):
+             try:
+@@ -44,21 +44,21 @@ class RetryMixin:
+                     @retry_api_call(verbose=self.retry_verbose)
+                     def retry_func():
+                         return func(*args, **kwargs)
+-                    
++
+                     return retry_func()
+-        
++
+         return wrapper
+-    
++
+     def ask(self, *args, **kwargs):
+         """ask 메서드에 재시도 로직 적용"""
+         original_ask = super().ask
+         wrapped_ask = self._wrap_with_retry(original_ask)
+         return wrapped_ask(*args, **kwargs)
+-    
++
+     def ask_async(self, *args, **kwargs):
+         """ask_async 메서드에 재시도 로직 적용"""
+         original_ask_async = super().ask_async
+-        
++
+         async def async_wrapper(*args, **kwargs):
+             try:
+                 return await original_ask_async(*args, **kwargs)
+@@ -73,16 +73,17 @@ class RetryMixin:
+                 except Exception:
+                     # 간단한 재시도 (비동기 데코레이터는 복잡하므로 간단히 구현)
+                     import asyncio
++
+                     for attempt in range(3):
+                         try:
+-                            await asyncio.sleep(2 ** attempt)
++                            await asyncio.sleep(2**attempt)
+                             return await original_ask_async(*args, **kwargs)
+                         except Exception as retry_e:
+                             if attempt == 2:
+                                 raise retry_e
+-        
++
+         return async_wrapper(*args, **kwargs)
+-    
++
+     def embed(self, *args, **kwargs):
+         """embed 메서드에 재시도 로직 적용"""
+         original_embed = super().embed
+@@ -92,10 +93,10 @@ class RetryMixin:
+ 
+ class ValidationMixin:
+     """입력 검증을 추가하는 믹스인"""
+-    
++
+     def __init__(self, *args, **kwargs):
+         super().__init__(*args, **kwargs)
+-        
++
+         # 모델별 토큰 제한 (대략적인 값)
+         self.model_token_limits = {
+             "gpt-4o": 128000,
+@@ -105,37 +106,33 @@ class ValidationMixin:
+             "gemini-1.5-pro": 1000000,
+             "gemini-1.5-flash": 1000000,
+         }
+-    
++
+     def _validate_token_limit(self, text: str, max_tokens: int = None) -> None:
+         """토큰 제한 검증"""
+         # 간단한 토큰 추정 (실제로는 tokenizer 사용해야 함)
+         estimated_tokens = len(text) // 4  # 대략 4글자당 1토큰
+-        
++
+         if max_tokens:
+             estimated_total = estimated_tokens + max_tokens
+         else:
+-            estimated_total = estimated_tokens + getattr(self, 'max_tokens', 1000)
+-        
+-        model = getattr(self, 'model', '')
++            estimated_total = estimated_tokens + getattr(self, "max_tokens", 1000)
++
++        model = getattr(self, "model", "")
+         limit = self.model_token_limits.get(model, 128000)
+-        
++
+         if estimated_total > limit:
+             console.print(
+-                f"[yellow]경고: 예상 토큰 수({estimated_total})가 "
+-                f"모델 제한({limit})에 근접합니다.[/yellow]"
++                f"[yellow]경고: 예상 토큰 수({estimated_total})가 " f"모델 제한({limit})에 근접합니다.[/yellow]"
+             )
+-    
++
+     def ask(self, query: str, *args, **kwargs):
+         """ask 메서드에 검증 추가"""
+-        self._validate_token_limit(query, kwargs.get('max_tokens'))
++        self._validate_token_limit(query, kwargs.get("max_tokens"))
+         return super().ask(query, *args, **kwargs)
+-    
++
+     def embed(self, text: str, *args, **kwargs):
+         """embed 메서드에 검증 추가"""
+         # 임베딩은 보통 8191 토큰 제한
+         if len(text) // 4 > 8191:
+-            console.print(
+-                f"[yellow]경고: 텍스트가 임베딩 토큰 제한(8191)을 "
+-                f"초과할 수 있습니다.[/yellow]"
+-            )
+-        return super().embed(text, *args, **kwargs)
+\ No newline at end of file
++            console.print(f"[yellow]경고: 텍스트가 임베딩 토큰 제한(8191)을 " f"초과할 수 있습니다.[/yellow]")
++        return super().embed(text, *args, **kwargs)
+diff --git a/src/pyhub/llm/utils/pricing.py b/src/pyhub/llm/utils/pricing.py
+index 154ece7..e4da2cb 100644
+--- a/src/pyhub/llm/utils/pricing.py
++++ b/src/pyhub/llm/utils/pricing.py
+@@ -9,25 +9,21 @@ PRICING = {
+     "chatgpt-4o-latest": {"input": 5.00, "output": 15.00},
+     "o1": {"input": 15.00, "output": 60.00},
+     "o1-mini": {"input": 3.00, "output": 12.00},
+-    
+     # Anthropic
+     "claude-3-opus-latest": {"input": 15.00, "output": 75.00},
+     "claude-3-5-sonnet-latest": {"input": 3.00, "output": 15.00},
+     "claude-3-5-sonnet-20241022": {"input": 3.00, "output": 15.00},
+     "claude-3-5-haiku-latest": {"input": 0.80, "output": 4.00},
+     "claude-3-5-haiku-20241022": {"input": 0.80, "output": 4.00},
+-    
+     # Google
+     "gemini-2.0-flash": {"input": 0.075, "output": 0.30},
+     "gemini-2.0-flash-lite": {"input": 0.015, "output": 0.06},
+     "gemini-1.5-flash": {"input": 0.075, "output": 0.30},
+     "gemini-1.5-flash-8b": {"input": 0.0375, "output": 0.15},
+     "gemini-1.5-pro": {"input": 1.25, "output": 5.00},
+-    
+     # Upstage
+     "solar-pro": {"input": 3.00, "output": 10.00},
+     "solar-mini": {"input": 0.30, "output": 0.90},
+-    
+     # Embedding models
+     "text-embedding-3-small": {"input": 0.020, "output": 0},
+     "text-embedding-3-large": {"input": 0.130, "output": 0},
+@@ -42,12 +38,12 @@ def calculate_cost(model: str, input_tokens: int, output_tokens: int) -> dict:
+         pricing = PRICING["gpt-4o-mini"]
+     else:
+         pricing = PRICING[model]
+-    
++
+     # 1M 토큰당 가격이므로 변환
+     input_cost = (input_tokens / 1_000_000) * pricing["input"]
+     output_cost = (output_tokens / 1_000_000) * pricing["output"]
+     total_cost = input_cost + output_cost
+-    
++
+     return {
+         "input_cost": input_cost,
+         "output_cost": output_cost,
+@@ -55,4 +51,4 @@ def calculate_cost(model: str, input_tokens: int, output_tokens: int) -> dict:
+         "model": model,
+         "input_tokens": input_tokens,
+         "output_tokens": output_tokens,
+-    }
+\ No newline at end of file
++    }
+diff --git a/src/pyhub/llm/utils/retry.py b/src/pyhub/llm/utils/retry.py
+index b55e362..b80fe42 100644
+--- a/src/pyhub/llm/utils/retry.py
++++ b/src/pyhub/llm/utils/retry.py
+@@ -12,6 +12,7 @@ console = Console()
+ 
+ class RetryError(Exception):
+     """재시도 실패 시 발생하는 예외"""
++
+     pass
+ 
+ 
+@@ -26,7 +27,7 @@ def exponential_backoff(
+     verbose: bool = False,
+ ):
+     """지수 백오프를 사용한 재시도 데코레이터
+-    
++
+     Args:
+         max_retries: 최대 재시도 횟수
+         initial_delay: 초기 대기 시간 (초)
+@@ -37,32 +38,33 @@ def exponential_backoff(
+         on_retry: 재시도 시 호출할 콜백 함수
+         verbose: 상세 로그 출력 여부
+     """
++
+     def decorator(func: Callable) -> Callable:
+         @wraps(func)
+         def wrapper(*args, **kwargs) -> Any:
+             last_exception = None
+-            
++
+             for attempt in range(max_retries + 1):
+                 try:
+                     return func(*args, **kwargs)
+                 except exceptions as e:
+                     last_exception = e
+-                    
++
+                     if attempt == max_retries:
+                         # 마지막 시도였으면 예외 발생
+                         raise RetryError(f"최대 재시도 횟수 {max_retries}회 초과") from e
+-                    
++
+                     # 대기 시간 계산
+-                    delay = min(initial_delay * (exponential_base ** attempt), max_delay)
+-                    
++                    delay = min(initial_delay * (exponential_base**attempt), max_delay)
++
+                     # 지터 추가
+                     if jitter:
+                         delay = delay * (0.5 + random.random())
+-                    
++
+                     # 재시도 콜백 호출
+                     if on_retry:
+                         on_retry(e, attempt + 1)
+-                    
++
+                     # 로그 출력
+                     if verbose:
+                         console.print(
+@@ -70,14 +72,15 @@ def exponential_backoff(
+                             f"{type(e).__name__}: {str(e)} "
+                             f"({delay:.1f}초 대기)[/yellow]"
+                         )
+-                    
++
+                     # 대기
+                     time.sleep(delay)
+-            
++
+             # 여기에 도달하면 안 됨
+             raise last_exception
+-        
++
+         return wrapper
++
+     return decorator
+ 
+ 
+@@ -89,7 +92,7 @@ def retry_with_fallback(
+     verbose: bool = False,
+ ) -> Any:
+     """기본 함수 실패 시 대체 함수를 시도하는 재시도 패턴
+-    
++
+     Args:
+         primary_func: 기본 함수
+         fallback_func: 대체 함수
+@@ -99,6 +102,7 @@ def retry_with_fallback(
+     """
+     # 기본 함수 시도
+     try:
++
+         @exponential_backoff(
+             max_retries=max_retries,
+             exceptions=exceptions,
+@@ -106,19 +110,20 @@ def retry_with_fallback(
+         )
+         def try_primary():
+             return primary_func()
+-        
++
+         return try_primary()
+-    
++
+     except (RetryError, *exceptions) as e:
+         if verbose:
+             console.print(f"[yellow]기본 함수 실패: {e}[/yellow]")
+-        
++
+         # 대체 함수가 있으면 시도
+         if fallback_func:
+             if verbose:
+                 console.print("[blue]대체 함수 시도 중...[/blue]")
+-            
++
+             try:
++
+                 @exponential_backoff(
+                     max_retries=max_retries,
+                     exceptions=exceptions,
+@@ -126,9 +131,9 @@ def retry_with_fallback(
+                 )
+                 def try_fallback():
+                     return fallback_func()
+-                
++
+                 return try_fallback()
+-            
++
+             except (RetryError, *exceptions) as fallback_e:
+                 if verbose:
+                     console.print(f"[red]대체 함수도 실패: {fallback_e}[/red]")
+@@ -145,12 +150,13 @@ def retry_api_call(
+     verbose: bool = False,
+ ):
+     """API 호출에 특화된 재시도 데코레이터
+-    
++
+     다음 에러들을 구분하여 처리:
+     - Rate limit 에러: 더 긴 대기 시간과 더 많은 재시도
+     - 네트워크 에러: 표준 재시도
+     - 인증 에러: 재시도하지 않음
+     """
++
+     def decorator(func: Callable) -> Callable:
+         @wraps(func)
+         def wrapper(*args, **kwargs) -> Any:
+@@ -181,99 +187,104 @@ def retry_api_call(
+                     "message": "서버 오류",
+                 },
+             ]
+-            
++
+             last_exception = None
+-            
++
+             for config in error_configs:
+                 try:
++
+                     @exponential_backoff(
+                         max_retries=config["max_retries"],
+                         initial_delay=config["initial_delay"],
+                         max_delay=config["max_delay"],
+                         exceptions=config["exceptions"],
+                         verbose=verbose,
+-                        on_retry=lambda e, attempt: console.print(
+-                            f"[yellow]{config['message']}: {e} "
+-                            f"(재시도 {attempt}/{config['max_retries']})[/yellow]"
+-                        ) if verbose else None,
++                        on_retry=lambda e, attempt: (
++                            console.print(
++                                f"[yellow]{config['message']}: {e} "
++                                f"(재시도 {attempt}/{config['max_retries']})[/yellow]"
++                            )
++                            if verbose
++                            else None
++                        ),
+                     )
+                     def try_call():
+                         return func(*args, **kwargs)
+-                    
++
+                     return try_call()
+-                
++
+                 except config["exceptions"] as e:
+                     last_exception = e
+                     continue
+                 except Exception as e:
+                     # 다른 예외는 바로 전파
+                     raise
+-            
++
+             # 모든 재시도 실패
+             if last_exception:
+                 raise last_exception
+             else:
+                 # 일반 호출 시도
+                 return func(*args, **kwargs)
+-        
++
+         return wrapper
++
+     return decorator
+ 
+ 
+ # 커스텀 예외 클래스들
+ class APIError(Exception):
+     """API 관련 기본 예외"""
++
+     pass
+ 
+ 
+ class RateLimitError(APIError):
+     """API 요청 제한 초과"""
++
+     pass
+ 
+ 
+ class NetworkError(APIError):
+     """네트워크 연결 오류"""
++
+     pass
+ 
+ 
+ class ServerError(APIError):
+     """서버 오류 (5xx)"""
++
+     pass
+ 
+ 
+ class AuthenticationError(APIError):
+     """인증 오류 (재시도하면 안 됨)"""
++
+     pass
+ 
+ 
+ def handle_api_error(e: Exception) -> None:
+     """API 에러를 적절한 예외 타입으로 변환"""
+     error_message = str(e).lower()
+-    
++
+     # Rate limit 에러 패턴
+-    if any(pattern in error_message for pattern in [
+-        "rate limit", "too many requests", "429", "quota exceeded"
+-    ]):
++    if any(pattern in error_message for pattern in ["rate limit", "too many requests", "429", "quota exceeded"]):
+         raise RateLimitError(str(e)) from e
+-    
++
+     # 네트워크 에러 패턴
+-    elif any(pattern in error_message for pattern in [
+-        "connection", "timeout", "network", "dns", "refused"
+-    ]):
++    elif any(pattern in error_message for pattern in ["connection", "timeout", "network", "dns", "refused"]):
+         raise NetworkError(str(e)) from e
+-    
++
+     # 서버 에러 패턴
+-    elif any(pattern in error_message for pattern in [
+-        "500", "502", "503", "504", "server error", "internal error"
+-    ]):
++    elif any(pattern in error_message for pattern in ["500", "502", "503", "504", "server error", "internal error"]):
+         raise ServerError(str(e)) from e
+-    
++
+     # 인증 에러 패턴
+-    elif any(pattern in error_message for pattern in [
+-        "401", "403", "unauthorized", "forbidden", "api key", "authentication"
+-    ]):
++    elif any(
++        pattern in error_message for pattern in ["401", "403", "unauthorized", "forbidden", "api key", "authentication"]
++    ):
+         raise AuthenticationError(str(e)) from e
+-    
++
+     # 기타 에러는 그대로 전파
+     else:
+-        raise
+\ No newline at end of file
++        raise
+diff --git a/src/pyhub/llm/commands/chat.py b/src/pyhub/llm/commands/chat.py
+new file mode 100644
+index 0000000..de1ba1b
+--- /dev/null
++++ b/src/pyhub/llm/commands/chat.py
+@@ -0,0 +1,237 @@
++import logging
++from pathlib import Path
++from typing import Optional
++
++import typer
++from rich.console import Console
++from rich.prompt import Prompt
++from rich.table import Table
++from rich.markdown import Markdown
++from rich.syntax import Syntax
++
++from pyhub import init
++from pyhub.llm import LLM
++from pyhub.llm.types import LLMChatModelEnum
++
++console = Console()
++
++
++def chat(
++    model: LLMChatModelEnum = typer.Option(
++        LLMChatModelEnum.GPT_4O_MINI,
++        "--model",
++        "-m",
++        help="LLM Chat 모델",
++    ),
++    system_prompt: str = typer.Option(
++        None,
++        "--system-prompt",
++        "-s",
++        help="시스템 프롬프트",
++    ),
++    temperature: float = typer.Option(
++        0.7,
++        "--temperature",
++        "-t",
++        help="응답 온도 (0.0-2.0)",
++    ),
++    max_tokens: int = typer.Option(
++        2000,
++        "--max-tokens",
++        help="최대 토큰 수",
++    ),
++    history_path: Optional[Path] = typer.Option(
++        None,
++        "--history",
++        help="대화 히스토리 저장 경로",
++    ),
++    show_cost: bool = typer.Option(
++        False,
++        "--cost",
++        help="각 응답의 비용 표시",
++    ),
++    markdown_mode: bool = typer.Option(
++        True,
++        "--markdown/--no-markdown",
++        help="마크다운 렌더링 사용",
++    ),
++    is_verbose: bool = typer.Option(False, "--verbose", help="상세 정보 표시"),
++):
++    """대화형 LLM 세션을 시작합니다."""
++    
++    if is_verbose:
++        log_level = logging.DEBUG
++    else:
++        log_level = logging.INFO
++    init(debug=True, log_level=log_level)
++    
++    # 세션 정보 표시
++    console.print("\n[bold blue]💬 LLM Chat Session[/bold blue]")
++    console.print(f"[dim]모델: {model.value} | 온도: {temperature} | 최대 토큰: {max_tokens}[/dim]")
++    if system_prompt:
++        console.print(f"[dim]시스템 프롬프트: {system_prompt[:50]}...[/dim]" if len(system_prompt) > 50 else f"[dim]시스템 프롬프트: {system_prompt}[/dim]")
++    console.print("[dim]종료하려면 'exit', 'quit', Ctrl+C 또는 Ctrl+D를 입력하세요.[/dim]")
++    console.print("[dim]대화를 초기화하려면 'clear'를 입력하세요.[/dim]")
++    console.print("[dim]현재 설정을 보려면 'settings'를 입력하세요.[/dim]")
++    console.print()
++    
++    # 초기 시스템 프롬프트 저장
++    base_system_prompt = system_prompt or ""
++    
++    # 대화 히스토리
++    messages = []
++    if history_path and history_path.exists():
++        try:
++            import json
++            with history_path.open("r", encoding="utf-8") as f:
++                messages = json.load(f)
++                console.print(f"[green]히스토리 로드: {len(messages)} 메시지[/green]\n")
++        except Exception as e:
++            console.print(f"[yellow]히스토리 로드 실패: {e}[/yellow]\n")
++    
++    # 총 사용량 추적
++    from pyhub.llm.types import Usage
++    total_usage = Usage()
++    turn_count = 0
++    
++    # 대화 루프
++    while True:
++        try:
++            # 사용자 입력
++            try:
++                user_input = Prompt.ask("\n[bold cyan]You[/bold cyan]")
++            except EOFError:
++                # Ctrl-D 처리
++                console.print("\n[yellow]대화를 종료합니다...[/yellow]")
++                break
++            
++            # 특수 명령 처리
++            if user_input.lower() in ["exit", "quit", "bye"]:
++                break
++            elif user_input.lower() == "clear":
++                messages = []
++                total_usage = Usage()
++                turn_count = 0
++                console.print("[yellow]대화가 초기화되었습니다.[/yellow]")
++                continue
++            elif user_input.lower() == "settings":
++                settings_table = Table(title="현재 설정")
++                settings_table.add_column("항목", style="cyan")
++                settings_table.add_column("값", style="green")
++                settings_table.add_row("모델", model.value)
++                settings_table.add_row("온도", str(temperature))
++                settings_table.add_row("최대 토큰", str(max_tokens))
++                settings_table.add_row("시스템 프롬프트", system_prompt or "(없음)")
++                settings_table.add_row("대화 턴", str(turn_count))
++                settings_table.add_row("총 입력 토큰", str(total_usage.input))
++                settings_table.add_row("총 출력 토큰", str(total_usage.output))
++                console.print(settings_table)
++                continue
++            
++            # AI 응답
++            console.print("\n[bold green]AI[/bold green]: ", end="")
++            
++            response_text = ""
++            usage = None
++            
++            # 대화 컨텍스트를 시스템 프롬프트에 포함
++            conversation_context = ""
++            if messages:
++                conversation_context = "\n\n대화 히스토리:\n"
++                for msg in messages[-10:]:  # 최근 10개 메시지만 포함
++                    role = "Human" if msg["role"] == "user" else "AI"
++                    conversation_context += f"{role}: {msg['content']}\n"
++            
++            # LLM 재생성 with 대화 컨텍스트
++            current_system_prompt = base_system_prompt
++            if conversation_context:
++                current_system_prompt = base_system_prompt + conversation_context
++            
++            llm = LLM.create(
++                model=model,
++                system_prompt=current_system_prompt,
++                temperature=temperature,
++                max_tokens=max_tokens,
++            )
++            
++            # 스트리밍 응답
++            for chunk in llm.ask(user_input, stream=True):
++                if markdown_mode and "\n" in chunk.text:
++                    # 마크다운 모드에서는 전체 응답을 모아서 렌더링
++                    response_text += chunk.text
++                else:
++                    console.print(chunk.text, end="")
++                    response_text += chunk.text
++                
++                if hasattr(chunk, 'usage') and chunk.usage:
++                    usage = chunk.usage
++            
++            # 마크다운 렌더링
++            if markdown_mode and response_text:
++                console.print()  # 줄바꿈
++                console.print(Markdown(response_text))
++            else:
++                console.print()  # 줄바꿈
++            
++            # 메시지 히스토리 업데이트
++            messages.append({"role": "user", "content": user_input})
++            messages.append({"role": "assistant", "content": response_text})
++            turn_count += 1
++            
++            # 사용량 업데이트
++            if usage:
++                total_usage += usage
++                
++                # 비용 표시
++                if show_cost:
++                    try:
++                        from pyhub.llm.utils.pricing import calculate_cost
++                        cost = calculate_cost(model.value, usage.input, usage.output)
++                        console.print(
++                            f"[dim]토큰: 입력 {usage.input}, 출력 {usage.output} | "
++                            f"비용: ${cost['total_cost']:.6f} (₩{cost['total_cost'] * 1300:.0f})[/dim]"
++                        )
++                    except:
++                        pass
++            
++            # 히스토리 저장
++            if history_path:
++                try:
++                    import json
++                    history_path.parent.mkdir(parents=True, exist_ok=True)
++                    with history_path.open("w", encoding="utf-8") as f:
++                        json.dump(messages, f, ensure_ascii=False, indent=2)
++                except Exception as e:
++                    if is_verbose:
++                        console.print(f"[yellow]히스토리 저장 실패: {e}[/yellow]")
++        
++        except KeyboardInterrupt:
++            console.print("\n[yellow]대화를 종료합니다...[/yellow]")
++            break
++        except Exception as e:
++            console.print(f"\n[red]오류: {e}[/red]")
++            if is_verbose:
++                console.print_exception()
++    
++    # 세션 종료
++    console.print(f"\n[bold blue]세션 종료[/bold blue]")
++    if turn_count > 0:
++        stats_table = Table(title="세션 통계")
++        stats_table.add_column("항목", style="cyan")
++        stats_table.add_column("값", style="green")
++        stats_table.add_row("대화 턴", str(turn_count))
++        stats_table.add_row("총 입력 토큰", str(total_usage.input))
++        stats_table.add_row("총 출력 토큰", str(total_usage.output))
++        
++        if show_cost:
++            try:
++                from pyhub.llm.utils.pricing import calculate_cost
++                total_cost = calculate_cost(model.value, total_usage.input, total_usage.output)
++                stats_table.add_row("총 비용", f"${total_cost['total_cost']:.4f}")
++                stats_table.add_row("원화 환산", f"₩{total_cost['total_cost'] * 1300:.0f}")
++            except:
++                pass
++        
++        console.print(stats_table)
++    
++    console.print("\n👋 안녕히 가세요!")
+diff --git a/src/pyhub/llm/commands/compare.py b/src/pyhub/llm/commands/compare.py
+new file mode 100644
+index 0000000..eba00b7
+--- /dev/null
++++ b/src/pyhub/llm/commands/compare.py
+@@ -0,0 +1,260 @@
++import logging
++from pathlib import Path
++from typing import Optional
++
++import typer
++from rich.console import Console
++from rich.table import Table
++from rich.columns import Columns
++from rich.panel import Panel
++
++from pyhub import init
++from pyhub.llm import LLM
++from pyhub.llm.types import LLMChatModelEnum
++
++console = Console()
++
++
++def compare(
++    ctx: typer.Context,
++    query: Optional[str] = typer.Argument(None, help="비교할 질문"),
++    models: list[LLMChatModelEnum] = typer.Option(
++        [LLMChatModelEnum.GPT_4O_MINI, LLMChatModelEnum.CLAUDE_HAIKU_3_5_LATEST],
++        "--model",
++        "-m",
++        help="비교할 모델들 (여러 개 지정 가능)",
++    ),
++    system_prompt: str = typer.Option(
++        None,
++        "--system-prompt",
++        "-s",
++        help="시스템 프롬프트",
++    ),
++    temperature: float = typer.Option(
++        0.7,
++        "--temperature",
++        "-t",
++        help="응답 온도",
++    ),
++    max_tokens: int = typer.Option(
++        1000,
++        "--max-tokens",
++        help="최대 토큰 수",
++    ),
++    output_format: str = typer.Option(
++        "side-by-side",
++        "--format",
++        "-f",
++        help="출력 형식 (side-by-side, sequential, table)",
++    ),
++    output_path: Optional[Path] = typer.Option(
++        None,
++        "--output",
++        "-o",
++        help="결과 저장 경로 (JSON)",
++    ),
++    show_cost: bool = typer.Option(
++        True,
++        "--cost/--no-cost",
++        help="비용 비교 표시",
++    ),
++    show_time: bool = typer.Option(
++        True,
++        "--time/--no-time",
++        help="응답 시간 비교 표시",
++    ),
++    is_verbose: bool = typer.Option(False, "--verbose", help="상세 정보 표시"),
++):
++    """여러 LLM 모델의 응답을 비교합니다."""
++    
++    # query가 없으면 help 출력
++    if not query:
++        console.print(ctx.get_help())
++        raise typer.Exit()
++    
++    if len(models) < 2:
++        console.print("[red]오류: 최소 2개 이상의 모델을 지정해야 합니다.[/red]")
++        console.print("[dim]예: pyhub.llm compare \"질문\" -m gpt-4o-mini -m claude-3-5-haiku-latest[/dim]")
++        raise typer.Exit(1)
++    
++    if is_verbose:
++        log_level = logging.DEBUG
++    else:
++        log_level = logging.INFO
++    init(debug=True, log_level=log_level)
++    
++    # 비교 시작
++    console.print(f"\n[bold blue]🔍 모델 비교[/bold blue]")
++    console.print(f"[dim]질문: {query}[/dim]")
++    console.print(f"[dim]모델: {', '.join([m.value for m in models])}[/dim]\n")
++    
++    results = []
++    
++    # 각 모델로 질의
++    import time
++    from concurrent.futures import ThreadPoolExecutor, as_completed
++    
++    def query_model(model_enum):
++        """단일 모델에 질의"""
++        try:
++            llm = LLM.create(
++                model=model_enum,
++                system_prompt=system_prompt,
++                temperature=temperature,
++                max_tokens=max_tokens,
++            )
++            
++            start_time = time.time()
++            response_text = ""
++            usage = None
++            
++            # 스트리밍 대신 일반 응답으로 받기 (비교를 위해)
++            response = llm.ask(query, stream=False)
++            response_text = response.text
++            usage = response.usage if hasattr(response, 'usage') else None
++            
++            elapsed_time = time.time() - start_time
++            
++            # 비용 계산
++            cost_info = None
++            if show_cost and usage:
++                try:
++                    from pyhub.llm.utils.pricing import calculate_cost
++                    cost_info = calculate_cost(model_enum.value, usage.input, usage.output)
++                except:
++                    pass
++            
++            return {
++                "model": model_enum.value,
++                "response": response_text,
++                "time": elapsed_time,
++                "usage": {
++                    "input": usage.input if usage else 0,
++                    "output": usage.output if usage else 0,
++                    "total": usage.total if usage else 0,
++                } if usage else None,
++                "cost": cost_info,
++                "success": True,
++                "error": None,
++            }
++        except Exception as e:
++            return {
++                "model": model_enum.value,
++                "response": None,
++                "time": 0,
++                "usage": None,
++                "cost": None,
++                "success": False,
++                "error": str(e),
++            }
++    
++    # 병렬 처리
++    with console.status("[bold green]모델들에게 질의 중...") as status:
++        with ThreadPoolExecutor(max_workers=len(models)) as executor:
++            future_to_model = {executor.submit(query_model, model): model for model in models}
++            
++            for future in as_completed(future_to_model):
++                result = future.result()
++                results.append(result)
++                if result["success"]:
++                    status.update(f"[bold green]✓ {result['model']} 완료[/bold green]")
++                else:
++                    status.update(f"[bold red]✗ {result['model']} 실패[/bold red]")
++    
++    # 모델 순서대로 정렬
++    results = sorted(results, key=lambda x: [m.value for m in models].index(x["model"]))
++    
++    # 결과 출력
++    if output_format == "side-by-side":
++        # 나란히 표시
++        panels = []
++        for result in results:
++            if result["success"]:
++                content = result["response"]
++                if show_time:
++                    content += f"\n\n[dim]응답 시간: {result['time']:.2f}초[/dim]"
++                if show_cost and result["cost"]:
++                    content += f"\n[dim]비용: ${result['cost']['total_cost']:.6f}[/dim]"
++            else:
++                content = f"[red]오류: {result['error']}[/red]"
++            
++            panels.append(Panel(content, title=result["model"], expand=True))
++        
++        console.print(Columns(panels, equal=True))
++    
++    elif output_format == "sequential":
++        # 순차적 표시
++        for result in results:
++            console.print(f"\n[bold blue]━━━ {result['model']} ━━━[/bold blue]")
++            if result["success"]:
++                console.print(result["response"])
++                if show_time:
++                    console.print(f"\n[dim]응답 시간: {result['time']:.2f}초[/dim]")
++                if show_cost and result["cost"]:
++                    console.print(f"[dim]비용: ${result['cost']['total_cost']:.6f}[/dim]")
++            else:
++                console.print(f"[red]오류: {result['error']}[/red]")
++    
++    elif output_format == "table":
++        # 테이블 형식
++        table = Table(title="모델 비교 결과")
++        table.add_column("모델", style="cyan")
++        table.add_column("응답", style="green", overflow="fold")
++        if show_time:
++            table.add_column("시간(초)", style="yellow")
++        if show_cost:
++            table.add_column("비용($)", style="magenta")
++        table.add_column("토큰", style="blue")
++        
++        for result in results:
++            if result["success"]:
++                response = result["response"][:100] + "..." if len(result["response"]) > 100 else result["response"]
++                row = [result["model"], response]
++                if show_time:
++                    row.append(f"{result['time']:.2f}")
++                if show_cost:
++                    row.append(f"{result['cost']['total_cost']:.6f}" if result["cost"] else "N/A")
++                row.append(f"{result['usage']['total']}" if result["usage"] else "N/A")
++            else:
++                row = [result["model"], f"[red]오류: {result['error']}[/red]"]
++                if show_time:
++                    row.append("N/A")
++                if show_cost:
++                    row.append("N/A")
++                row.append("N/A")
++            
++            table.add_row(*row)
++        
++        console.print(table)
++    
++    # 통계 요약
++    if show_time or show_cost:
++        console.print("\n[bold]통계 요약[/bold]")
++        
++        if show_time:
++            times = [r["time"] for r in results if r["success"]]
++            if times:
++                fastest = min(results, key=lambda x: x["time"] if x["success"] else float('inf'))
++                console.print(f"가장 빠른 모델: [green]{fastest['model']}[/green] ({fastest['time']:.2f}초)")
++        
++        if show_cost:
++            costs = [(r["model"], r["cost"]["total_cost"]) for r in results if r["success"] and r["cost"]]
++            if costs:
++                cheapest = min(costs, key=lambda x: x[1])
++                console.print(f"가장 저렴한 모델: [green]{cheapest[0]}[/green] (${cheapest[1]:.6f})")
++    
++    # 결과 저장
++    if output_path:
++        try:
++            import json
++            with output_path.open("w", encoding="utf-8") as f:
++                json.dump({
++                    "query": query,
++                    "system_prompt": system_prompt,
++                    "temperature": temperature,
++                    "max_tokens": max_tokens,
++                    "results": results,
++                }, f, ensure_ascii=False, indent=2)
++            console.print(f"\n[green]결과가 저장되었습니다: {output_path}[/green]")
++        except Exception as e:
++            console.print(f"\n[red]결과 저장 실패: {e}[/red]")
+\ No newline at end of file
+diff --git a/src/pyhub/llm/utils/mixins.py b/src/pyhub/llm/utils/mixins.py
+new file mode 100644
+index 0000000..208df8d
+--- /dev/null
++++ b/src/pyhub/llm/utils/mixins.py
+@@ -0,0 +1,141 @@
++"""LLM 관련 믹스인 클래스들"""
++
++from typing import Any, Callable
++from functools import wraps
++
++from .retry import (
++    retry_api_call,
++    handle_api_error,
++    AuthenticationError,
++)
++from rich.console import Console
++
++console = Console()
++
++
++class RetryMixin:
++    """API 호출에 재시도 로직을 추가하는 믹스인"""
++    
++    def __init__(self, *args, enable_retry: bool = True, retry_verbose: bool = False, **kwargs):
++        super().__init__(*args, **kwargs)
++        self.enable_retry = enable_retry
++        self.retry_verbose = retry_verbose
++    
++    def _wrap_with_retry(self, func: Callable) -> Callable:
++        """함수에 재시도 로직을 래핑"""
++        if not self.enable_retry:
++            return func
++        
++        @wraps(func)
++        def wrapper(*args, **kwargs):
++            try:
++                return func(*args, **kwargs)
++            except Exception as e:
++                # API 에러를 적절한 타입으로 변환
++                try:
++                    handle_api_error(e)
++                except AuthenticationError:
++                    # 인증 에러는 재시도하지 않음
++                    console.print(f"[red]인증 오류: {e}[/red]")
++                    console.print("[yellow]API 키를 확인해주세요.[/yellow]")
++                    raise
++                except Exception as converted_e:
++                    # 변환된 에러로 재시도
++                    @retry_api_call(verbose=self.retry_verbose)
++                    def retry_func():
++                        return func(*args, **kwargs)
++                    
++                    return retry_func()
++        
++        return wrapper
++    
++    def ask(self, *args, **kwargs):
++        """ask 메서드에 재시도 로직 적용"""
++        original_ask = super().ask
++        wrapped_ask = self._wrap_with_retry(original_ask)
++        return wrapped_ask(*args, **kwargs)
++    
++    def ask_async(self, *args, **kwargs):
++        """ask_async 메서드에 재시도 로직 적용"""
++        original_ask_async = super().ask_async
++        
++        async def async_wrapper(*args, **kwargs):
++            try:
++                return await original_ask_async(*args, **kwargs)
++            except Exception as e:
++                # 비동기 버전도 동일하게 처리
++                try:
++                    handle_api_error(e)
++                except AuthenticationError:
++                    console.print(f"[red]인증 오류: {e}[/red]")
++                    console.print("[yellow]API 키를 확인해주세요.[/yellow]")
++                    raise
++                except Exception:
++                    # 간단한 재시도 (비동기 데코레이터는 복잡하므로 간단히 구현)
++                    import asyncio
++                    for attempt in range(3):
++                        try:
++                            await asyncio.sleep(2 ** attempt)
++                            return await original_ask_async(*args, **kwargs)
++                        except Exception as retry_e:
++                            if attempt == 2:
++                                raise retry_e
++        
++        return async_wrapper(*args, **kwargs)
++    
++    def embed(self, *args, **kwargs):
++        """embed 메서드에 재시도 로직 적용"""
++        original_embed = super().embed
++        wrapped_embed = self._wrap_with_retry(original_embed)
++        return wrapped_embed(*args, **kwargs)
++
++
++class ValidationMixin:
++    """입력 검증을 추가하는 믹스인"""
++    
++    def __init__(self, *args, **kwargs):
++        super().__init__(*args, **kwargs)
++        
++        # 모델별 토큰 제한 (대략적인 값)
++        self.model_token_limits = {
++            "gpt-4o": 128000,
++            "gpt-4o-mini": 128000,
++            "claude-3-5-sonnet-latest": 200000,
++            "claude-3-5-haiku-latest": 200000,
++            "gemini-1.5-pro": 1000000,
++            "gemini-1.5-flash": 1000000,
++        }
++    
++    def _validate_token_limit(self, text: str, max_tokens: int = None) -> None:
++        """토큰 제한 검증"""
++        # 간단한 토큰 추정 (실제로는 tokenizer 사용해야 함)
++        estimated_tokens = len(text) // 4  # 대략 4글자당 1토큰
++        
++        if max_tokens:
++            estimated_total = estimated_tokens + max_tokens
++        else:
++            estimated_total = estimated_tokens + getattr(self, 'max_tokens', 1000)
++        
++        model = getattr(self, 'model', '')
++        limit = self.model_token_limits.get(model, 128000)
++        
++        if estimated_total > limit:
++            console.print(
++                f"[yellow]경고: 예상 토큰 수({estimated_total})가 "
++                f"모델 제한({limit})에 근접합니다.[/yellow]"
++            )
++    
++    def ask(self, query: str, *args, **kwargs):
++        """ask 메서드에 검증 추가"""
++        self._validate_token_limit(query, kwargs.get('max_tokens'))
++        return super().ask(query, *args, **kwargs)
++    
++    def embed(self, text: str, *args, **kwargs):
++        """embed 메서드에 검증 추가"""
++        # 임베딩은 보통 8191 토큰 제한
++        if len(text) // 4 > 8191:
++            console.print(
++                f"[yellow]경고: 텍스트가 임베딩 토큰 제한(8191)을 "
++                f"초과할 수 있습니다.[/yellow]"
++            )
++        return super().embed(text, *args, **kwargs)
+\ No newline at end of file
+diff --git a/src/pyhub/llm/utils/pricing.py b/src/pyhub/llm/utils/pricing.py
+new file mode 100644
+index 0000000..154ece7
+--- /dev/null
++++ b/src/pyhub/llm/utils/pricing.py
+@@ -0,0 +1,58 @@
++"""LLM 모델별 가격 정보 및 비용 계산 유틸리티"""
++
++# 모델별 가격 정보 (USD per 1M tokens)
++# 2024년 기준
++PRICING = {
++    # OpenAI
++    "gpt-4o": {"input": 2.50, "output": 10.00},
++    "gpt-4o-mini": {"input": 0.150, "output": 0.600},
++    "chatgpt-4o-latest": {"input": 5.00, "output": 15.00},
++    "o1": {"input": 15.00, "output": 60.00},
++    "o1-mini": {"input": 3.00, "output": 12.00},
++    
++    # Anthropic
++    "claude-3-opus-latest": {"input": 15.00, "output": 75.00},
++    "claude-3-5-sonnet-latest": {"input": 3.00, "output": 15.00},
++    "claude-3-5-sonnet-20241022": {"input": 3.00, "output": 15.00},
++    "claude-3-5-haiku-latest": {"input": 0.80, "output": 4.00},
++    "claude-3-5-haiku-20241022": {"input": 0.80, "output": 4.00},
++    
++    # Google
++    "gemini-2.0-flash": {"input": 0.075, "output": 0.30},
++    "gemini-2.0-flash-lite": {"input": 0.015, "output": 0.06},
++    "gemini-1.5-flash": {"input": 0.075, "output": 0.30},
++    "gemini-1.5-flash-8b": {"input": 0.0375, "output": 0.15},
++    "gemini-1.5-pro": {"input": 1.25, "output": 5.00},
++    
++    # Upstage
++    "solar-pro": {"input": 3.00, "output": 10.00},
++    "solar-mini": {"input": 0.30, "output": 0.90},
++    
++    # Embedding models
++    "text-embedding-3-small": {"input": 0.020, "output": 0},
++    "text-embedding-3-large": {"input": 0.130, "output": 0},
++    "text-embedding-ada-002": {"input": 0.100, "output": 0},
++}
++
++
++def calculate_cost(model: str, input_tokens: int, output_tokens: int) -> dict:
++    """모델과 토큰 수를 기반으로 비용 계산"""
++    if model not in PRICING:
++        # 알 수 없는 모델은 gpt-4o-mini 가격으로 추정
++        pricing = PRICING["gpt-4o-mini"]
++    else:
++        pricing = PRICING[model]
++    
++    # 1M 토큰당 가격이므로 변환
++    input_cost = (input_tokens / 1_000_000) * pricing["input"]
++    output_cost = (output_tokens / 1_000_000) * pricing["output"]
++    total_cost = input_cost + output_cost
++    
++    return {
++        "input_cost": input_cost,
++        "output_cost": output_cost,
++        "total_cost": total_cost,
++        "model": model,
++        "input_tokens": input_tokens,
++        "output_tokens": output_tokens,
++    }
+\ No newline at end of file
+diff --git a/src/pyhub/llm/utils/retry.py b/src/pyhub/llm/utils/retry.py
+new file mode 100644
+index 0000000..b55e362
+--- /dev/null
++++ b/src/pyhub/llm/utils/retry.py
+@@ -0,0 +1,279 @@
++"""재시도 및 에러 처리 유틸리티"""
++
++import time
++from functools import wraps
++from typing import Any, Callable, Type, Union
++import random
++
++from rich.console import Console
++
++console = Console()
++
++
++class RetryError(Exception):
++    """재시도 실패 시 발생하는 예외"""
++    pass
++
++
++def exponential_backoff(
++    max_retries: int = 3,
++    initial_delay: float = 1.0,
++    max_delay: float = 60.0,
++    exponential_base: float = 2.0,
++    jitter: bool = True,
++    exceptions: tuple[Type[Exception], ...] = (Exception,),
++    on_retry: Callable[[Exception, int], None] = None,
++    verbose: bool = False,
++):
++    """지수 백오프를 사용한 재시도 데코레이터
++    
++    Args:
++        max_retries: 최대 재시도 횟수
++        initial_delay: 초기 대기 시간 (초)
++        max_delay: 최대 대기 시간 (초)
++        exponential_base: 지수 증가 베이스
++        jitter: 지터 추가 여부 (대기 시간에 랜덤성 추가)
++        exceptions: 재시도할 예외 타입들
++        on_retry: 재시도 시 호출할 콜백 함수
++        verbose: 상세 로그 출력 여부
++    """
++    def decorator(func: Callable) -> Callable:
++        @wraps(func)
++        def wrapper(*args, **kwargs) -> Any:
++            last_exception = None
++            
++            for attempt in range(max_retries + 1):
++                try:
++                    return func(*args, **kwargs)
++                except exceptions as e:
++                    last_exception = e
++                    
++                    if attempt == max_retries:
++                        # 마지막 시도였으면 예외 발생
++                        raise RetryError(f"최대 재시도 횟수 {max_retries}회 초과") from e
++                    
++                    # 대기 시간 계산
++                    delay = min(initial_delay * (exponential_base ** attempt), max_delay)
++                    
++                    # 지터 추가
++                    if jitter:
++                        delay = delay * (0.5 + random.random())
++                    
++                    # 재시도 콜백 호출
++                    if on_retry:
++                        on_retry(e, attempt + 1)
++                    
++                    # 로그 출력
++                    if verbose:
++                        console.print(
++                            f"[yellow]재시도 {attempt + 1}/{max_retries}: "
++                            f"{type(e).__name__}: {str(e)} "
++                            f"({delay:.1f}초 대기)[/yellow]"
++                        )
++                    
++                    # 대기
++                    time.sleep(delay)
++            
++            # 여기에 도달하면 안 됨
++            raise last_exception
++        
++        return wrapper
++    return decorator
++
++
++def retry_with_fallback(
++    primary_func: Callable,
++    fallback_func: Callable = None,
++    max_retries: int = 2,
++    exceptions: tuple[Type[Exception], ...] = (Exception,),
++    verbose: bool = False,
++) -> Any:
++    """기본 함수 실패 시 대체 함수를 시도하는 재시도 패턴
++    
++    Args:
++        primary_func: 기본 함수
++        fallback_func: 대체 함수
++        max_retries: 각 함수의 최대 재시도 횟수
++        exceptions: 재시도할 예외 타입들
++        verbose: 상세 로그 출력 여부
++    """
++    # 기본 함수 시도
++    try:
++        @exponential_backoff(
++            max_retries=max_retries,
++            exceptions=exceptions,
++            verbose=verbose,
++        )
++        def try_primary():
++            return primary_func()
++        
++        return try_primary()
++    
++    except (RetryError, *exceptions) as e:
++        if verbose:
++            console.print(f"[yellow]기본 함수 실패: {e}[/yellow]")
++        
++        # 대체 함수가 있으면 시도
++        if fallback_func:
++            if verbose:
++                console.print("[blue]대체 함수 시도 중...[/blue]")
++            
++            try:
++                @exponential_backoff(
++                    max_retries=max_retries,
++                    exceptions=exceptions,
++                    verbose=verbose,
++                )
++                def try_fallback():
++                    return fallback_func()
++                
++                return try_fallback()
++            
++            except (RetryError, *exceptions) as fallback_e:
++                if verbose:
++                    console.print(f"[red]대체 함수도 실패: {fallback_e}[/red]")
++                raise
++        else:
++            raise
++
++
++# API 에러 처리를 위한 특화된 데코레이터
++def retry_api_call(
++    max_retries: int = 3,
++    rate_limit_retries: int = 5,
++    network_error_retries: int = 3,
++    verbose: bool = False,
++):
++    """API 호출에 특화된 재시도 데코레이터
++    
++    다음 에러들을 구분하여 처리:
++    - Rate limit 에러: 더 긴 대기 시간과 더 많은 재시도
++    - 네트워크 에러: 표준 재시도
++    - 인증 에러: 재시도하지 않음
++    """
++    def decorator(func: Callable) -> Callable:
++        @wraps(func)
++        def wrapper(*args, **kwargs) -> Any:
++            # 에러 타입별 재시도 설정
++            error_configs = [
++                # Rate limit 에러
++                {
++                    "exceptions": (RateLimitError,),
++                    "max_retries": rate_limit_retries,
++                    "initial_delay": 5.0,
++                    "max_delay": 300.0,  # 5분
++                    "message": "API 요청 제한 도달",
++                },
++                # 네트워크 에러
++                {
++                    "exceptions": (NetworkError, TimeoutError),
++                    "max_retries": network_error_retries,
++                    "initial_delay": 1.0,
++                    "max_delay": 30.0,
++                    "message": "네트워크 오류",
++                },
++                # 서버 에러
++                {
++                    "exceptions": (ServerError,),
++                    "max_retries": max_retries,
++                    "initial_delay": 2.0,
++                    "max_delay": 60.0,
++                    "message": "서버 오류",
++                },
++            ]
++            
++            last_exception = None
++            
++            for config in error_configs:
++                try:
++                    @exponential_backoff(
++                        max_retries=config["max_retries"],
++                        initial_delay=config["initial_delay"],
++                        max_delay=config["max_delay"],
++                        exceptions=config["exceptions"],
++                        verbose=verbose,
++                        on_retry=lambda e, attempt: console.print(
++                            f"[yellow]{config['message']}: {e} "
++                            f"(재시도 {attempt}/{config['max_retries']})[/yellow]"
++                        ) if verbose else None,
++                    )
++                    def try_call():
++                        return func(*args, **kwargs)
++                    
++                    return try_call()
++                
++                except config["exceptions"] as e:
++                    last_exception = e
++                    continue
++                except Exception as e:
++                    # 다른 예외는 바로 전파
++                    raise
++            
++            # 모든 재시도 실패
++            if last_exception:
++                raise last_exception
++            else:
++                # 일반 호출 시도
++                return func(*args, **kwargs)
++        
++        return wrapper
++    return decorator
++
++
++# 커스텀 예외 클래스들
++class APIError(Exception):
++    """API 관련 기본 예외"""
++    pass
++
++
++class RateLimitError(APIError):
++    """API 요청 제한 초과"""
++    pass
++
++
++class NetworkError(APIError):
++    """네트워크 연결 오류"""
++    pass
++
++
++class ServerError(APIError):
++    """서버 오류 (5xx)"""
++    pass
++
++
++class AuthenticationError(APIError):
++    """인증 오류 (재시도하면 안 됨)"""
++    pass
++
++
++def handle_api_error(e: Exception) -> None:
++    """API 에러를 적절한 예외 타입으로 변환"""
++    error_message = str(e).lower()
++    
++    # Rate limit 에러 패턴
++    if any(pattern in error_message for pattern in [
++        "rate limit", "too many requests", "429", "quota exceeded"
++    ]):
++        raise RateLimitError(str(e)) from e
++    
++    # 네트워크 에러 패턴
++    elif any(pattern in error_message for pattern in [
++        "connection", "timeout", "network", "dns", "refused"
++    ]):
++        raise NetworkError(str(e)) from e
++    
++    # 서버 에러 패턴
++    elif any(pattern in error_message for pattern in [
++        "500", "502", "503", "504", "server error", "internal error"
++    ]):
++        raise ServerError(str(e)) from e
++    
++    # 인증 에러 패턴
++    elif any(pattern in error_message for pattern in [
++        "401", "403", "unauthorized", "forbidden", "api key", "authentication"
++    ]):
++        raise AuthenticationError(str(e)) from e
++    
++    # 기타 에러는 그대로 전파
++    else:
++        raise
+\ No newline at end of file

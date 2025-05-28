@@ -185,6 +185,11 @@ class Usage:
     input: int = 0
     output: int = 0
 
+    @property
+    def total(self) -> int:
+        """총 토큰 수 (input + output)"""
+        return self.input + self.output
+
     def __add__(self, other):
         if isinstance(other, Usage):
             return Usage(input=self.input + other.input, output=self.output + other.output)
