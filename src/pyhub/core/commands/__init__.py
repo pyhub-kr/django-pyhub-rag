@@ -3,10 +3,9 @@ from pathlib import Path
 from typing import Optional
 
 import typer
-from django.core.management import call_command
 from rich.console import Console
 
-from pyhub import init, print_for_main
+from pyhub import print_for_main
 from pyhub.config import DEFAULT_TOML_PATH
 
 app = typer.Typer(
@@ -119,11 +118,29 @@ def show(
     is_verbose: bool = typer.Option(False, "--verbose"),
 ):
     """TOML 설정 파일 내용을 출력합니다."""
-    # Django 초기화
-    init()
-
-    args = [str(toml_path), "--print"]
-    call_command("pyhub_toml", *args)
+    # 파일 확장자 확인
+    if toml_path.suffix != ".toml":
+        console.print(f"[red]오류: 파일 확장자는 .toml이어야 합니다.[/red]")
+        console.print(f"[dim]입력된 파일: {toml_path}[/dim]")
+        raise typer.Exit(code=1)
+    
+    # 파일 존재 확인
+    if not toml_path.exists():
+        console.print(f"[red]오류: {toml_path} 파일이 존재하지 않습니다.[/red]")
+        console.print(f"[dim]다음 명령으로 새 설정 파일을 생성할 수 있습니다:[/dim]")
+        console.print(f"  [cyan]pyhub toml create[/cyan]")
+        raise typer.Exit(code=1)
+    
+    # 파일 내용 출력
+    console.print(f"[dim]{toml_path} 경로의 파일을 출력하겠습니다.[/dim]")
+    try:
+        with toml_path.open("rt", encoding="utf-8") as f:
+            content = f.read()
+            print(content)
+    except Exception as e:
+        console.print(f"[red]오류: 파일을 읽을 수 없습니다.[/red]")
+        console.print(f"[dim]상세: {e}[/dim]")
+        raise typer.Exit(code=1)
 
 
 @toml_app.command()
@@ -135,11 +152,73 @@ def validate(
     is_verbose: bool = typer.Option(False, "--verbose"),
 ):
     """TOML 설정 파일의 유효성을 검증합니다."""
-    # Django 초기화
-    init()
-
-    args = [str(toml_path), "--test"]
-    call_command("pyhub_toml", *args)
+    # 파일 확장자 확인
+    if toml_path.suffix != ".toml":
+        console.print(f"[red]오류: 파일 확장자는 .toml이어야 합니다.[/red]")
+        console.print(f"[dim]입력된 파일: {toml_path}[/dim]")
+        raise typer.Exit(code=1)
+    
+    # 파일 존재 확인
+    if not toml_path.exists():
+        console.print(f"[red]오류: {toml_path} 파일이 존재하지 않습니다.[/red]")
+        console.print(f"[dim]다음 명령으로 새 설정 파일을 생성할 수 있습니다:[/dim]")
+        console.print(f"  [cyan]pyhub toml create[/cyan]")
+        raise typer.Exit(code=1)
+    
+    console.print(f"[dim]{toml_path} 경로의 파일을 확인하겠습니다.[/dim]")
+    
+    try:
+        # TOML 파일 파싱 시도
+        import toml
+        with toml_path.open("rt", encoding="utf-8") as f:
+            toml_data = toml.load(f)
+    except toml.TomlDecodeError as e:
+        console.print(f"[red]오류: 유효하지 않은 TOML 파일입니다.[/red]")
+        console.print(f"[dim]상세: {e}[/dim]")
+        raise typer.Exit(code=1)
+    except Exception as e:
+        console.print(f"[red]오류: 파일을 읽을 수 없습니다.[/red]")
+        console.print(f"[dim]상세: {e}[/dim]")
+        raise typer.Exit(code=1)
+    
+    # 환경변수 검증
+    env_section = toml_data.get("env", {})
+    if not env_section:
+        console.print("[red]경고: 등록된 환경변수가 없습니다. (tip: env 항목으로 환경변수를 등록합니다.)[/red]")
+    else:
+        console.print(f"[green]INFO: 등록된 환경변수 = {', '.join(env_section.keys())}[/green]")
+        
+        if "UPSTAGE_API_KEY" not in env_section:
+            console.print("[yellow]경고: UPSTAGE_API_KEY 환경변수를 등록해주세요.[/yellow]")
+    
+    # 프롬프트 템플릿 검증
+    errors = []
+    prompt_templates = toml_data.get("prompt_templates", {})
+    
+    # 이미지 설명 프롬프트 검증
+    describe_image = prompt_templates.get("describe_image", {})
+    if "system" not in describe_image:
+        errors.append("ERROR: [prompt_templates.describe_image] 의 system 항목이 누락되었습니다.")
+    if "user" not in describe_image:
+        errors.append("ERROR: [prompt_templates.describe_image] 의 user 항목이 누락되었습니다.")
+    
+    # 테이블 설명 프롬프트 검증
+    describe_table = prompt_templates.get("describe_table", {})
+    if "system" not in describe_table:
+        errors.append("ERROR: [prompt_templates.describe_table] 의 system 항목이 누락되었습니다.")
+    if "user" not in describe_table:
+        errors.append("ERROR: [prompt_templates.describe_table] 의 user 항목이 누락되었습니다.")
+    
+    if not errors:
+        console.print("[green]INFO: image/table에 대한 시스템/유저 프롬프트 템플릿이 모두 등록되어있습니다.[/green]")
+    else:
+        for error in errors:
+            console.print(f"[red]{error}[/red]")
+    
+    if not errors and env_section:
+        console.print("\n[green]✓ TOML 파일 검증이 완료되었습니다.[/green]")
+    else:
+        console.print("\n[yellow]⚠ TOML 파일에 경고사항이 있습니다.[/yellow]")
 
 
 @toml_app.command()
