@@ -11,7 +11,7 @@ from rich.syntax import Syntax
 
 from ..agents import Tool, create_react_agent
 from ..agents.tools import Calculator
-from ..base import LLM
+from .. import LLM
 
 app = typer.Typer(
     help="Agent를 실행합니다.",
