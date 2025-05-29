@@ -79,7 +79,11 @@ def run(
         console.print(Panel(result, expand=False))
         
     except Exception as e:
+        import traceback
         console.print(f"\n[bold red]Error:[/bold red] {str(e)}")
+        if verbose:
+            console.print("\n[bold red]Traceback:[/bold red]")
+            console.print(traceback.format_exc())
         raise typer.Exit(1)
 
 

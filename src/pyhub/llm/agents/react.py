@@ -7,12 +7,26 @@ import re
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Union
 
-from django.template.loader import get_template
-
 from ..base import BaseLLM
 from .base import BaseAgent, AsyncBaseAgent, Tool, ToolExecutor
+from .simple_template import SimpleTemplate
 
 logger = logging.getLogger(__name__)
+
+# Try to import Django components
+DJANGO_AVAILABLE = False
+get_template = None
+DjangoTemplate = None
+Context = None
+
+try:
+    from django.conf import settings
+    if settings.configured:
+        from django.template.loader import get_template
+        from django.template import Template as DjangoTemplate, Context
+        DJANGO_AVAILABLE = True
+except Exception:
+    pass
 
 
 @dataclass
@@ -91,25 +105,33 @@ class ReactAgent(BaseAgent):
     def __init__(self, llm: BaseLLM, tools: List[Tool], **kwargs):
         super().__init__(llm, tools, **kwargs)
         
-        # 템플릿이 제공되지 않으면 Django 템플릿 로드 시도
+        # 템플릿이 제공되지 않으면 기본 템플릿 사용
         if "system_prompt_template" in kwargs:
             self.system_prompt_template = kwargs["system_prompt_template"]
         else:
-            try:
-                self.system_prompt_template = get_template("prompts/react/system.md")
-            except Exception:
-                # Django가 초기화되지 않은 경우 기본 템플릿 사용
-                from django.template import Template
-                self.system_prompt_template = Template(self._get_default_system_prompt())
+            if DJANGO_AVAILABLE and get_template:
+                try:
+                    self.system_prompt_template = get_template("prompts/react/system.md")
+                except Exception:
+                    # Django 설정이 없는 경우 기본 템플릿 사용
+                    self.system_prompt_template = SimpleTemplate(self._get_default_system_prompt())
+            else:
+                # Django가 없는 경우 기본 템플릿 사용
+                self.system_prompt_template = SimpleTemplate(self._get_default_system_prompt())
         
         if "user_prompt_template" in kwargs:
             self.user_prompt_template = kwargs["user_prompt_template"]
         else:
-            try:
-                self.user_prompt_template = get_template("prompts/react/user.md")
-            except Exception:
-                from django.template import Template
-                self.user_prompt_template = Template(self._get_default_user_prompt())
+            if DJANGO_AVAILABLE and get_template:
+                try:
+                    self.user_prompt_template = get_template("prompts/react/user.md")
+                except Exception:
+                    # Django 설정이 없는 경우 기본 템플릿 사용
+                    self.user_prompt_template = SimpleTemplate(self._get_default_user_prompt())
+            else:
+                # Django가 없는 경우 기본 템플릿 사용
+                self.user_prompt_template = SimpleTemplate(self._get_default_user_prompt())
+        
         self.verbose = kwargs.get("verbose", False)
     
     def _get_default_system_prompt(self) -> str:
@@ -154,9 +176,13 @@ Important guidelines:
             "tools": self.tools,
             "tool_names": ", ".join(tool.name for tool in self.tools)
         }
-        # Django 템플릿인 경우 Context 객체 필요
-        from django.template import Context
-        return self.system_prompt_template.render(Context(context))
+        
+        # Django 템플릿인지 확인
+        if DJANGO_AVAILABLE and hasattr(self.system_prompt_template, 'render') and hasattr(self.system_prompt_template, 'origin'):
+            return self.system_prompt_template.render(Context(context))
+        else:
+            # SimpleTemplate
+            return self.system_prompt_template.render(context)
     
     def _format_user_prompt(self, question: str, history: str = "") -> str:
         """사용자 프롬프트 생성"""
@@ -164,9 +190,13 @@ Important guidelines:
             "question": question,
             "history": history
         }
-        # Django 템플릿인 경우 Context 객체 필요
-        from django.template import Context
-        return self.user_prompt_template.render(Context(context))
+        
+        # Django 템플릿인지 확인
+        if DJANGO_AVAILABLE and hasattr(self.user_prompt_template, 'render') and hasattr(self.user_prompt_template, 'origin'):
+            return self.user_prompt_template.render(Context(context))
+        else:
+            # SimpleTemplate
+            return self.user_prompt_template.render(context)
     
     def _execute_tool(self, tool_name: str, tool_input: Dict[str, Any]) -> str:
         """도구 실행"""
@@ -202,6 +232,8 @@ Important guidelines:
                 
                 # LLM 호출
                 response = self.llm.ask(prompt)
+                # Reply 객체를 문자열로 변환
+                response = str(response)
                 
                 if self.verbose:
                     logger.info(f"Iteration {iteration + 1}:\n{response}")
@@ -239,25 +271,33 @@ class AsyncReactAgent(AsyncBaseAgent):
     def __init__(self, llm: BaseLLM, tools: List[Tool], **kwargs):
         super().__init__(llm, tools, **kwargs)
         
-        # 템플릿이 제공되지 않으면 Django 템플릿 로드 시도
+        # 템플릿이 제공되지 않으면 기본 템플릿 사용
         if "system_prompt_template" in kwargs:
             self.system_prompt_template = kwargs["system_prompt_template"]
         else:
-            try:
-                self.system_prompt_template = get_template("prompts/react/system.md")
-            except Exception:
-                # Django가 초기화되지 않은 경우 기본 템플릿 사용
-                from django.template import Template
-                self.system_prompt_template = Template(self._get_default_system_prompt())
+            if DJANGO_AVAILABLE and get_template:
+                try:
+                    self.system_prompt_template = get_template("prompts/react/system.md")
+                except Exception:
+                    # Django 설정이 없는 경우 기본 템플릿 사용
+                    self.system_prompt_template = SimpleTemplate(self._get_default_system_prompt())
+            else:
+                # Django가 없는 경우 기본 템플릿 사용
+                self.system_prompt_template = SimpleTemplate(self._get_default_system_prompt())
         
         if "user_prompt_template" in kwargs:
             self.user_prompt_template = kwargs["user_prompt_template"]
         else:
-            try:
-                self.user_prompt_template = get_template("prompts/react/user.md")
-            except Exception:
-                from django.template import Template
-                self.user_prompt_template = Template(self._get_default_user_prompt())
+            if DJANGO_AVAILABLE and get_template:
+                try:
+                    self.user_prompt_template = get_template("prompts/react/user.md")
+                except Exception:
+                    # Django 설정이 없는 경우 기본 템플릿 사용
+                    self.user_prompt_template = SimpleTemplate(self._get_default_user_prompt())
+            else:
+                # Django가 없는 경우 기본 템플릿 사용
+                self.user_prompt_template = SimpleTemplate(self._get_default_user_prompt())
+        
         self.verbose = kwargs.get("verbose", False)
     
     def _get_default_system_prompt(self) -> str:
@@ -302,9 +342,13 @@ Important guidelines:
             "tools": self.tools,
             "tool_names": ", ".join(tool.name for tool in self.tools)
         }
-        # Django 템플릿인 경우 Context 객체 필요
-        from django.template import Context
-        return self.system_prompt_template.render(Context(context))
+        
+        # Django 템플릿인지 확인
+        if DJANGO_AVAILABLE and hasattr(self.system_prompt_template, 'render') and hasattr(self.system_prompt_template, 'origin'):
+            return self.system_prompt_template.render(Context(context))
+        else:
+            # SimpleTemplate
+            return self.system_prompt_template.render(context)
     
     def _format_user_prompt(self, question: str, history: str = "") -> str:
         """사용자 프롬프트 생성"""
@@ -312,9 +356,13 @@ Important guidelines:
             "question": question,
             "history": history
         }
-        # Django 템플릿인 경우 Context 객체 필요
-        from django.template import Context
-        return self.user_prompt_template.render(Context(context))
+        
+        # Django 템플릿인지 확인
+        if DJANGO_AVAILABLE and hasattr(self.user_prompt_template, 'render') and hasattr(self.user_prompt_template, 'origin'):
+            return self.user_prompt_template.render(Context(context))
+        else:
+            # SimpleTemplate
+            return self.user_prompt_template.render(context)
     
     async def _execute_tool(self, tool_name: str, tool_input: Dict[str, Any]) -> str:
         """비동기 도구 실행"""
@@ -355,6 +403,9 @@ Important guidelines:
                     # 동기 LLM을 비동기로 실행
                     loop = asyncio.get_event_loop()
                     response = await loop.run_in_executor(None, self.llm.ask, prompt)
+                
+                # Reply 객체를 문자열로 변환
+                response = str(response)
                 
                 if self.verbose:
                     logger.info(f"Iteration {iteration + 1}:\n{response}")

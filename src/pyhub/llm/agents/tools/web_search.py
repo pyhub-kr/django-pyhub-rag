@@ -1,6 +1,5 @@
 """Web search tool implementation."""
 
-from typing import List
 from ..base import BaseTool, ValidationLevel
 from .schemas import WebSearchInput
 

@@ -1,7 +1,7 @@
 """Tool registry for managing available tools."""
 
 from typing import Dict, List, Type, Optional
-from ..base import BaseTool, AsyncBaseTool, Tool
+from ..base import BaseTool, Tool
 from .calculator import Calculator
 from .web_search import WebSearch
 from .file_reader import FileReader
@@ -51,9 +51,6 @@ class ToolRegistry:
                 if hasattr(schema, 'model_fields'):  # Pydantic v2
                     for field_name, field_info in schema.model_fields.items():
                         tool_info["args"][field_name] = field_info.description or f"Field: {field_name}"
-                elif hasattr(schema, '__fields__'):  # Pydantic v1
-                    for field_name, field in schema.__fields__.items():
-                        tool_info["args"][field_name] = field.field_info.description or f"Field: {field_name}"
             
             tools.append(tool_info)
         
