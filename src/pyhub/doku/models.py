@@ -173,3 +173,44 @@ class VectorDocumentImage(LifecycleModelMixin, TimestampedMixin, models.Model):
     def on_after_save(self):
         # 부모 VectorDocument metadata["image_descriptions"] 업데이트
         self.vector_document.update_image_descriptions()
+
+
+class ExtractedInformation(TimestampedMixin, models.Model):
+    """Information Extract API로 추출된 정보"""
+
+    class ExtractionType(models.TextChoices):
+        UNIVERSAL = "universal", "Universal"
+        PREBUILT = "prebuilt", "Prebuilt"
+
+    document = models.ForeignKey(
+        Document,
+        on_delete=models.CASCADE,
+        related_name="extracted_information_set",
+        related_query_name="extracted_information",
+    )
+    schema_name = models.CharField(max_length=100, blank=True, help_text="사용된 추출 스키마 이름")
+    extraction_type = models.CharField(
+        max_length=20,
+        choices=ExtractionType.choices,
+        default=ExtractionType.UNIVERSAL,
+    )
+    document_type = models.CharField(max_length=50, blank=True, null=True, help_text="문서 타입 (prebuilt 추출 시)")
+    extracted_data = models.JSONField(help_text="추출된 정보")
+    extraction_model = models.CharField(max_length=100, blank=True, null=True)
+    extraction_cost = models.DecimalField(
+        max_digits=10, decimal_places=4, blank=True, null=True, help_text="추출 비용 (USD)"
+    )
+    error_message = models.TextField(blank=True, null=True, help_text="추출 실패 시 에러 메시지")
+
+    class Meta:
+        verbose_name = "추출된 정보"
+        verbose_name_plural = "추출된 정보"
+        ordering = ["-created_at"]
+        db_table = "pyhub_doku_extracted_information"
+        indexes = [
+            models.Index(fields=["document", "schema_name"]),
+            models.Index(fields=["extraction_type", "document_type"]),
+        ]
+
+    def __str__(self):
+        return f"{self.document.name} - {self.schema_name or self.extraction_type}"

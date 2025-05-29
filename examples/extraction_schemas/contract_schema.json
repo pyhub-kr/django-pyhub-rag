@@ -1,0 +1,97 @@
+{
+  "contract_information": {
+    "contract_title": {
+      "type": "string",
+      "description": "Title or name of the contract"
+    },
+    "contract_number": {
+      "type": "string",
+      "description": "Contract reference number"
+    },
+    "contract_type": {
+      "type": "string",
+      "description": "Type of contract (e.g., Service Agreement, Purchase Agreement)"
+    },
+    "effective_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date when the contract becomes effective"
+    },
+    "expiration_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date when the contract expires"
+    }
+  },
+  "parties": {
+    "type": "array",
+    "description": "Parties involved in the contract",
+    "items": {
+      "type": "object",
+      "properties": {
+        "party_name": {
+          "type": "string",
+          "description": "Name of the party"
+        },
+        "party_type": {
+          "type": "string",
+          "description": "Role of the party (e.g., Buyer, Seller, Service Provider)"
+        },
+        "party_address": {
+          "type": "string",
+          "description": "Address of the party"
+        },
+        "representative": {
+          "type": "string",
+          "description": "Name of the representative"
+        }
+      }
+    }
+  },
+  "terms_and_conditions": {
+    "payment_terms": {
+      "type": "string",
+      "description": "Payment terms and conditions"
+    },
+    "delivery_terms": {
+      "type": "string",
+      "description": "Delivery or performance terms"
+    },
+    "termination_clause": {
+      "type": "string",
+      "description": "Conditions for contract termination"
+    },
+    "penalty_clause": {
+      "type": "string",
+      "description": "Penalties for breach of contract"
+    }
+  },
+  "financial_terms": {
+    "total_contract_value": {
+      "type": "number",
+      "description": "Total value of the contract"
+    },
+    "payment_schedule": {
+      "type": "array",
+      "description": "Payment milestones",
+      "items": {
+        "type": "object",
+        "properties": {
+          "milestone": {
+            "type": "string",
+            "description": "Payment milestone description"
+          },
+          "amount": {
+            "type": "number",
+            "description": "Payment amount"
+          },
+          "due_date": {
+            "type": "string",
+            "format": "date",
+            "description": "Payment due date"
+          }
+        }
+      }
+    }
+  }
+}

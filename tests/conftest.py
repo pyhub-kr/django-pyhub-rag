@@ -15,6 +15,8 @@ def pytest_configure():
             "django.contrib.contenttypes",
             "django.contrib.auth",
             "pyhub.rag",
+            "pyhub.doku",
+            "pyhub.llm",
             "test_app",
         ],
         CACHES={

@@ -1,0 +1,84 @@
+{
+  "document_information": {
+    "document_type": {
+      "type": "string",
+      "description": "Type of document (e.g., INVOICE, RECEIPT)"
+    },
+    "document_number": {
+      "type": "string",
+      "description": "Document number or ID"
+    },
+    "issue_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date when the document was issued"
+    }
+  },
+  "vendor_information": {
+    "vendor_name": {
+      "type": "string",
+      "description": "Name of the vendor/supplier"
+    },
+    "vendor_address": {
+      "type": "string",
+      "description": "Complete address of the vendor"
+    },
+    "vendor_tax_id": {
+      "type": "string",
+      "description": "Tax ID or registration number"
+    }
+  },
+  "customer_information": {
+    "customer_name": {
+      "type": "string",
+      "description": "Name of the customer/buyer"
+    },
+    "customer_address": {
+      "type": "string",
+      "description": "Complete address of the customer"
+    }
+  },
+  "items": {
+    "type": "array",
+    "description": "List of line items",
+    "items": {
+      "type": "object",
+      "properties": {
+        "item_description": {
+          "type": "string",
+          "description": "Description of the item"
+        },
+        "quantity": {
+          "type": "number",
+          "description": "Quantity of the item"
+        },
+        "unit_price": {
+          "type": "number",
+          "description": "Price per unit"
+        },
+        "total_price": {
+          "type": "number",
+          "description": "Total price for this line item"
+        }
+      }
+    }
+  },
+  "financial_summary": {
+    "subtotal": {
+      "type": "number",
+      "description": "Subtotal before tax"
+    },
+    "tax_amount": {
+      "type": "number",
+      "description": "Total tax amount"
+    },
+    "total_amount": {
+      "type": "number",
+      "description": "Total amount including tax"
+    },
+    "currency": {
+      "type": "string",
+      "description": "Currency code (e.g., USD, KRW)"
+    }
+  }
+}

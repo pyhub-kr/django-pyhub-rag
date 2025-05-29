@@ -1,7 +1,9 @@
 from django.contrib import admin
 from django.contrib.admin import SimpleListFilter
+from django.utils.html import format_html
+import json
 
-from .models import Document, DocumentParseJob, VectorDocument, VectorDocumentImage
+from .models import Document, DocumentParseJob, VectorDocument, VectorDocumentImage, ExtractedInformation
 
 
 @admin.register(Document)
@@ -73,4 +75,35 @@ class VectorDocumentImageAdmin(admin.ModelAdmin):
         return False
 
     def has_delete_permission(self, request, obj=None):
+        return False
+
+
+@admin.register(ExtractedInformation)
+class ExtractedInformationAdmin(admin.ModelAdmin):
+    list_display = ("id", "document", "schema_name", "extraction_type", "created_at", "has_error")
+    list_filter = ("extraction_type", "document_type", "schema_name", "created_at")
+    search_fields = ("document__name", "schema_name")
+    readonly_fields = ("document", "extracted_data_pretty", "error_message", "created_at", "updated_at")
+
+    def has_error(self, obj):
+        return bool(obj.error_message)
+
+    has_error.boolean = True
+    has_error.short_description = "Error"
+
+    def extracted_data_pretty(self, obj):
+        """Display extracted data in a pretty format"""
+        if obj.extracted_data:
+            return format_html(
+                '<pre style="white-space: pre-wrap;">{}</pre>',
+                json.dumps(obj.extracted_data, indent=2, ensure_ascii=False),
+            )
+        return "-"
+
+    extracted_data_pretty.short_description = "Extracted Data"
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
         return False
