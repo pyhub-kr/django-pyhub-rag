@@ -215,8 +215,14 @@ user = """{self._get_template_code("prompts/describe/table/user.md")}"""
                 if editor == "code":  # VS Code의 경우 특별 처리
                     subprocess.run(["code", "--wait", file_path_str], check=True)
                     self.console.print("[green]Visual Studio Code로 파일을 열었습니다.[/green]")
-                else:
+                elif sys.platform.startswith("win") and editor == "notepad":
+                    # Windows에서 notepad는 항상 존재하므로 직접 실행
                     subprocess.run([editor, file_path_str], check=True)
+                    self.console.print(f"[green]{editor} 에디터로 파일을 열었습니다.[/green]")
+                else:
+                    # 다른 에디터들은 stderr/stdout을 숨겨서 시도
+                    subprocess.run([editor, file_path_str], check=True,
+                                 stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
                     self.console.print(f"[green]{editor} 에디터로 파일을 열었습니다.[/green]")
                 return  # 성공적으로 실행되면 함수 종료
             except (subprocess.SubprocessError, FileNotFoundError) as e:

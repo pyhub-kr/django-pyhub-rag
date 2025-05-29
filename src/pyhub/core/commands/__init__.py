@@ -261,12 +261,22 @@ def edit(
     if editor:
         editors = [editor]
     else:
-        # 일반적인 에디터들 시도
-        editors = ["code", "vim", "nano", "emacs", "gedit", "notepad"]
+        # 플랫폼별 일반적인 에디터들 시도
+        if sys.platform.startswith("win"):
+            editors = ["code", "notepad++", "notepad"]
+        else:
+            editors = ["code", "vim", "nano", "emacs", "gedit"]
 
     for ed in editors:
         try:
-            subprocess.run([ed, str(toml_path)], check=True)
+            # Windows에서 notepad의 경우 특별 처리
+            if sys.platform.startswith("win") and ed == "notepad":
+                # notepad는 항상 존재하므로 직접 실행
+                subprocess.run([ed, str(toml_path)], check=True)
+            else:
+                # 다른 에디터들은 일반적인 방식으로 시도
+                subprocess.run([ed, str(toml_path)], check=True, 
+                             stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
             console.print(f"[green]✓ {ed} 에디터로 파일을 열었습니다.[/green]")
             return
         except (subprocess.CalledProcessError, FileNotFoundError):
