@@ -43,6 +43,10 @@ pyhub.parser upstage file.pdf
 pyhub.llm ask "your question"
 pyhub.llm describe image.png
 pyhub.llm embed "text to embed"
+pyhub.llm chat  # Interactive chat session
+pyhub.llm compare "question" --models gpt-4o-mini --models claude-3-haiku
+pyhub.llm agent run "Calculate 25 * 4"  # Run React Agent
+pyhub.llm agent list-tools  # List available tools
 
 # RAG operations
 pyhub.rag sqlite-vec create-table  # Create vector table
@@ -99,6 +103,8 @@ pyhub.web
   - Structured responses (choices parameter with JSON Schema)
   - Multimodal support (image input)
   - Automatic caching mechanism
+  - React Agent system with tool integration
+  - Input validation for tools to reduce unnecessary API calls
 
 #### 4. **parser** - Document Parsing
 - **Purpose**: PDF document parsing and image extraction
@@ -209,6 +215,28 @@ pyhub.web
    └─> Return to user
 ```
 
+#### React Agent Workflow
+
+```
+1. User Query
+   └─> create_react_agent(llm, tools)
+   
+2. Agent Execution Loop
+   ├─> Thought: Reasoning about the task
+   ├─> Action: Select appropriate tool
+   ├─> Action Input: Prepare tool parameters
+   └─> Observation: Execute tool and get result
+   
+3. Iteration
+   └─> Repeat Thought/Action/Observation cycle
+   └─> Until Final Answer is reached
+   
+4. Tool Validation
+   ├─> Input validation before execution
+   ├─> Security checks (e.g., no code injection)
+   └─> Error handling with informative messages
+```
+
 ## Configuration Management
 
 ### Configuration Priority
@@ -285,6 +313,33 @@ Optional:
 1. Implement the `BaseParser` interface
 2. Add parsing logic
 3. Add CLI command
+
+### Creating Custom Tools for Agents
+1. Inherit from `BaseTool` or `AsyncBaseTool`
+2. Define `args_schema` using Pydantic for input validation
+3. Implement `run()` or `arun()` method
+4. Set appropriate `validation_level` (STRICT, MODERATE, LENIENT)
+5. Add custom validators for security checks
+
+Example:
+```python
+from pyhub.llm.agents import BaseTool, ValidationLevel
+from pydantic import BaseModel, Field
+
+class WebSearchInput(BaseModel):
+    query: str = Field(..., description="Search query")
+    max_results: int = Field(5, ge=1, le=10)
+
+class WebSearchTool(BaseTool):
+    name = "web_search"
+    description = "Search the web for information"
+    args_schema = WebSearchInput
+    validation_level = ValidationLevel.STRICT
+    
+    def run(self, query: str, max_results: int = 5) -> str:
+        # Implement web search logic
+        return f"Found {max_results} results for: {query}"
+```
 
 ### Prompt Customization
 1. Add templates to `templates/prompts/` directory
