@@ -154,7 +154,7 @@ class UpstageDocumentParseParser:
         coordinates: bool = False,
         base64_encoding_category_list: Optional[list[ElementCategoryType]] = None,
         ignore_element_category_list: Optional[list[ElementCategoryType]] = None,
-        ignore_cache: bool = False,
+        enable_cache: bool = False,
         verbose: bool = False,
     ):
         """
@@ -192,7 +192,7 @@ class UpstageDocumentParseParser:
                                                         기본값은 빈 리스트입니다.
             ignore_element_category_list (list[CategoryType], optional): 제외할 요소의 카테고리.
                                                         기본값은 빈 리스트입니다.
-            ignore_cache (bool, optional): API 응답 캐시를 무시할지 여부.
+            enable_cache (bool, optional): API 응답 캐시를 활성화할지 여부.
                                          기본값은 False입니다.
             verbose (bool, optional): 상세한 처리 정보를 표시할지 여부.
                                      기본값은 False입니다.
@@ -212,7 +212,7 @@ class UpstageDocumentParseParser:
         self.ignore_element_category_list = ignore_element_category_list or []
         self.validators = [validate_upstage_document]
         self.errors: Optional[list[ValidationError]] = None
-        self.ignore_cache = ignore_cache
+        self.enable_cache = enable_cache
         self.verbose = verbose
 
     def is_valid(self, file: File, raise_exception: bool = False) -> bool:
@@ -495,7 +495,7 @@ class UpstageDocumentParseParser:
                 data=data,
                 files=files,
                 timeout=timeout,
-                ignore_cache=self.ignore_cache,
+                ignore_cache=not self.enable_cache,
                 cache_alias="upstage",
             )
             return json.loads(response_data)

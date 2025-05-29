@@ -177,8 +177,8 @@ def upstage(
     ),
     is_verbose: bool = typer.Option(False, "--verbose"),
     is_force: bool = typer.Option(False, "--force", "-f", help="확인 없이 출력 폴더 삭제 후 재생성"),
-    is_ignore_cache: bool = typer.Option(
-        False, "--ignore-cache", help="API 응답 캐시를 무시하고 항상 새로운 API 요청을 보냅니다. 캐시는 유지됩니다."
+    is_enable_cache: bool = typer.Option(
+        False, "--enable-cache", help="API 응답 캐시를 활성화합니다. 활성화하면 이전 API 응답을 재사용하여 빠른 처리와 비용 절약이 가능합니다."
     ),
     is_cache_clear_all: bool = typer.Option(
         False,
@@ -330,7 +330,7 @@ def upstage(
         document_format=cast(DocumentFormatType, document_format.value),
         base64_encoding_category_list=extract_element_category_list,
         ignore_element_category_list=ignore_element_category_list,
-        ignore_cache=is_ignore_cache,
+        enable_cache=is_enable_cache,
         verbose=is_verbose,
     )
 
