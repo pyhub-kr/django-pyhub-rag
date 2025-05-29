@@ -142,12 +142,12 @@ class BaseLLM(abc.ABC):
             else:
                 # prompt가 없으면 dict를 자동으로 포맷팅
                 # context에서 'user_message' 키가 있으면 그것을 사용
-                if 'user_message' in context:
-                    return str(context['user_message'])
+                if "user_message" in context:
+                    return str(context["user_message"])
                 # 아니면 dict의 내용을 읽기 쉬운 형태로 변환
                 formatted_parts = []
                 for key, value in context.items():
-                    if key not in ['choices', 'choices_formatted', 'choices_optional', 'original_choices']:
+                    if key not in ["choices", "choices_formatted", "choices_optional", "original_choices"]:
                         formatted_parts.append(f"{key}: {value}")
                 return "\n".join(formatted_parts) if formatted_parts else ""
 
@@ -286,6 +286,7 @@ class BaseLLM(abc.ABC):
         stream: bool = False,
         use_history: bool = True,
         raise_errors: bool = False,
+        enable_cache: bool = False,
     ):
         """동기 또는 비동기 응답을 생성하는 내부 메서드 (일반/스트리밍)"""
         current_messages = [*self.history] if use_history else []
@@ -298,6 +299,9 @@ class BaseLLM(abc.ABC):
 
         if context:
             input_context.update(context)
+
+        # enable_cache를 context에 추가
+        input_context["enable_cache"] = enable_cache
 
         # choices 처리
         if choices:
@@ -469,6 +473,7 @@ class BaseLLM(abc.ABC):
         stream: bool = False,
         use_history: bool = True,
         raise_errors: bool = False,
+        enable_cache: bool = False,
     ) -> Union[Reply, Generator[Reply, None, None]]:
         return self._ask_impl(
             input=input,
@@ -481,6 +486,7 @@ class BaseLLM(abc.ABC):
             stream=stream,
             use_history=use_history,
             raise_errors=raise_errors,
+            enable_cache=enable_cache,
         )
 
     async def ask_async(
@@ -495,6 +501,7 @@ class BaseLLM(abc.ABC):
         stream: bool = False,
         raise_errors: bool = False,
         use_history: bool = True,
+        enable_cache: bool = False,
     ) -> Union[Reply, AsyncGenerator[Reply, None]]:
         return_value = self._ask_impl(
             input=input,
@@ -507,6 +514,7 @@ class BaseLLM(abc.ABC):
             stream=stream,
             use_history=use_history,
             raise_errors=raise_errors,
+            enable_cache=enable_cache,
         )
         if stream:
             return return_value
@@ -547,14 +555,16 @@ class BaseLLM(abc.ABC):
         request: Union[DescribeImageRequest, list[DescribeImageRequest]],
         max_parallel_size: int = 4,
         raise_errors: bool = False,
+        enable_cache: bool = False,
     ) -> Reply:
-        return async_to_sync(self.describe_images_async)(request, max_parallel_size, raise_errors)
+        return async_to_sync(self.describe_images_async)(request, max_parallel_size, raise_errors, enable_cache)
 
     async def describe_images_async(
         self,
         request: Union[DescribeImageRequest, list[DescribeImageRequest]],
         max_parallel_size: int = 4,
         raise_errors: bool = False,
+        enable_cache: bool = False,
     ) -> Union[Reply, list[Reply]]:
 
         # 최대 4개의 병렬 처리를 위한 세마포어 설정
@@ -597,6 +607,7 @@ class BaseLLM(abc.ABC):
                 files=[task_request.image],
                 context=task_request.prompt_context,
                 raise_errors=raise_errors,
+                enable_cache=enable_cache,
             )
             logger.debug("image description for %s : %s", task_request.image_path, repr(reply.text))
             return reply

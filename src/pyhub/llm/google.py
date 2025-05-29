@@ -332,6 +332,7 @@ class GoogleLLM(BaseLLM):
         stream: bool = False,
         use_history: bool = True,
         raise_errors: bool = False,
+        enable_cache: bool = False,
     ) -> Union[Reply, Generator[Reply, None, None]]:
         return super().ask(
             input=input,
@@ -343,6 +344,7 @@ class GoogleLLM(BaseLLM):
             stream=stream,
             use_history=use_history,
             raise_errors=raise_errors,
+            enable_cache=enable_cache,
         )
 
     async def ask_async(
@@ -357,6 +359,7 @@ class GoogleLLM(BaseLLM):
         stream: bool = False,
         use_history: bool = True,
         raise_errors: bool = False,
+        enable_cache: bool = False,
     ) -> Union[Reply, AsyncGenerator[Reply, None]]:
         return await super().ask_async(
             input=input,
@@ -368,6 +371,7 @@ class GoogleLLM(BaseLLM):
             stream=stream,
             use_history=use_history,
             raise_errors=raise_errors,
+            enable_cache=enable_cache,
         )
 
     def embed(

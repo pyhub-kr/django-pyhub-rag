@@ -315,6 +315,7 @@ def upstage(
             prompt_context={"language": image_descriptor_language},
             temperature=image_descriptor_temperature,
             max_tokens=image_descriptor_max_tokens,
+            enable_cache=is_enable_cache,
         )
     else:
         image_descriptor = None

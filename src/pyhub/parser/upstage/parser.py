@@ -15,14 +15,14 @@ from PyPDF2.errors import PdfReadError
 
 from pyhub import PromptTemplates
 from pyhub.http import cached_http_async
-from pyhub.llm import AnthropicLLM, GoogleLLM, OllamaLLM, OpenAILLM, LLM
+from pyhub.llm import LLM, AnthropicLLM, GoogleLLM, OllamaLLM, OpenAILLM
 from pyhub.llm.base import BaseLLM, DescribeImageRequest
 from pyhub.llm.types import (
     GoogleChatModelType,
     LLMChatModelType,
+    LLMVendorType,
     OpenAIChatModelType,
     Reply,
-    LLMVendorType,
 )
 from pyhub.parser.documents import Document
 
@@ -54,6 +54,7 @@ class ImageDescriptor:
     max_tokens: Optional[int] = None
     system_prompts: Optional[dict[str, str]] = None
     user_prompts: Optional[dict[str, str]] = None
+    enable_cache: bool = False
 
     DEFAULT_SYSTEM_PROMPTS = {
         "image": "prompts/describe/image/system.md",
@@ -587,7 +588,9 @@ class UpstageDocumentParseParser:
                 self.image_descriptor.llm_model,
             )
 
-            llm_reply_list: list[Reply] = await image_descriptor_llm.describe_images_async(request_list)
+            llm_reply_list: list[Reply] = await image_descriptor_llm.describe_images_async(
+                request_list, enable_cache=self.image_descriptor.enable_cache
+            )
             if not isinstance(llm_reply_list, list):
                 llm_reply_list = [llm_reply_list]  # noqa
 

@@ -155,13 +155,17 @@ async def cache_make_key_and_get_async(
         ],
     ],
     cache_alias: str = "default",
+    enable_cache: bool = False,
 ) -> tuple[Optional[str], Optional[bytes]]:
 
-    if cache_alias not in caches:
+    if not enable_cache:
+        logger.debug("cache disabled : sending api request")
+        cache_key = None
+        cached_value = None
+    elif cache_alias not in caches:
         logger.warning("The specified cache alias '%s' is not configured. Skipping cache lookup.", cache_alias)
         cache_key = None
         cached_value = None
-
     else:
         key_args = dict(type=type, **kwargs)
         cache_key = cache_make_key(key_args)
@@ -187,13 +191,17 @@ def cache_make_key_and_get(
         ],
     ],
     cache_alias: str = "default",
+    enable_cache: bool = False,
 ) -> tuple[Optional[str], Optional[bytes]]:
 
-    if cache_alias not in caches:
+    if not enable_cache:
+        logger.debug("cache disabled : sending api request")
+        cache_key = None
+        cached_value = None
+    elif cache_alias not in caches:
         logger.warning("The specified cache alias '%s' is not configured. Skipping cache lookup.", cache_alias)
         cache_key = None
         cached_value = None
-
     else:
         key_args = dict(type=type, **kwargs)
         cache_key = cache_make_key(key_args)

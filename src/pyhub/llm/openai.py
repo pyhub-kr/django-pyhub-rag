@@ -199,6 +199,7 @@ class OpenAIMixin:
             "openai",
             request_params,
             cache_alias=self.cache_alias,
+            enable_cache=input_context.get("enable_cache", False),
         )
 
         response: Optional[ChatCompletion] = None
@@ -245,7 +246,7 @@ class OpenAIMixin:
             request_params,
             cache_alias=self.cache_alias,
         )
-        
+
         # Add stream_options after cache key generation (if supported)
         if self.supports_stream_options:
             request_params["stream_options"] = {"include_usage": True}
@@ -257,8 +258,12 @@ class OpenAIMixin:
                 reply.usage = None  # cache 된 응답이기에 usage 내역 제거
                 yield reply
         else:
-            logger.info("Request to %s (supports_stream_options=%s, stream_options=%s)", 
-                       self.__class__.__name__, self.supports_stream_options, request_params.get("stream_options"))
+            logger.info(
+                "Request to %s (supports_stream_options=%s, stream_options=%s)",
+                self.__class__.__name__,
+                self.supports_stream_options,
+                request_params.get("stream_options"),
+            )
 
             response_stream = sync_client.chat.completions.create(**request_params)
             usage = None
@@ -272,7 +277,11 @@ class OpenAIMixin:
                     reply_list.append(reply)
                     yield reply
                 if chunk.usage:
-                    logger.info("Found usage in sync stream: input=%s, output=%s", chunk.usage.prompt_tokens, chunk.usage.completion_tokens)
+                    logger.info(
+                        "Found usage in sync stream: input=%s, output=%s",
+                        chunk.usage.prompt_tokens,
+                        chunk.usage.completion_tokens,
+                    )
                     usage = Usage(
                         input=chunk.usage.prompt_tokens or 0,
                         output=chunk.usage.completion_tokens or 0,
@@ -280,15 +289,22 @@ class OpenAIMixin:
 
             logger.info("Processed %d chunks from OpenAI stream", chunk_count)
             if usage:
-                logger.info("Yielding final usage chunk with usage info: input=%d, output=%d", usage.input, usage.output)
+                logger.info(
+                    "Yielding final usage chunk with usage info: input=%d, output=%d", usage.input, usage.output
+                )
                 reply = Reply(text="", usage=usage)
                 reply_list.append(reply)
                 yield reply
             else:
                 if self.supports_stream_options:
-                    logger.warning("No usage information received from %s stream despite stream_options", self.__class__.__name__)
+                    logger.warning(
+                        "No usage information received from %s stream despite stream_options", self.__class__.__name__
+                    )
                 else:
-                    logger.info("No usage information received from %s stream (stream_options not supported)", self.__class__.__name__)
+                    logger.info(
+                        "No usage information received from %s stream (stream_options not supported)",
+                        self.__class__.__name__,
+                    )
 
             if cache_key is not None:
                 cache_set(cache_key, reply_list, alias=self.cache_alias)
@@ -313,8 +329,9 @@ class OpenAIMixin:
             "openai",
             request_params,
             cache_alias=self.cache_alias,
+            enable_cache=input_context.get("enable_cache", False),
         )
-        
+
         # Add stream_options after cache key generation (if supported)
         if self.supports_stream_options:
             request_params["stream_options"] = {"include_usage": True}
@@ -343,15 +360,22 @@ class OpenAIMixin:
                     )
 
             if usage:
-                logger.info("Yielding final usage chunk with usage info: input=%d, output=%d", usage.input, usage.output)
+                logger.info(
+                    "Yielding final usage chunk with usage info: input=%d, output=%d", usage.input, usage.output
+                )
                 reply = Reply(text="", usage=usage)
                 reply_list.append(reply)
                 yield reply
             else:
                 if self.supports_stream_options:
-                    logger.warning("No usage information received from %s stream despite stream_options", self.__class__.__name__)
+                    logger.warning(
+                        "No usage information received from %s stream despite stream_options", self.__class__.__name__
+                    )
                 else:
-                    logger.info("No usage information received from %s stream (stream_options not supported)", self.__class__.__name__)
+                    logger.info(
+                        "No usage information received from %s stream (stream_options not supported)",
+                        self.__class__.__name__,
+                    )
 
             if cache_key is not None:
                 await cache_set_async(cache_key, reply_list, alias=self.cache_alias)
@@ -368,6 +392,7 @@ class OpenAIMixin:
         stream: bool = False,
         use_history: bool = True,
         raise_errors: bool = False,
+        enable_cache: bool = False,
     ) -> Union[Reply, Generator[Reply, None, None]]:
         return super().ask(
             input=input,
@@ -379,6 +404,7 @@ class OpenAIMixin:
             stream=stream,
             use_history=use_history,
             raise_errors=raise_errors,
+            enable_cache=enable_cache,
         )
 
     async def ask_async(
@@ -393,6 +419,7 @@ class OpenAIMixin:
         stream: bool = False,
         use_history: bool = True,
         raise_errors: bool = False,
+        enable_cache: bool = False,
     ) -> Union[Reply, AsyncGenerator[Reply, None]]:
         return await super().ask_async(
             input=input,
@@ -404,6 +431,7 @@ class OpenAIMixin:
             stream=stream,
             use_history=use_history,
             raise_errors=raise_errors,
+            enable_cache=enable_cache,
         )
 
     def embed(
