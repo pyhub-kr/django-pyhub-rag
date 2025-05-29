@@ -54,6 +54,28 @@ DATABASE_URL = ""
 TOML_PATH = ""
 ENV_PATH = ""
 
+[rag]
+# RAG (Retrieval Augmented Generation) 설정
+# 기본 벡터 스토어 백엔드 선택 (pgvector, sqlite-vec)
+default_backend = "sqlite-vec"
+
+[rag.backends.pgvector]
+# PostgreSQL pgvector 벡터 데이터베이스 설정
+enabled = true
+# database_url = "postgresql://user:password@localhost:5432/vectordb"
+# default_table = "documents"
+# default_dimensions = 1536
+# index_type = "hnsw"  # 옵션: hnsw, ivfflat
+# distance_metric = "cosine"  # 옵션: cosine, l2, inner_product
+
+[rag.backends.sqlite-vec]
+# SQLite-vec 벡터 데이터베이스 설정
+enabled = true
+# db_path = "~/.pyhub/vector.db"
+# default_table = "documents"
+# default_dimensions = 1536
+# distance_metric = "cosine"  # 옵션: cosine, l2
+
 [prompt_templates.describe_image]
 system = """{image_system_prompt}"""
 user = """{image_user_prompt}"""
