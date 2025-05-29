@@ -30,6 +30,7 @@ def run(
         None, "--mcp-server", help="MCP 서버 명령 (예: python /path/to/server.py)"
     ),
     mcp_args: Optional[List[str]] = typer.Option(None, "--mcp-arg", help="MCP 서버 인자"),
+    mcp_config: Optional[str] = typer.Option(None, "--mcp-config", help="MCP 설정 파일 경로 (TOML)"),
 ):
     """React Agent를 실행합니다."""
 
@@ -58,7 +59,36 @@ def run(
                 agent_tools.append(tool)
 
     # MCP 도구 로드
-    if mcp_server:
+    if mcp_config:
+        # TOML 설정에서 여러 서버 로드
+        try:
+            import toml
+            from ..agents.mcp import MultiServerMCPClient
+            
+            # TOML 파일 읽기
+            with open(mcp_config, 'r') as f:
+                config = toml.load(f)
+            
+            # MultiServerMCPClient로 도구 로드
+            console.print(f"[yellow]Loading MCP servers from config: {mcp_config}[/yellow]")
+            
+            async def load_from_config():
+                client = MultiServerMCPClient(config.get("mcp", {}).get("servers", {}))
+                async with client:
+                    return await client.get_tools()
+            
+            mcp_tools = asyncio.run(load_from_config())
+            agent_tools.extend(mcp_tools)
+            console.print(f"[green]Loaded {len(mcp_tools)} tools from MCP config[/green]")
+            
+        except Exception as e:
+            console.print(f"[red]Error loading MCP config: {e}[/red]")
+            if verbose:
+                import traceback
+                console.print(traceback.format_exc())
+    
+    elif mcp_server:
+        # 단일 서버 로드 (기존 방식)
         try:
             from ..agents.mcp import load_mcp_tools
 

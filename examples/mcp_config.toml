@@ -1,0 +1,14 @@
+[mcp]
+# MCP 서버 설정 예제
+# prefix_tools = true  # 도구 이름에 서버 이름을 prefix로 추가
+
+[mcp.servers.math]
+# 수학 계산 도구 서버
+command = "python"
+args = ["examples/simple_math_server.py"]
+
+[mcp.servers.weather]
+# 날씨 정보 도구 서버
+command = "python"
+args = ["examples/weather_server.py"]
+# filter_tools = ["get_weather"]  # 특정 도구만 사용하려면 주석 해제
