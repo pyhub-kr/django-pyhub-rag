@@ -77,7 +77,7 @@ Issues = "https://github.com/pyhub-kr/django-pyhub-rag/issues"
 "pyhub.rag" = "pyhub.rag.__main__:app"
 "pyhub.parser" = "pyhub.parser.__main__:app"
 "pyhub.web" = "pyhub.web.__main__:app"
-"pyhub" = "pyhub._main__:app"
+"pyhub" = "pyhub.__main__:app"
 
 [build-system]
 requires = ["hatchling"]

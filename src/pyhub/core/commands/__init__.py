@@ -29,63 +29,8 @@ app.callback(invoke_without_command=True)(print_for_main(logo))
 console = Console()
 
 
-def get_default_toml_content() -> str:
-    """기본 TOML 템플릿 내용을 반환합니다."""
-    from pathlib import Path
-
-    # 실제 프롬프트 템플릿 파일 경로
-    prompt_base = Path(__file__).parent.parent.parent / "parser" / "templates" / "prompts" / "describe"
-
-    # 기본 프롬프트 내용 읽기
-    image_system = ""
-    image_user = ""
-    table_system = ""
-    table_user = ""
-
-    try:
-        image_system_path = prompt_base / "image" / "system.md"
-        if image_system_path.exists():
-            image_system = image_system_path.read_text(encoding="utf-8").strip()
-
-        image_user_path = prompt_base / "image" / "user.md"
-        if image_user_path.exists():
-            image_user = image_user_path.read_text(encoding="utf-8").strip()
-
-        table_system_path = prompt_base / "table" / "system.md"
-        if table_system_path.exists():
-            table_system = table_system_path.read_text(encoding="utf-8").strip()
-
-        table_user_path = prompt_base / "table" / "user.md"
-        if table_user_path.exists():
-            table_user = table_user_path.read_text(encoding="utf-8").strip()
-    except Exception:
-        # 파일을 읽을 수 없는 경우 기본값 사용
-        image_system = "Analyze the given image and provide a structured output."
-        image_user = "Describe this image."
-        table_system = "Analyze the given table and extract structured information."
-        table_user = "Describe this table."
-
-    return f'''[env]
-# UPSTAGE_API_KEY = "up_xxxxx..."
-# OPENAI_API_KEY = "sk-xxxxx..."
-# ANTHROPIC_API_KEY = "sk-ant-xxxxx..."
-# GOOGLE_API_KEY = "AIxxxxx...."
-
-# 무료 PostgreSQL 서비스로서 supabase를 추천합니다. - https://supabase.com
-# DATABASE_URL = "postgresql://postgres:pw@localhost:5432/postgres
-
-USER_DEFAULT_TIME_ZONE = "Asia/Seoul"
-
-[prompt_templates.describe_image]
-system = """{image_system}"""
-
-user = """{image_user}"""
-
-[prompt_templates.describe_table]
-system = """{table_system}"""
-
-user = """{table_user}"""
-'''
+# 공통 유틸리티 import
+from ..toml_utils import get_default_toml_content, open_file_with_editor
 
 
 # toml 서브커맨드 그룹 생성
@@ -222,72 +167,9 @@ def edit(
 
     console.print(f"[dim]{toml_path} 파일을 편집합니다...[/dim]")
 
-    # 에디터로 파일 열기
-    import os
-    import sys
-    import subprocess
-
-    # 1. 환경변수에서 에디터 확인
-    editor = os.environ.get("VISUAL") or os.environ.get("EDITOR")
-
-    # 2. 플랫폼별 기본 명령 시도
-    if not editor:
-        if sys.platform.startswith("win"):
-            # Windows
-            try:
-                subprocess.run(["start", str(toml_path)], shell=True, check=True)
-                console.print(f"[green]✓ Windows 기본 프로그램으로 파일을 열었습니다.[/green]")
-                return
-            except subprocess.CalledProcessError:
-                pass
-        elif sys.platform.startswith("darwin"):
-            # macOS
-            try:
-                subprocess.run(["open", str(toml_path)], check=True)
-                console.print(f"[green]✓ macOS 기본 프로그램으로 파일을 열었습니다.[/green]")
-                return
-            except subprocess.CalledProcessError:
-                pass
-        else:
-            # Linux
-            try:
-                subprocess.run(["xdg-open", str(toml_path)], check=True)
-                console.print(f"[green]✓ 기본 프로그램으로 파일을 열었습니다.[/green]")
-                return
-            except subprocess.CalledProcessError:
-                pass
-
-    # 3. 에디터 명령으로 시도
-    if editor:
-        editors = [editor]
-    else:
-        # 플랫폼별 일반적인 에디터들 시도
-        if sys.platform.startswith("win"):
-            editors = ["code", "notepad++", "notepad"]
-        else:
-            editors = ["code", "vim", "nano", "emacs", "gedit"]
-
-    for ed in editors:
-        try:
-            # Windows에서 notepad의 경우 특별 처리
-            if sys.platform.startswith("win") and ed == "notepad":
-                # notepad는 항상 존재하므로 직접 실행
-                subprocess.run([ed, str(toml_path)], check=True)
-            else:
-                # 다른 에디터들은 일반적인 방식으로 시도
-                subprocess.run([ed, str(toml_path)], check=True, 
-                             stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
-            console.print(f"[green]✓ {ed} 에디터로 파일을 열었습니다.[/green]")
-            return
-        except (subprocess.CalledProcessError, FileNotFoundError):
-            continue
-
-    # 모든 시도가 실패한 경우
-    console.print(f"[red]오류: 파일을 열 수 있는 에디터를 찾을 수 없습니다.[/red]")
-    console.print(f"[dim]시도한 에디터: {', '.join(editors)}[/dim]")
-    console.print(f"[dim]VISUAL 또는 EDITOR 환경변수를 설정하거나, 다음 명령으로 파일 내용을 확인하세요:[/dim]")
-    console.print(f"  [cyan]pyhub toml show[/cyan]")
-    raise typer.Exit(code=1)
+    # 공통 함수를 사용하여 파일 열기
+    if not open_file_with_editor(toml_path):
+        raise typer.Exit(code=1)
 
 
 @toml_app.command()

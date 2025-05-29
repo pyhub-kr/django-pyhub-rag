@@ -1,6 +1,4 @@
 import os
-import subprocess
-import sys
 from pathlib import Path
 from typing import Annotated, Optional
 
@@ -12,6 +10,7 @@ from typer import Option, BadParameter, Exit, Argument
 from pyhub import load_toml
 from pyhub.config import DEFAULT_TOML_PATH
 from pyhub.parser.upstage.parser import ImageDescriptor
+from pyhub.core.toml_utils import get_default_toml_content, open_file_with_editor
 
 
 class Command(RichCommand, TyperCommand):
@@ -166,71 +165,8 @@ user = """{self._get_template_code("prompts/describe/table/user.md")}"""
         t = get_template(template_name)
         return t.template.source
 
-    @classmethod
-    def get_editor_commands(cls) -> list[str]:
-        """시스템에서 사용 가능한 에디터 명령어 목록을 반환합니다."""
-        # 환경 변수에서 기본 에디터 확인
-        editors = []
-
-        # VISUAL or EDITOR 환경 변수 확인
-        if "VISUAL" in os.environ:
-            editors.append(os.environ["VISUAL"])
-        if "EDITOR" in os.environ:
-            editors.append(os.environ["EDITOR"])
-
-        if sys.platform.startswith("win"):
-            editors.extend(["code", "notepad++", "notepad"])
-        else:
-            editors.extend(["code", "vim", "nano", "emacs", "gedit"])
-
-        return editors
 
     def open_with_default_editor(self, file_path: Path) -> None:
-        """다양한 에디터 명령을 시도하여 파일을 엽니다."""
-        file_path_str = str(file_path)
-
-        # 1. 플랫폼 기본 명령 시도
-        try:
-            if sys.platform.startswith("win"):
-                subprocess.run(["start", file_path_str], shell=True, check=True)
-                self.console.print("[green]Windows 기본 프로그램으로 파일을 열었습니다.[/green]")
-                return
-            elif sys.platform.startswith("darwin"):
-                subprocess.run(["open", file_path_str], check=True)
-                self.console.print("[green]macOS 기본 프로그램으로 파일을 열었습니다.[/green]")
-                return
-            else:
-                subprocess.run(["xdg-open", file_path_str], check=True)
-                self.console.print("[green]Linux 기본 프로그램으로 파일을 열었습니다.[/green]")
-                return
-        except (subprocess.SubprocessError, FileNotFoundError):
-            pass
-
-        # 2. 다양한 에디터 명령 시도
-        editors = self.get_editor_commands()
-        last_error = None
-
-        for editor in editors:
-            try:
-                if editor == "code":  # VS Code의 경우 특별 처리
-                    subprocess.run(["code", "--wait", file_path_str], check=True)
-                    self.console.print("[green]Visual Studio Code로 파일을 열었습니다.[/green]")
-                elif sys.platform.startswith("win") and editor == "notepad":
-                    # Windows에서 notepad는 항상 존재하므로 직접 실행
-                    subprocess.run([editor, file_path_str], check=True)
-                    self.console.print(f"[green]{editor} 에디터로 파일을 열었습니다.[/green]")
-                else:
-                    # 다른 에디터들은 stderr/stdout을 숨겨서 시도
-                    subprocess.run([editor, file_path_str], check=True,
-                                 stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
-                    self.console.print(f"[green]{editor} 에디터로 파일을 열었습니다.[/green]")
-                return  # 성공적으로 실행되면 함수 종료
-            except (subprocess.SubprocessError, FileNotFoundError) as e:
-                last_error = e
-                continue
-
-        # 모든 시도가 실패한 경우
-        error_msg = f"파일을 열 수 있는 에디터를 찾을 수 없습니다. 시도한 에디터: {', '.join(editors)}"
-        if last_error:
-            error_msg += f"\n마지막 오류: {str(last_error)}"
-        raise BadParameter(error_msg)
+        """공통 함수를 사용하여 파일을 편집기로 엽니다."""
+        if not open_file_with_editor(file_path):
+            raise BadParameter("파일을 열 수 있는 에디터를 찾을 수 없습니다.")
