@@ -196,7 +196,9 @@ def make_settings(
             "django_htmx.middleware.HtmxMiddleware",
         ],
         # django-components>=0.139.1 에서는 반드시 ROOT_URLCONF 설정이 필요
-        ROOT_URLCONF="",
+        # CLI 명령에서는 URL 라우팅이 필요없지만, 빈 문자열은 오류를 발생시키므로
+        # ui.urls를 dummy urlconf로 사용 (빈 urlpatterns를 가지고 있음)
+        ROOT_URLCONF="pyhub.ui.urls",
         TEMPLATES=[
             {
                 "BACKEND": "django.template.backends.django.DjangoTemplates",
