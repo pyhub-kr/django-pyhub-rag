@@ -30,6 +30,9 @@ def run(
         None, "--mcp-server", help="MCP 서버 명령 (예: python /path/to/server.py)"
     ),
     mcp_args: Optional[List[str]] = typer.Option(None, "--mcp-arg", help="MCP 서버 인자"),
+    mcp_server_http: Optional[str] = typer.Option(
+        None, "--mcp-server-http", help="MCP HTTP 서버 URL (예: http://localhost:3000/mcp)"
+    ),
     mcp_config: Optional[str] = typer.Option(None, "--mcp-config", help="MCP 설정 파일 경로 (TOML)"),
 ):
     """React Agent를 실행합니다."""
@@ -64,29 +67,56 @@ def run(
         try:
             import toml
             from ..agents.mcp import MultiServerMCPClient
-            
+
             # TOML 파일 읽기
-            with open(mcp_config, 'r') as f:
+            with open(mcp_config, "r") as f:
                 config = toml.load(f)
-            
+
             # MultiServerMCPClient로 도구 로드
             console.print(f"[yellow]Loading MCP servers from config: {mcp_config}[/yellow]")
-            
+
             async def load_from_config():
                 client = MultiServerMCPClient(config.get("mcp", {}).get("servers", {}))
                 async with client:
                     return await client.get_tools()
-            
+
             mcp_tools = asyncio.run(load_from_config())
             agent_tools.extend(mcp_tools)
             console.print(f"[green]Loaded {len(mcp_tools)} tools from MCP config[/green]")
-            
+
         except Exception as e:
             console.print(f"[red]Error loading MCP config: {e}[/red]")
             if verbose:
                 import traceback
+
                 console.print(traceback.format_exc())
-    
+
+    elif mcp_server_http:
+        # HTTP 서버 로드
+        try:
+            from ..agents.mcp import load_mcp_tools, MCPClient
+
+            # HTTP 설정
+            config = {"transport": "streamable_http", "url": mcp_server_http}
+
+            console.print(f"[yellow]Loading tools from HTTP MCP server: {mcp_server_http}[/yellow]")
+
+            async def load_from_http():
+                client = MCPClient(config)
+                async with client.connect():
+                    return await load_mcp_tools(client)
+
+            mcp_tools = asyncio.run(load_from_http())
+            agent_tools.extend(mcp_tools)
+            console.print(f"[green]Loaded {len(mcp_tools)} tools from HTTP MCP server[/green]")
+
+        except Exception as e:
+            console.print(f"[red]Error loading HTTP MCP tools: {e}[/red]")
+            if verbose:
+                import traceback
+
+                console.print(traceback.format_exc())
+
     elif mcp_server:
         # 단일 서버 로드 (기존 방식)
         try:

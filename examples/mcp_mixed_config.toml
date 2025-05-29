@@ -1,0 +1,20 @@
+[mcp]
+# 여러 transport 타입을 함께 사용하는 예제
+# prefix_tools = true  # 도구 이름 충돌 방지
+
+[mcp.servers.math_stdio]
+# stdio transport (기본)
+transport = "stdio"
+command = "python"
+args = ["examples/simple_math_server.py"]
+
+[mcp.servers.math_http]
+# streamable HTTP transport
+transport = "streamable_http"
+url = "http://localhost:3000/mcp"
+# headers = { "Authorization" = "Bearer token" }  # 선택적: 인증 헤더
+
+[mcp.servers.weather]
+# transport를 명시하지 않으면 자동 추론 (command가 있으므로 stdio)
+command = "python"
+args = ["examples/weather_server.py"]
