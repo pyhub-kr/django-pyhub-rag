@@ -62,8 +62,9 @@ docs = [
     "mkdocs-glightbox",
     "pymdown-extensions",
 ]
+mcp = ["mcp"]
 
-all = ["django-pyhub-rag[postgres,sqlite,web,parser]"]
+all = ["django-pyhub-rag[postgres,sqlite,web,parser,mcp]"]
 
 [project.urls]
 Homepage = "https://github.com/pyhub-kr/django-pyhub-rag"
