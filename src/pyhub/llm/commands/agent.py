@@ -2,7 +2,7 @@
 
 import asyncio
 import json
-from typing import Optional
+from typing import Optional, List
 
 import typer
 from rich.console import Console
@@ -10,7 +10,7 @@ from rich.panel import Panel
 from rich.syntax import Syntax
 
 from ..agents import Tool, create_react_agent
-from ..agents.tools import Calculator
+from ..agents.tools import Calculator, tool_registry
 from .. import LLM
 
 app = typer.Typer(
@@ -26,26 +26,39 @@ def run(
     model: str = typer.Option("gpt-4o-mini", help="사용할 모델"),
     verbose: bool = typer.Option(False, "--verbose", "-v", help="상세 로그 출력"),
     max_iterations: int = typer.Option(10, help="최대 반복 횟수"),
+    tools: Optional[List[str]] = typer.Option(None, "--tool", "-t", help="사용할 도구 (여러 개 지정 가능)"),
 ):
     """React Agent를 실행합니다."""
     
     # LLM 생성
     llm = LLM.create(model=model)
     
-    # 도구 생성
-    tools = [
-        Tool(
-            name="calculator",
-            description="Performs mathematical calculations. Use this when you need to compute numbers.",
-            func=Calculator().run,
-            args_schema=Calculator().args_schema
-        )
-    ]
+    # 도구 생성 - 레지스트리에서 도구 가져오기
+    agent_tools = []
+    
+    if tools:
+        # 지정된 도구만 사용
+        for tool_name in tools:
+            tool = tool_registry.create_tool(tool_name)
+            if tool:
+                agent_tools.append(tool)
+            else:
+                console.print(f"[yellow]Warning: Tool '{tool_name}' not found[/yellow]")
+    else:
+        # 모든 도구 사용
+        for tool_info in tool_registry.list_tools():
+            tool = tool_registry.create_tool(tool_info['name'])
+            if tool:
+                agent_tools.append(tool)
+    
+    if not agent_tools:
+        console.print("[red]Error: No tools available[/red]")
+        raise typer.Exit(1)
     
     # Agent 생성
     agent = create_react_agent(
         llm=llm,
-        tools=tools,
+        tools=agent_tools,
         verbose=verbose,
         max_iterations=max_iterations
     )
@@ -74,24 +87,19 @@ def run(
 def list_tools():
     """사용 가능한 도구 목록을 표시합니다."""
     
-    tools = [
-        {
-            "name": "calculator",
-            "description": "Performs mathematical calculations",
-            "args": {
-                "expression": "Mathematical expression to evaluate (e.g., '2 + 2', '10 * 5')"
-            }
-        }
-    ]
+    tools = tool_registry.list_tools()
     
     console.print("[bold]Available Tools:[/bold]\n")
     
     for tool in tools:
         console.print(f"[bold blue]{tool['name']}[/bold blue]")
         console.print(f"  Description: {tool['description']}")
-        console.print("  Arguments:")
-        for arg, desc in tool['args'].items():
-            console.print(f"    - {arg}: {desc}")
+        if tool['args']:
+            console.print("  Arguments:")
+            for arg, desc in tool['args'].items():
+                console.print(f"    - {arg}: {desc}")
+        else:
+            console.print("  Arguments: None")
         console.print()
 
 
