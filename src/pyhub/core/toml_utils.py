@@ -76,6 +76,23 @@ enabled = true
 # default_dimensions = 1536
 # distance_metric = "cosine"  # 옵션: cosine, l2
 
+[mcp]
+# MCP (Model Context Protocol) 서버 설정
+# 여러 MCP 서버를 정의할 수 있습니다
+
+# [mcp.servers.math]
+# # 수학 도구를 제공하는 MCP 서버 예제
+# command = "python"
+# args = ["/path/to/math_server.py"]
+# # env = { PYTHONPATH = "/custom/path" }  # 선택적: 환경 변수
+# # filter_tools = ["add", "multiply"]  # 선택적: 특정 도구만 로드
+
+# [mcp.servers.web]
+# # 웹 검색 도구를 제공하는 MCP 서버 예제
+# command = "node"
+# args = ["/path/to/web_search_server.js"]
+# # filter_tools = ["search", "browse"]
+
 [prompt_templates.describe_image]
 system = """{image_system_prompt}"""
 user = """{image_user_prompt}"""

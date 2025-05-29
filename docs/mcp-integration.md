@@ -57,7 +57,7 @@ agent = create_react_agent(llm=llm, tools=tools)
 
 ## Example MCP Server
 
-See `examples/mcp_math_server.py` for a simple example of an MCP server that provides math tools.
+See `examples/simple_math_server.py` for a simple example of an MCP server that provides math tools.
 
 ## Features
 
