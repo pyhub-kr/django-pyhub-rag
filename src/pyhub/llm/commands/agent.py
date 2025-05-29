@@ -1,16 +1,15 @@
 """Agent CLI command."""
 
 import asyncio
-import json
 from typing import Optional, List
 
 import typer
 from rich.console import Console
 from rich.panel import Panel
-from rich.syntax import Syntax
 
-from ..agents import Tool, create_react_agent
-from ..agents.tools import Calculator, tool_registry
+from pyhub import init
+from ..agents import create_react_agent
+from ..agents.tools import tool_registry
 from .. import LLM
 
 app = typer.Typer(
@@ -29,6 +28,9 @@ def run(
     tools: Optional[List[str]] = typer.Option(None, "--tool", "-t", help="사용할 도구 (여러 개 지정 가능)"),
 ):
     """React Agent를 실행합니다."""
+    
+    # Django 초기화
+    init()
     
     # LLM 생성
     llm = LLM.create(model=model)
@@ -90,6 +92,9 @@ def run(
 @app.command()
 def list_tools():
     """사용 가능한 도구 목록을 표시합니다."""
+    
+    # Django 초기화
+    init()
     
     tools = tool_registry.list_tools()
     
