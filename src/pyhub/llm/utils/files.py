@@ -248,7 +248,11 @@ def optimize_image(
         content_type = "image/jpeg"
     else:
         # 원본 형식 유지
-        img.save(buffer, format=original_format, quality=quality if original_format == "JPEG" else None)
+        if original_format.upper() in ["JPEG", "JPG"]:
+            img.save(buffer, format=original_format, quality=quality, optimize=True)
+        else:
+            # PNG, GIF 등 quality 파라미터를 지원하지 않는 포맷
+            img.save(buffer, format=original_format)
 
     return buffer.getvalue(), content_type
 
