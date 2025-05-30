@@ -258,7 +258,7 @@ class OpenAIMixin:
                 reply.usage = None  # cache 된 응답이기에 usage 내역 제거
                 yield reply
         else:
-            logger.info(
+            logger.debug(
                 "Request to %s (supports_stream_options=%s, stream_options=%s)",
                 self.__class__.__name__,
                 self.supports_stream_options,
@@ -277,7 +277,7 @@ class OpenAIMixin:
                     reply_list.append(reply)
                     yield reply
                 if chunk.usage:
-                    logger.info(
+                    logger.debug(
                         "Found usage in sync stream: input=%s, output=%s",
                         chunk.usage.prompt_tokens,
                         chunk.usage.completion_tokens,
@@ -287,9 +287,9 @@ class OpenAIMixin:
                         output=chunk.usage.completion_tokens or 0,
                     )
 
-            logger.info("Processed %d chunks from OpenAI stream", chunk_count)
+            logger.debug("Processed %d chunks from OpenAI stream", chunk_count)
             if usage:
-                logger.info(
+                logger.debug(
                     "Yielding final usage chunk with usage info: input=%d, output=%d", usage.input, usage.output
                 )
                 reply = Reply(text="", usage=usage)
@@ -301,7 +301,7 @@ class OpenAIMixin:
                         "No usage information received from %s stream despite stream_options", self.__class__.__name__
                     )
                 else:
-                    logger.info(
+                    logger.debug(
                         "No usage information received from %s stream (stream_options not supported)",
                         self.__class__.__name__,
                     )
@@ -360,7 +360,7 @@ class OpenAIMixin:
                     )
 
             if usage:
-                logger.info(
+                logger.debug(
                     "Yielding final usage chunk with usage info: input=%d, output=%d", usage.input, usage.output
                 )
                 reply = Reply(text="", usage=usage)
@@ -372,7 +372,7 @@ class OpenAIMixin:
                         "No usage information received from %s stream despite stream_options", self.__class__.__name__
                     )
                 else:
-                    logger.info(
+                    logger.debug(
                         "No usage information received from %s stream (stream_options not supported)",
                         self.__class__.__name__,
                     )

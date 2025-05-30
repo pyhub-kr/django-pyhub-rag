@@ -130,8 +130,8 @@ def ask(
     if is_verbose:
         log_level = logging.DEBUG
     else:
-        log_level = logging.INFO
-    init(debug=True, log_level=log_level)
+        log_level = logging.WARNING  # Only show warnings and errors when not verbose
+    init(debug=is_verbose, log_level=log_level)
 
     # 템플릿 로드
     if template_name:
@@ -266,8 +266,6 @@ def ask(
                             )
                         usage = chunk.usage
                 console.print()
-                if is_verbose:
-                    console.print(f"[dim]디버그: 스트리밍 완료. usage 존재: {usage is not None}[/dim]")
 
         # 응답 시간 계산
         elapsed_time = time.time() - start_time
@@ -300,14 +298,14 @@ def ask(
                 try:
                     from pyhub.llm.utils.pricing import calculate_cost
 
-                    cost = calculate_cost(model.value, usage.input, usage.output)
+                    cost = calculate_cost(model, usage.input, usage.output)
                     cost_table = Table(title="예상 비용")
                     cost_table.add_column("항목", style="cyan")
                     cost_table.add_column("값", style="green")
-                    cost_table.add_row("입력 비용", f"${cost['input_cost']:.6f}")
-                    cost_table.add_row("출력 비용", f"${cost['output_cost']:.6f}")
-                    cost_table.add_row("총 비용", f"${cost['total_cost']:.6f}")
-                    cost_table.add_row("원화 환산", f"₩{cost['total_cost'] * 1300:.0f}")
+                    cost_table.add_row("입력 비용", f"$ {cost['input_cost']:.6f}")
+                    cost_table.add_row("출력 비용", f"$ {cost['output_cost']:.6f}")
+                    cost_table.add_row("총 비용", f"$ {cost['total_cost']:.6f}")
+                    cost_table.add_row("원화 환산", f"₩ {cost['total_cost'] * 1300:.6f}")
                     console.print(cost_table)
                 except Exception as e:
                     console.print(f"[red]비용 계산 오류: {e}[/red]")
