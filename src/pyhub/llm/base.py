@@ -25,6 +25,13 @@ from .types import (
 logger = logging.getLogger(__name__)
 
 
+class TemplateDict(dict):
+    """템플릿 변수 중 존재하지 않는 키는 원래 형태({key})로 유지하는 딕셔너리"""
+
+    def __missing__(self, key):
+        return '{' + key + '}'
+
+
 @dataclass
 class DescribeImageRequest:
     image: Union[str, Path, File]
@@ -114,9 +121,13 @@ class BaseLLM(abc.ABC):
             elif "{{" in template or "{%" in template:
                 logger.debug("using string template render : %s ...", repr(template))
                 return Template(template).render(Context(context))
-            # 일반 문자열 포맷팅
+            # 일반 문자열 포맷팅 - 존재하는 키만 치환하고 나머지는 그대로 유지
             if context:
-                return template.format(**context)
+                try:
+                    return template.format_map(TemplateDict(context))
+                except Exception as e:
+                    logger.debug("Template formatting failed: %s", e)
+                    return template
             return template
 
         return None
