@@ -1,8 +1,12 @@
 from django.conf import settings
 from environ import Env
+import pytest
 
 
 def pytest_configure():
+    # Django 설정이 이미 되어있으면 다시 설정하지 않음
+    if settings.configured:
+        return
 
     env = Env()
     env.DB_SCHEMES["sqlite"] = "pyhub.db.backends.sqlite3"
@@ -14,9 +18,8 @@ def pytest_configure():
         INSTALLED_APPS=[
             "django.contrib.contenttypes",
             "django.contrib.auth",
+            "pyhub.core",
             "pyhub.rag",
-            "pyhub.doku",
-            "pyhub.llm",
             "test_app",
         ],
         CACHES={

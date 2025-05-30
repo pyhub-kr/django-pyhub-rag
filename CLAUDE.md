@@ -63,6 +63,47 @@ pyhub.web
 
 - 테스트 시에는 pytest가 아니라 make test 명령을 활용한다.
 
+## Testing
+
+### Running Tests
+
+#### Command Line (Recommended)
+```bash
+# Run all tests
+make test
+
+# Run specific test file  
+make test tests/test_llm.py
+
+# Using pytest directly
+python -m pytest tests/test_fields_core.py -v
+
+# Skip vector database tests (when sqlite-vec not available)
+SKIP_DATABASE_TESTS=1 python -m pytest tests/
+```
+
+#### PyCharm/IDE Setup
+For PyCharm or other IDEs using Django's test runner, use the dedicated settings module:
+
+**Settings → Languages & Frameworks → Django → Settings:**
+- Django project root: `/path/to/django-pyhub-rag`
+- Settings: `tests.django_settings`
+- Manage script: `/path/to/django-pyhub-rag/tests/manage.py`
+
+**Run Configuration:**
+- Test: Django tests
+- Settings: `tests.django_settings`
+- Working directory: `/path/to/django-pyhub-rag`
+
+This configuration excludes vector-related apps to avoid sqlite-vec dependencies in the test environment.
+
+### Test Organization
+- All tests are centralized in the `tests/` directory
+- Core field tests: `tests/test_fields_core.py`
+- LLM file utilities: `tests/test_llm_files.py`
+- Cache functionality: `tests/test_caches.py`
+- Vector database models: `tests/test_models.py` (requires vector extensions)
+
 ## Architecture
 
 ### Django Apps Structure

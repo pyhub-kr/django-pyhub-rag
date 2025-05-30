@@ -4,7 +4,6 @@ import json
 import pytest
 from pathlib import Path
 from unittest.mock import Mock, AsyncMock, patch
-from decimal import Decimal
 
 from django.core.files import File
 

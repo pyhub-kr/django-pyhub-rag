@@ -120,7 +120,7 @@ class TestCaches(TestCase):
         mock_client.base_url = "https://test.com"
         mock_cache_get.return_value = b"cached_data"
 
-        cache_key, cached_value = cache_make_key_and_get("test_type", {"key": "value"})
+        cache_key, cached_value = cache_make_key_and_get("test_type", {"key": "value"}, enable_cache=True)
 
         assert cached_value == b"cached_data"
         mock_cache_get.assert_called_once()
@@ -132,7 +132,7 @@ class TestCaches(TestCase):
         mock_client.base_url = "https://test.com"
         mock_cache_get.return_value = None
 
-        cache_key, cached_value = cache_make_key_and_get("test_type", {"key": "value"})
+        cache_key, cached_value = cache_make_key_and_get("test_type", {"key": "value"}, enable_cache=True)
 
         assert cached_value is None
         mock_cache_get.assert_called_once()
@@ -145,7 +145,7 @@ class TestCaches(TestCase):
         mock_client.base_url = "https://test.com"
         mock_cache_get.return_value = b"cached_data"
 
-        cache_key, cached_value = await cache_make_key_and_get_async("test_type", {"key": "value"})
+        cache_key, cached_value = await cache_make_key_and_get_async("test_type", {"key": "value"}, enable_cache=True)
 
         assert cached_value == b"cached_data"
         mock_cache_get.assert_called_once()
@@ -158,7 +158,7 @@ class TestCaches(TestCase):
         mock_client.base_url = "https://test.com"
         mock_cache_get.return_value = None
 
-        cache_key, cached_value = await cache_make_key_and_get_async("test_type", {"key": "value"})
+        cache_key, cached_value = await cache_make_key_and_get_async("test_type", {"key": "value"}, enable_cache=True)
 
         assert cached_value is None
         mock_cache_get.assert_called_once()

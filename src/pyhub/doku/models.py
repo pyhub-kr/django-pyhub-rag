@@ -28,6 +28,7 @@ class Document(
         UPSTAGE_DOCUMENT_PARSE = "upstage/document_parse", "Upstage Document Parse API"
 
     engine = models.CharField(
+        max_length=50,
         choices=Engine.choices,
         default=Engine.UPSTAGE_DOCUMENT_PARSE,
         verbose_name="문서 파싱 엔진",
