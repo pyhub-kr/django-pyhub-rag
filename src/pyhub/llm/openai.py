@@ -155,29 +155,33 @@ class OpenAIMixin:
             "openai",
             request_params,
             cache_alias=self.cache_alias,
+            enable_cache=input_context.get("enable_cache", False),
         )
 
         response: Optional[ChatCompletion] = None
+        is_cached = False
         if cached_value is not None:
             try:
                 response = ChatCompletion.model_validate_json(cached_value)
+                is_cached = True
             except pydantic.ValidationError as e:
                 logger.error("Invalid cached value : %s", e)
 
         if response is None:
             logger.debug("request to openai")
             response: ChatCompletion = sync_client.chat.completions.create(**request_params)
-            if cached_value is not None:
+            if cache_key is not None:
                 cache_set(cache_key, response.model_dump_json(), alias=self.cache_alias)
 
         assert response is not None
 
+        # 캐시된 응답인 경우 usage를 0으로 설정
+        usage_input = 0 if is_cached else (response.usage.prompt_tokens or 0)
+        usage_output = 0 if is_cached else (response.usage.completion_tokens or 0)
+        
         return Reply(
             text=response.choices[0].message.content,
-            usage=Usage(
-                input=response.usage.prompt_tokens or 0,
-                output=response.usage.completion_tokens or 0,
-            ),
+            usage=Usage(input=usage_input, output=usage_output),
         )
 
     async def _make_ask_async(
@@ -203,9 +207,11 @@ class OpenAIMixin:
         )
 
         response: Optional[ChatCompletion] = None
+        is_cached = False
         if cached_value is not None:
             try:
                 response = ChatCompletion.model_validate_json(cached_value)
+                is_cached = True
             except pydantic.ValidationError as e:
                 logger.error("Invalid cached value : %s", e)
 
@@ -217,12 +223,13 @@ class OpenAIMixin:
 
         assert response is not None
 
+        # 캐시된 응답인 경우 usage를 0으로 설정
+        usage_input = 0 if is_cached else (response.usage.prompt_tokens or 0)
+        usage_output = 0 if is_cached else (response.usage.completion_tokens or 0)
+        
         return Reply(
             text=response.choices[0].message.content,
-            usage=Usage(
-                input=response.usage.prompt_tokens or 0,
-                output=response.usage.completion_tokens or 0,
-            ),
+            usage=Usage(input=usage_input, output=usage_output),
         )
 
     def _make_ask_stream(
@@ -245,6 +252,7 @@ class OpenAIMixin:
             "openai",
             request_params,
             cache_alias=self.cache_alias,
+            enable_cache=input_context.get("enable_cache", False),
         )
 
         # Add stream_options after cache key generation (if supported)
@@ -435,7 +443,7 @@ class OpenAIMixin:
         )
 
     def embed(
-        self, input: Union[str, list[str]], model: Optional[OpenAIEmbeddingModelType] = None
+        self, input: Union[str, list[str]], model: Optional[OpenAIEmbeddingModelType] = None, enable_cache: bool = False
     ) -> Union[Embed, EmbedList]:
         embedding_model = cast(OpenAIEmbeddingModelType, model or self.embedding_model)
 
@@ -446,6 +454,7 @@ class OpenAIMixin:
             "openai",
             request_params,
             cache_alias=self.cache_alias,
+            enable_cache=enable_cache,
         )
 
         response: Optional[CreateEmbeddingResponse] = None
@@ -468,7 +477,7 @@ class OpenAIMixin:
         return EmbedList([Embed(v.embedding) for v in response.data], usage=usage)
 
     async def embed_async(
-        self, input: Union[str, list[str]], model: Optional[OpenAIEmbeddingModelType] = None
+        self, input: Union[str, list[str]], model: Optional[OpenAIEmbeddingModelType] = None, enable_cache: bool = False
     ) -> Union[Embed, EmbedList]:
         embedding_model = cast(OpenAIEmbeddingModelType, model or self.embedding_model)
 
@@ -479,6 +488,7 @@ class OpenAIMixin:
             "openai",
             request_params,
             cache_alias=self.cache_alias,
+            enable_cache=enable_cache,
         )
 
         response: Optional[CreateEmbeddingResponse] = None

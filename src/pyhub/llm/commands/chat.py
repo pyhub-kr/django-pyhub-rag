@@ -56,6 +56,11 @@ def chat(
         help="마크다운 렌더링 사용",
     ),
     is_verbose: bool = typer.Option(False, "--verbose", help="상세 정보 표시"),
+    enable_cache: bool = typer.Option(
+        False,
+        "--enable-cache",
+        help="API 응답 캐시를 활성화합니다",
+    ),
 ):
     """대화형 LLM 세션을 시작합니다."""
 
@@ -161,7 +166,7 @@ def chat(
             )
 
             # 스트리밍 응답
-            for chunk in llm.ask(user_input, stream=True):
+            for chunk in llm.ask(user_input, stream=True, enable_cache=enable_cache):
                 if markdown_mode and "\n" in chunk.text:
                     # 마크다운 모드에서는 전체 응답을 모아서 렌더링
                     response_text += chunk.text

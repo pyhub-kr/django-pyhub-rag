@@ -34,6 +34,11 @@ def run(
         None, "--mcp-server-http", help="MCP HTTP 서버 URL (예: http://localhost:3000/mcp)"
     ),
     mcp_config: Optional[str] = typer.Option(None, "--mcp-config", help="MCP 설정 파일 경로 (TOML)"),
+    enable_cache: bool = typer.Option(
+        False,
+        "--enable-cache",
+        help="API 응답 캐시를 활성화합니다",
+    ),
 ):
     """React Agent를 실행합니다."""
 

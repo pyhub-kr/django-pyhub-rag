@@ -164,12 +164,15 @@ class GoogleLLM(BaseLLM):
             "google",
             request_params,
             cache_alias="google",
+            enable_cache=input_context.get("enable_cache", False),
         )
 
         response: Optional[GenerateContentResponse] = None
+        is_cached = False
         if cached_value is not None:
             try:
                 response = GenerateContentResponse.model_validate_json(cached_value)
+                is_cached = True
             except pydantic.ValidationError as e:
                 logger.error("Invalid cached value : %s", e)
 
@@ -181,11 +184,15 @@ class GoogleLLM(BaseLLM):
 
         assert response is not None
 
+        # 캐시된 응답인 경우 usage를 0으로 설정
+        usage_input = 0 if is_cached else (response.usage_metadata.prompt_token_count or 0)
+        usage_output = 0 if is_cached else (response.usage_metadata.candidates_token_count or 0)
+
         return Reply(
             text=response.text,
             usage=Usage(
-                input=response.usage_metadata.prompt_token_count or 0,
-                output=response.usage_metadata.candidates_token_count or 0,
+                input=usage_input,
+                output=usage_output,
             ),
         )
 
@@ -203,12 +210,15 @@ class GoogleLLM(BaseLLM):
             "google",
             request_params,
             cache_alias="google",
+            enable_cache=input_context.get("enable_cache", False),
         )
 
         response: Optional[GenerateContentResponse] = None
+        is_cached = False
         if cached_value is not None:
             try:
                 response = GenerateContentResponse.model_validate_json(cached_value)
+                is_cached = True
             except pydantic.ValidationError as e:
                 logger.error("Invalid cached value : %s", e)
 
@@ -220,11 +230,15 @@ class GoogleLLM(BaseLLM):
 
         assert response is not None
 
+        # 캐시된 응답인 경우 usage를 0으로 설정
+        usage_input = 0 if is_cached else (response.usage_metadata.prompt_token_count or 0)
+        usage_output = 0 if is_cached else (response.usage_metadata.candidates_token_count or 0)
+
         return Reply(
             text=response.text,
             usage=Usage(
-                input=response.usage_metadata.prompt_token_count or 0,
-                output=response.usage_metadata.candidates_token_count or 0,
+                input=usage_input,
+                output=usage_output,
             ),
         )
 
@@ -242,12 +256,15 @@ class GoogleLLM(BaseLLM):
             "google",
             dict(stream=True, **request_params),
             cache_alias="google",
+            enable_cache=input_context.get("enable_cache", False),
         )
 
         if cached_value is not None:
             reply_list = cast(list[Reply], cached_value)
             for reply in reply_list:
-                reply.usage = None  # cache 된 응답이기에 usage 내역 제거
+                if reply.usage is not None:
+                    # 캐시된 응답인 경우 usage를 0으로 설정
+                    reply.usage = Usage(input=0, output=0)
                 yield reply
 
         else:
@@ -287,12 +304,15 @@ class GoogleLLM(BaseLLM):
             "google",
             dict(stream=True, **request_params),
             cache_alias="google",
+            enable_cache=input_context.get("enable_cache", False),
         )
 
         if cached_value is not None:
             reply_list = cast(list[Reply], cached_value)
             for reply in reply_list:
-                reply.usage = None
+                if reply.usage is not None:
+                    # 캐시된 응답인 경우 usage를 0으로 설정
+                    reply.usage = Usage(input=0, output=0)
                 yield reply
 
         else:
@@ -378,6 +398,7 @@ class GoogleLLM(BaseLLM):
         self,
         input: Union[str, list[str]],
         model: Optional[GoogleEmbeddingModelType] = None,
+        enable_cache: bool = False,
     ) -> Union[Embed, EmbedList]:
         embedding_model = cast(GoogleEmbeddingModelType, model or self.embedding_model)
 
@@ -392,12 +413,15 @@ class GoogleLLM(BaseLLM):
             "google",
             request_params,
             cache_alias="google",
+            enable_cache=enable_cache,
         )
 
         response: Optional[EmbedContentResponse] = None
+        is_cached = False
         if cached_value is not None:
             try:
                 response = EmbedContentResponse.model_validate_json(cached_value)
+                is_cached = True
             except pydantic.ValidationError as e:
                 logger.error("Invalid cached value : %s", e)
 
@@ -407,7 +431,8 @@ class GoogleLLM(BaseLLM):
             if cache_key is not None:
                 cache_set(cache_key, response.model_dump_json(), alias="google")
 
-        usage = None  # TODO: response에 usage_metadata가 없음
+        # TODO: response에 usage_metadata가 없음 - 캐시된 응답인 경우에도 None 유지
+        usage = None
         if isinstance(input, str):
             return Embed(response.embeddings[0].values, usage=usage)
         return EmbedList([Embed(v.values) for v in response.embeddings], usage=usage)
@@ -416,6 +441,7 @@ class GoogleLLM(BaseLLM):
         self,
         input: Union[str, list[str]],
         model: Optional[GoogleEmbeddingModelType] = None,
+        enable_cache: bool = False,
     ) -> Union[Embed, EmbedList]:
         embedding_model = cast(GoogleEmbeddingModelType, model or self.embedding_model)
 
@@ -430,12 +456,15 @@ class GoogleLLM(BaseLLM):
             "google",
             request_params,
             cache_alias="google",
+            enable_cache=enable_cache,
         )
 
         response: Optional[EmbedContentResponse] = None
+        is_cached = False
         if cached_value is not None:
             try:
                 response = EmbedContentResponse.model_validate_json(cached_value)
+                is_cached = True
             except pydantic.ValidationError as e:
                 logger.error("Invalid cached value : %s", e)
 
@@ -444,7 +473,8 @@ class GoogleLLM(BaseLLM):
             if cache_key is not None:
                 await cache_set_async(cache_key, response.model_dump_json(), alias="google")
 
-        usage = None  # TODO: response에 usage_metadata가 없음
+        # TODO: response에 usage_metadata가 없음 - 캐시된 응답인 경우에도 None 유지
+        usage = None
         if isinstance(input, str):
             return Embed(response.embeddings[0].values, usage=usage)
         return EmbedList([Embed(v.values) for v in response.embeddings], usage=usage)

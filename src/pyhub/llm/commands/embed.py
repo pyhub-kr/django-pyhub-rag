@@ -45,6 +45,11 @@ def fill_jsonl(
     ),
     is_force: bool = typer.Option(False, "--force", "-f", help="확인 없이 출력 폴더 삭제 후 재생성"),
     is_verbose: bool = typer.Option(False, "--verbose", help="상세한 처리 정보 표시"),
+    enable_cache: bool = typer.Option(
+        False,
+        "--enable-cache",
+        help="API 응답 캐시를 활성화합니다",
+    ),
 ):
     """JSONL 파일 데이터의 page_content 필드 값을 임베딩하고 embedding 필드에 저장합니다."""
 
@@ -95,7 +100,7 @@ def fill_jsonl(
                     # Create embedding field if it doesn't exist
                     embedding = obj.get("embedding")
                     if not embedding:
-                        embedding = llm.embed(obj["page_content"])
+                        embedding = llm.embed(obj["page_content"], enable_cache=enable_cache)
                         obj["embedding"] = embedding
                         usage = embedding.usage
                         total_usage += usage
@@ -137,6 +142,11 @@ def text(
         help="출력 형식 (json, list, numpy)",
     ),
     is_verbose: bool = typer.Option(False, "--verbose", help="상세한 처리 정보 표시"),
+    enable_cache: bool = typer.Option(
+        False,
+        "--enable-cache",
+        help="API 응답 캐시를 활성화합니다",
+    ),
 ):
     """텍스트를 임베딩하여 벡터를 출력합니다."""
 
@@ -158,7 +168,7 @@ def text(
         console.print(f"[dim]입력 텍스트 길이: {len(query)} 문자[/dim]")
 
     # 임베딩 생성
-    embedding_result = llm.embed(query)
+    embedding_result = llm.embed(query, enable_cache=enable_cache)
 
     # 출력 형식에 따라 처리
     if output_format == "json":
@@ -213,6 +223,11 @@ def similarity(
         help="유사도 측정 방식 (cosine, euclidean, dot)",
     ),
     is_verbose: bool = typer.Option(False, "--verbose", help="상세한 처리 정보 표시"),
+    enable_cache: bool = typer.Option(
+        False,
+        "--enable-cache",
+        help="API 응답 캐시를 활성화합니다",
+    ),
 ):
     """두 텍스트 또는 벡터 간의 유사도를 계산합니다."""
 
@@ -250,8 +265,8 @@ def similarity(
             console.print(f"[dim]텍스트 1 길이: {len(text1)} 문자[/dim]")
             console.print(f"[dim]텍스트 2 길이: {len(text2)} 문자[/dim]")
 
-        embed1 = llm.embed(text1)
-        embed2 = llm.embed(text2)
+        embed1 = llm.embed(text1, enable_cache=enable_cache)
+        embed2 = llm.embed(text2, enable_cache=enable_cache)
         vec1 = np.array(embed1.array)
         vec2 = np.array(embed2.array)
     else:
@@ -343,6 +358,11 @@ def batch(
     ),
     is_force: bool = typer.Option(False, "--force", "-f", help="기존 파일 덮어쓰기"),
     is_verbose: bool = typer.Option(False, "--verbose", help="상세한 처리 정보 표시"),
+    enable_cache: bool = typer.Option(
+        False,
+        "--enable-cache",
+        help="API 응답 캐시를 활성화합니다",
+    ),
 ):
     """여러 텍스트를 일괄적으로 임베딩합니다."""
 
@@ -407,7 +427,7 @@ def batch(
                 batch_usage = Usage()
 
                 for text in batch:
-                    embed_result = llm.embed(text)
+                    embed_result = llm.embed(text, enable_cache=enable_cache)
                     batch_results.append(
                         {
                             "text": text,

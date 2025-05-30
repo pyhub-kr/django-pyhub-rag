@@ -77,6 +77,11 @@ def ask(
         "--no-stream",
         help="스트리밍 비활성화 (기본: 스트리밍 활성)",
     ),
+    enable_cache: bool = typer.Option(
+        False,
+        "--enable-cache",
+        help="API 응답 캐시를 활성화합니다",
+    ),
 ):
     """LLM에 질의하고 응답을 출력합니다.
 
@@ -203,7 +208,7 @@ def ask(
 
         if output_json or choices:
             # 구조화된 응답
-            response = llm.ask(query, choices=choices)
+            response = llm.ask(query, choices=choices, enable_cache=enable_cache)
             usage = response.usage if hasattr(response, "usage") else None
             if output_json:
                 import json
@@ -247,7 +252,7 @@ def ask(
                 # 비스트리밍 모드
                 if is_verbose:
                     console.print(f"[dim]디버그: 비스트리밍 모드 사용[/dim]")
-                response = llm.ask(query, stream=False)
+                response = llm.ask(query, stream=False, enable_cache=enable_cache)
                 response_text = response.text
                 usage = response.usage
                 console.print(response_text)
@@ -255,7 +260,7 @@ def ask(
                 # 스트리밍 모드 (기본)
                 if is_verbose:
                     console.print(f"[dim]디버그: 스트리밍 시작...[/dim]")
-                for chunk in llm.ask(query, stream=True):
+                for chunk in llm.ask(query, stream=True, enable_cache=enable_cache):
                     if chunk.text:  # 텍스트가 있는 경우에만 출력
                         console.print(chunk.text, end="")
                         response_text += chunk.text
@@ -333,10 +338,10 @@ def ask(
         while query:
             console.print("AI:", end=" ")
             if no_stream:
-                response = llm.ask(query, stream=False)
+                response = llm.ask(query, stream=False, enable_cache=enable_cache)
                 console.print(response.text)
             else:
-                for chunk in llm.ask(query, stream=True):
+                for chunk in llm.ask(query, stream=True, enable_cache=enable_cache):
                     console.print(chunk.text, end="")
                 console.print()
 

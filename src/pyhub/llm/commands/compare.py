@@ -64,6 +64,11 @@ def compare(
         help="응답 시간 비교 표시",
     ),
     is_verbose: bool = typer.Option(False, "--verbose", help="상세 정보 표시"),
+    enable_cache: bool = typer.Option(
+        False,
+        "--enable-cache",
+        help="API 응답 캐시를 활성화합니다",
+    ),
 ):
     """여러 LLM 모델의 응답을 비교합니다."""
 
@@ -109,7 +114,7 @@ def compare(
             usage = None
 
             # 스트리밍 대신 일반 응답으로 받기 (비교를 위해)
-            response = llm.ask(query, stream=False)
+            response = llm.ask(query, stream=False, enable_cache=enable_cache)
             response_text = response.text
             usage = response.usage if hasattr(response, "usage") else None
 

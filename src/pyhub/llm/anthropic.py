@@ -159,12 +159,15 @@ class AnthropicLLM(BaseLLM):
             "anthropic",
             request_params,
             cache_alias="anthropic",
+            enable_cache=input_context.get("enable_cache", False),
         )
 
         response: Optional[anthropic.types.Message] = None
+        is_cached = False
         if cached_value is not None:
             try:
                 response = anthropic.types.Message.model_validate_json(cached_value)
+                is_cached = True
             except pydantic.ValidationError as e:
                 logger.error("cached_value is valid : %s", e)
 
@@ -176,9 +179,13 @@ class AnthropicLLM(BaseLLM):
 
         assert response is not None
 
+        # 캐시된 응답인 경우 usage를 0으로 설정
+        usage_input = 0 if is_cached else (response.usage.input_tokens or 0)
+        usage_output = 0 if is_cached else (response.usage.output_tokens or 0)
+        
         return Reply(
             text=response.content[0].text,
-            usage=Usage(input=response.usage.input_tokens, output=response.usage.output_tokens),
+            usage=Usage(input=usage_input, output=usage_output),
         )
 
     async def _make_ask_async(
@@ -197,12 +204,15 @@ class AnthropicLLM(BaseLLM):
             "anthropic",
             request_params,
             cache_alias="anthropic",
+            enable_cache=input_context.get("enable_cache", False),
         )
 
         response: Optional[anthropic.types.Message] = None
+        is_cached = False
         if cached_value is not None:
             try:
                 response = anthropic.types.Message.model_validate_json(cached_value)
+                is_cached = True
             except pydantic.ValidationError as e:
                 logger.error("cached_value is valid : %s", e)
 
@@ -214,9 +224,13 @@ class AnthropicLLM(BaseLLM):
 
         assert response is not None
 
+        # 캐시된 응답인 경우 usage를 0으로 설정
+        usage_input = 0 if is_cached else (response.usage.input_tokens or 0)
+        usage_output = 0 if is_cached else (response.usage.output_tokens or 0)
+        
         return Reply(
             text=response.content[0].text,
-            usage=Usage(input=response.usage.input_tokens, output=response.usage.output_tokens),
+            usage=Usage(input=usage_input, output=usage_output),
         )
 
     def _make_ask_stream(
@@ -237,12 +251,13 @@ class AnthropicLLM(BaseLLM):
             "anthropic",
             request_params,
             cache_alias="anthropic",
+            enable_cache=input_context.get("enable_cache", False),
         )
 
         if cached_value is not None:
             reply_list = cast(list[Reply], cached_value)
             for reply in reply_list:
-                reply.usage = None
+                reply.usage = None  # cache 된 응답이기에 usage 내역 제거
                 yield reply
         else:
             logger.debug("request to anthropic")
@@ -301,12 +316,13 @@ class AnthropicLLM(BaseLLM):
             "anthropic",
             request_params,
             cache_alias="anthropic",
+            enable_cache=input_context.get("enable_cache", False),
         )
 
         if cached_value is not None:
             reply_list = cast(list[Reply], cached_value)
             for reply in reply_list:
-                reply.usage = None
+                reply.usage = None  # cache 된 응답이기에 usage 내역 제거
                 yield reply
         else:
             logger.debug("request to anthropic")

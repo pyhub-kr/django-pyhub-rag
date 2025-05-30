@@ -1,6 +1,6 @@
 import logging
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Union
 
 import typer
 from django.core.files import File
@@ -72,6 +72,11 @@ def describe(
         help="토큰 사용량 통계 표시",
     ),
     is_verbose: bool = typer.Option(False, "--verbose", help="상세한 처리 정보 표시"),
+    enable_cache: bool = typer.Option(
+        False,
+        "--enable-cache",
+        help="API 응답 캐시를 활성화합니다",
+    ),
 ):
     """LLM에게 이미지 설명을 요청합니다."""
 
@@ -154,7 +159,7 @@ def describe(
                 response_text = ""
                 usage = None
 
-                for chunk in llm.ask(query, files=files, stream=True):
+                for chunk in llm.ask(query, files=files, stream=True, enable_cache=enable_cache):
                     response_text += chunk.text
                     if hasattr(chunk, "usage") and chunk.usage:
                         usage = chunk.usage
@@ -229,7 +234,7 @@ def describe(
         console.print(stats_table)
 
 
-def save_result(output_path: Path, result: dict, format: str):
+def save_result(output_path: Path, result: Union[dict, list], format: str):
     """결과를 지정된 형식으로 저장"""
     import json
 
