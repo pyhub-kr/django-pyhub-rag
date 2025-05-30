@@ -135,7 +135,7 @@ class Migration(migrations.Migration):
                         choices=[("upstage/document_parse", "Upstage Document Parse API")],
                         default="upstage/document_parse",
                         verbose_name="문서 파싱 엔진",
-                    ),
+                        max_length=50,                    ),
                 ),
                 (
                     "file",

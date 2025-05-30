@@ -92,7 +92,7 @@ exclude = ["**/__pycache__", "**/.DS_Store"]
 allow-direct-references = true
 
 [tool.pytest.ini_options]
-pythonpath = ["src"]
+pythonpath = ["src", "tests"]
 python_files = ["test_*.py", "*_test.py"]
 addopts = "-ra --disable-warnings"
 asyncio_mode = "auto"
@@ -100,7 +100,7 @@ asyncio_default_fixture_loop_scope = "function"
 
 [tool.black]
 line-length = 120
-target-version = ["py310", "py311", "py312"]
+target-version = ["py310", "py311", "py312", "py313"]
 include = '\.pyi?$'
 
 [tool.isort]
