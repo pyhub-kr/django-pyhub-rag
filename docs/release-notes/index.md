@@ -1,5 +1,33 @@
 # 릴리즈 노트
 
+## 1.4.0
+
+🚀 **RAG 시스템 대폭 단순화 및 자동 감지 기능**
+
+### 주요 신기능
++ **Django 설정 기반 자동 백엔드 감지**: PostgreSQL → pgvector, SQLite → sqlite-vec 자동 선택
++ **단순화된 팩토리 API**: `get_vector_store()` 자동 감지, `create_sqlite_store()`, `create_postgres_store()` 추가
++ **새로운 간단한 CLI 명령어**: `pyhub.rag create`, `pyhub.rag search`, `pyhub.rag load`
++ **Zero Configuration**: Django 프로젝트에서 추가 설정 없이 RAG 사용 가능
+
+### CLI 개선사항  
++ 기존 명령어에서 `--backend` 파라미터 옵셔널화
++ 명령어 길이 평균 50% 단축
++ 더 직관적인 사용법: `pyhub.rag search "query" docs`
+
+### Breaking Changes
+⚠️ **VectorStoreRegistry Deprecation**: `VectorStoreRegistry`는 더 이상 사용되지 않으며 향후 버전에서 제거 예정
++ `pyhub.rag.registry` 모듈의 모든 함수에 deprecation 경고 추가
++ 기존 코드는 경고와 함께 계속 동작하지만 새로운 API로 마이그레이션 권장
+
+### 마이그레이션
++ 상세한 마이그레이션 가이드 (`MIGRATION_GUIDE.md`) 제공
++ 기존 코드 호환성 유지로 점진적 마이그레이션 가능
+
+### 개발자 경험 향상
++ **Before**: `pyhub.rag create-collection docs --backend sqlite-vec`
++ **After**: `pyhub.rag create docs` (자동 감지)
+
 ## 1.2.2
 
 + `pyhub.mcp` 앱을 통한 MCP API 지원
