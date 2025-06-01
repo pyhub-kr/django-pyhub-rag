@@ -8,7 +8,7 @@ from rich.table import Table
 
 from pyhub import init
 from pyhub.llm import LLM
-from pyhub.llm.json import json_dumps, json_loads, JSONDecodeError
+from pyhub.llm.json import JSONDecodeError, json_dumps, json_loads
 from pyhub.llm.types import LLMEmbeddingModelEnum, Usage
 
 app = typer.Typer(

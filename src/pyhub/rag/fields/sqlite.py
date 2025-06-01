@@ -7,7 +7,7 @@ from django.apps import apps
 from django.core import checks
 from django.core.exceptions import ValidationError
 
-from pyhub.llm.json import json_dumps, json_loads, JSONDecodeError
+from pyhub.llm.json import JSONDecodeError, json_dumps, json_loads
 from pyhub.rag.fields.base import BaseVectorField
 
 

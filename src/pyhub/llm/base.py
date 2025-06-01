@@ -765,7 +765,7 @@ class BaseLLM(abc.ABC):
                     try:
                         if llm_settings.trace_function_calls:
                             # 인자를 더 읽기 쉽게 포맷팅
-                            args_str = ", ".join([f"{k}={v}" for k, v in tool_call['arguments'].items()])
+                            args_str = ", ".join([f"{k}={v}" for k, v in tool_call["arguments"].items()])
                             print(f"   실행: {tool_call['name']}({args_str})")
 
                         result = executor.execute_tool(tool_call["name"], tool_call["arguments"])
@@ -803,12 +803,12 @@ class BaseLLM(abc.ABC):
             else:
                 final_human_message = Message(role="user", content="", files=files)
                 final_messages = []
-                
+
             final_response = self._make_ask(
                 input_context={"enable_cache": enable_cache},
                 human_message=final_human_message,
                 messages=final_messages,
-                model=model
+                model=model,
             )
             return final_response
         except Exception as e:
@@ -851,7 +851,7 @@ class BaseLLM(abc.ABC):
                     model,
                     files if call_count == 0 else None,
                     enable_cache,
-                    )
+                )
 
                 # 도구 호출 추출
                 tool_calls = self._extract_tool_calls_from_response(response)
@@ -895,12 +895,12 @@ class BaseLLM(abc.ABC):
             else:
                 final_human_message = Message(role="user", content="", files=files)
                 final_messages = []
-                
+
             final_response = await self._make_ask_async(
                 input_context={"enable_cache": enable_cache},
                 human_message=final_human_message,
                 messages=final_messages,
-                model=model
+                model=model,
             )
             return final_response
         except Exception as e:
@@ -937,7 +937,6 @@ class BaseLLM(abc.ABC):
             messages=messages,
             model=model,
         )
-
 
     #
     # embed

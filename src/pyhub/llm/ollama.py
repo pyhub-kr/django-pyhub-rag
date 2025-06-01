@@ -220,14 +220,14 @@ class OllamaLLM(BaseLLM):
                 cache_set(cache_key, response.model_dump_json(), alias="ollama")
 
         assert response is not None
-        
+
         # 캐시된 응답인 경우 usage를 0으로 설정하여 비용 중복 계산 방지
         usage = None
-        if hasattr(response, 'usage') and response.usage:
-            usage_input = 0 if is_cached else getattr(response.usage, 'prompt_tokens', 0)
-            usage_output = 0 if is_cached else getattr(response.usage, 'completion_tokens', 0)
+        if hasattr(response, "usage") and response.usage:
+            usage_input = 0 if is_cached else getattr(response.usage, "prompt_tokens", 0)
+            usage_output = 0 if is_cached else getattr(response.usage, "completion_tokens", 0)
             usage = Usage(input=usage_input, output=usage_output)
-        
+
         return Reply(text=response.message.content, usage=usage)
 
     async def _make_ask_async(
@@ -272,14 +272,14 @@ class OllamaLLM(BaseLLM):
                 await cache_set_async(cache_key, response.model_dump_json(), alias="ollama")
 
         assert response is not None
-        
+
         # 캐시된 응답인 경우 usage를 0으로 설정하여 비용 중복 계산 방지
         usage = None
-        if hasattr(response, 'usage') and response.usage:
-            usage_input = 0 if is_cached else getattr(response.usage, 'prompt_tokens', 0)
-            usage_output = 0 if is_cached else getattr(response.usage, 'completion_tokens', 0)
+        if hasattr(response, "usage") and response.usage:
+            usage_input = 0 if is_cached else getattr(response.usage, "prompt_tokens", 0)
+            usage_output = 0 if is_cached else getattr(response.usage, "completion_tokens", 0)
             usage = Usage(input=usage_input, output=usage_output)
-        
+
         return Reply(text=response.message.content, usage=usage)
 
     def _make_ask_stream(
@@ -323,11 +323,11 @@ class OllamaLLM(BaseLLM):
             for chunk in response_stream:
                 # 스트림 응답에서는 usage 정보가 제한적이므로 기본값 사용
                 usage = None
-                if hasattr(chunk, 'usage') and chunk.usage:
-                    usage_input = getattr(chunk.usage, 'prompt_tokens', 0)
-                    usage_output = getattr(chunk.usage, 'completion_tokens', 0)
+                if hasattr(chunk, "usage") and chunk.usage:
+                    usage_input = getattr(chunk.usage, "prompt_tokens", 0)
+                    usage_output = getattr(chunk.usage, "completion_tokens", 0)
                     usage = Usage(input=usage_input, output=usage_output)
-                
+
                 reply = Reply(text=chunk.message.content or "", usage=usage)
                 reply_list.append(reply)
                 yield reply
@@ -374,11 +374,11 @@ class OllamaLLM(BaseLLM):
             async for chunk in response:
                 # 스트림 응답에서는 usage 정보가 제한적이므로 기본값 사용
                 usage = None
-                if hasattr(chunk, 'usage') and chunk.usage:
-                    usage_input = getattr(chunk.usage, 'prompt_tokens', 0)
-                    usage_output = getattr(chunk.usage, 'completion_tokens', 0)
+                if hasattr(chunk, "usage") and chunk.usage:
+                    usage_input = getattr(chunk.usage, "prompt_tokens", 0)
+                    usage_output = getattr(chunk.usage, "completion_tokens", 0)
                     usage = Usage(input=usage_input, output=usage_output)
-                
+
                 reply = Reply(text=chunk.message.content or "", usage=usage)
                 reply_list.append(reply)
                 yield reply
@@ -427,10 +427,10 @@ class OllamaLLM(BaseLLM):
 
         # 캐시된 응답인 경우 usage를 0으로 설정하여 비용 중복 계산 방지
         usage = None
-        if hasattr(response, 'usage') and response.usage:
-            usage_input = 0 if is_cached else getattr(response.usage, 'prompt_tokens', 0)
+        if hasattr(response, "usage") and response.usage:
+            usage_input = 0 if is_cached else getattr(response.usage, "prompt_tokens", 0)
             usage = Usage(input=usage_input, output=0)
-        
+
         if isinstance(input, str):
             return Embed(list(response.embeddings[0]), usage=usage)
         return EmbedList([Embed(list(e)) for e in response.embeddings], usage=usage)
@@ -477,10 +477,10 @@ class OllamaLLM(BaseLLM):
 
         # 캐시된 응답인 경우 usage를 0으로 설정하여 비용 중복 계산 방지
         usage = None
-        if hasattr(response, 'usage') and response.usage:
-            usage_input = 0 if is_cached else getattr(response.usage, 'prompt_tokens', 0)
+        if hasattr(response, "usage") and response.usage:
+            usage_input = 0 if is_cached else getattr(response.usage, "prompt_tokens", 0)
             usage = Usage(input=usage_input, output=0)
-        
+
         if isinstance(input, str):
             return Embed(list(response.embeddings[0]), usage=usage)
         return EmbedList([Embed(list(e)) for e in response.embeddings], usage=usage)

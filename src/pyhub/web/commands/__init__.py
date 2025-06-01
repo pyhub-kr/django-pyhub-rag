@@ -17,7 +17,7 @@ from rich.prompt import Prompt
 from rich.table import Table
 
 from pyhub import print_for_main
-from pyhub.config import DEFAULT_TOML_PATH, DEFAULT_ENV_PATH
+from pyhub.config import DEFAULT_ENV_PATH, DEFAULT_TOML_PATH
 
 app = typer.Typer()
 console = Console()

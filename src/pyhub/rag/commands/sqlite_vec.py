@@ -8,7 +8,7 @@ import typer
 from rich.console import Console
 
 from pyhub import init
-from pyhub.config import DEFAULT_TOML_PATH, DEFAULT_ENV_PATH
+from pyhub.config import DEFAULT_ENV_PATH, DEFAULT_TOML_PATH
 from pyhub.llm.types import EmbeddingDimensionsEnum, LLMEmbeddingModelEnum
 from pyhub.rag.db.sqlite_vec import (
     DistanceMetric,
@@ -26,7 +26,7 @@ except ImportError:
 
 # Create SQLite-vec subcommand group
 app = typer.Typer(
-    name="sqlite-vec", 
+    name="sqlite-vec",
     help="SQLite-vec 관련 명령어",
     invoke_without_command=True,
 )
@@ -131,7 +131,7 @@ def command_create_table(
     except SQLiteVecError as e:
         error_msg = str(e)
         if "이미 존재합니다" in error_msg:
-            lines = error_msg.split('\n')
+            lines = error_msg.split("\n")
             console.print(f"[red]❌ {lines[0]}[/red]")
             if len(lines) > 1:
                 console.print(f"[dim]{lines[1]}[/dim]")

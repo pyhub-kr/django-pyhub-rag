@@ -1,9 +1,16 @@
+import json
+
 from django.contrib import admin
 from django.contrib.admin import SimpleListFilter
 from django.utils.html import format_html
-import json
 
-from .models import Document, DocumentParseJob, VectorDocument, VectorDocumentImage, ExtractedInformation
+from .models import (
+    Document,
+    DocumentParseJob,
+    ExtractedInformation,
+    VectorDocument,
+    VectorDocumentImage,
+)
 
 
 @admin.register(Document)

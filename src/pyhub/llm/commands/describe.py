@@ -142,6 +142,7 @@ def describe(
     results = []
 
     import time
+
     from pyhub.llm.types import Usage
 
     # 각 이미지 처리

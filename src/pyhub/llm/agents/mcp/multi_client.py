@@ -2,12 +2,12 @@
 
 import asyncio
 import logging
-from typing import Any, Dict, List, Optional, Union
 from contextlib import asynccontextmanager
+from typing import Any, Dict, List, Optional, Union
 
+from ..base import Tool
 from .client import MCPClient
 from .loader import load_mcp_tools
-from ..base import Tool
 
 logger = logging.getLogger(__name__)
 

@@ -1,6 +1,6 @@
 from asgiref.sync import iscoroutinefunction, markcoroutinefunction, sync_to_async
-from pyhub import activate_timezone
 
+from pyhub import activate_timezone
 
 # https://docs.djangoproject.com/en/dev/topics/i18n/timezones/#selecting-the-current-time-zone
 

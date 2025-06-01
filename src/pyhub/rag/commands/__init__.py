@@ -3,7 +3,7 @@ from rich.console import Console
 
 from pyhub import print_for_main
 
-from . import sqlite_vec, pgvector
+from . import pgvector, sqlite_vec
 
 app = typer.Typer()
 console = Console()
@@ -14,6 +14,7 @@ app.add_typer(pgvector.app)
 
 # 통합 CLI 추가
 from ..cli import app as unified_app
+
 # 통합 명령어를 루트 레벨에 병합
 for command in unified_app.registered_commands:
     app.command(command.name)(command.callback)

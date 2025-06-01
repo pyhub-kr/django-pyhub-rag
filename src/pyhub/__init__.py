@@ -5,7 +5,14 @@ from typing import Optional
 import typer
 from rich.console import Console
 
-from .init import PromptTemplates, init, activate_timezone, load_envs, load_toml, make_settings
+from .init import (
+    PromptTemplates,
+    activate_timezone,
+    init,
+    load_envs,
+    load_toml,
+    make_settings,
+)
 
 console = Console()
 

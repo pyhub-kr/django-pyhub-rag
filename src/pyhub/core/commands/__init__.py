@@ -31,7 +31,6 @@ console = Console()
 # 공통 유틸리티 import
 from ..toml_utils import get_default_toml_content, open_file_with_editor
 
-
 # toml 서브커맨드 그룹 생성
 toml_app = typer.Typer(
     name="toml",

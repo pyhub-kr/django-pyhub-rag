@@ -2,7 +2,7 @@ from pathlib import Path
 
 from environ import Env
 
-from pyhub import load_envs, load_toml, make_settings, activate_timezone
+from pyhub import activate_timezone, load_envs, load_toml, make_settings
 
 BASE_DIR = Path(__file__).resolve().parent
 

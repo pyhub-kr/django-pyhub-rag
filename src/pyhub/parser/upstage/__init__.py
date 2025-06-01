@@ -1,5 +1,9 @@
+from .extractor import (
+    BatchInformationExtractor,
+    ExtractionSchema,
+    UpstageInformationExtractor,
+)
 from .parser import UpstageDocumentParseParser
-from .extractor import UpstageInformationExtractor, ExtractionSchema, BatchInformationExtractor
 
 __all__ = [
     "UpstageDocumentParseParser",

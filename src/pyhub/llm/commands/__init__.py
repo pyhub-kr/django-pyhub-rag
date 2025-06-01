@@ -3,12 +3,12 @@ from rich.console import Console
 
 from pyhub import print_for_main
 
+from .agent import app as agent_app
 from .ask import ask
-from .describe import describe
-from .embed import app as embed_app
 from .chat import chat
 from .compare import compare
-from .agent import app as agent_app
+from .describe import describe
+from .embed import app as embed_app
 
 app = typer.Typer()
 console = Console()

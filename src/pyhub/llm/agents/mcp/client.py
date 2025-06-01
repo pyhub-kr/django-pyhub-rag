@@ -2,8 +2,8 @@
 
 import asyncio
 import logging
-from typing import Any, Dict, List, Optional, Tuple, Union
 from contextlib import asynccontextmanager
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 from .transports import Transport, create_transport
 

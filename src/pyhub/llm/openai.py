@@ -454,21 +454,24 @@ class OpenAIMixin:
             logger.debug(f"Making Function Calling request to {self.base_url}")
             logger.debug(f"Model: {request_params['model']}")
             logger.debug(f"Tools count: {len(tools) if tools else 0}")
-            
+
             # API 요청 내역 상세 출력
             import json
+
             logger.debug("=== Function Calling API Request ===")
             logger.debug(f"Endpoint: {self.base_url}/chat/completions")
             logger.debug(f"Headers: Authorization: Bearer {self.api_key[:8]}...")
             logger.debug("Request payload:")
             # 요청 페이로드를 JSON 형태로 예쁘게 출력
             debug_payload = request_params.copy()
-            if 'messages' in debug_payload and len(debug_payload['messages']) > 2:
+            if "messages" in debug_payload and len(debug_payload["messages"]) > 2:
                 # 메시지가 너무 길면 요약
-                debug_payload['messages'] = debug_payload['messages'][:2] + [{"...": f"({len(debug_payload['messages'])-2} more messages)"}]
+                debug_payload["messages"] = debug_payload["messages"][:2] + [
+                    {"...": f"({len(debug_payload['messages'])-2} more messages)"}
+                ]
             logger.debug(json.dumps(debug_payload, indent=2, ensure_ascii=False))
             logger.debug("=" * 40)
-            
+
             # Trace 모드에서 콘솔에도 출력
             if llm_settings.trace_function_calls:
                 print(f"   🌐 API 요청: {self.base_url}/chat/completions")
@@ -477,31 +480,39 @@ class OpenAIMixin:
                 if tools:
                     print(f"   🛠️ 도구 목록: {[t['function']['name'] for t in tools]}")
                 print(f"   💬 메시지 개수: {len(request_params['messages'])}")
-            
+
             response = sync_client.chat.completions.create(**request_params)
 
             # API 응답 디버깅 출력
             logger.debug("=== Function Calling API Response ===")
             logger.debug(f"Response status: Success")
             logger.debug(f"Usage: input={response.usage.prompt_tokens}, output={response.usage.completion_tokens}")
-            logger.debug(f"Response content: {response.choices[0].message.content[:200] if response.choices[0].message.content else 'None'}...")
+            logger.debug(
+                f"Response content: {response.choices[0].message.content[:200] if response.choices[0].message.content else 'None'}..."
+            )
             logger.debug(f"Response finish_reason: {response.choices[0].finish_reason}")
-            if hasattr(response.choices[0].message, 'tool_calls') and response.choices[0].message.tool_calls:
+            if hasattr(response.choices[0].message, "tool_calls") and response.choices[0].message.tool_calls:
                 logger.debug(f"Tool calls: {len(response.choices[0].message.tool_calls)} calls")
                 for i, tool_call in enumerate(response.choices[0].message.tool_calls):
                     logger.debug(f"  Tool {i+1}: {tool_call.function.name}({tool_call.function.arguments})")
             else:
                 logger.debug("Tool calls: None")
             logger.debug("=" * 40)
-            
+
             # Trace 모드에서 콘솔에도 응답 출력
             if llm_settings.trace_function_calls:
                 print(f"   ✅ API 응답 성공")
-                print(f"   📊 토큰 사용량: 입력={response.usage.prompt_tokens}, 출력={response.usage.completion_tokens}")
-                if hasattr(response.choices[0].message, 'tool_calls') and response.choices[0].message.tool_calls:
+                print(
+                    f"   📊 토큰 사용량: 입력={response.usage.prompt_tokens}, 출력={response.usage.completion_tokens}"
+                )
+                if hasattr(response.choices[0].message, "tool_calls") and response.choices[0].message.tool_calls:
                     print(f"   🔧 도구 호출 요청: {len(response.choices[0].message.tool_calls)}개")
                 else:
-                    print(f"   💬 응답 내용: {response.choices[0].message.content[:100]}...'" if response.choices[0].message.content else "   💬 응답 내용: (없음)")
+                    print(
+                        f"   💬 응답 내용: {response.choices[0].message.content[:100]}...'"
+                        if response.choices[0].message.content
+                        else "   💬 응답 내용: (없음)"
+                    )
 
             # Reply 객체로 변환
             usage = Usage(input=response.usage.prompt_tokens or 0, output=response.usage.completion_tokens or 0)
@@ -518,26 +529,26 @@ class OpenAIMixin:
             logger.error("=== Async Function Calling API Error ===")
             logger.error(f"Error type: {type(e).__name__}")
             logger.error(f"Error message: {str(e)}")
-            if hasattr(e, 'response'):
+            if hasattr(e, "response"):
                 logger.error(f"HTTP status: {getattr(e.response, 'status_code', 'Unknown')}")
-                response_text = getattr(e.response, 'text', '')
+                response_text = getattr(e.response, "text", "")
                 if response_text:
                     logger.error(f"Response body: {response_text[:1000]}")
             logger.error("=" * 40)
-            
+
             # Trace 모드에서 콘솔에도 에러 출력
             if llm_settings.trace_function_calls:
                 print(f"   ❌ 비동기 API 오류: {type(e).__name__}")
-                if hasattr(e, 'response') and hasattr(e.response, 'status_code'):
+                if hasattr(e, "response") and hasattr(e.response, "status_code"):
                     print(f"   📄 HTTP 상태: {e.response.status_code}")
-                    if hasattr(e.response, 'text'):
+                    if hasattr(e.response, "text"):
                         print(f"   📝 응답 내용: {e.response.text[:200]}...")
-            
+
             # HTTP 응답 코드와 상세 정보도 포함
             error_details = str(e)
-            if hasattr(e, 'response') and hasattr(e.response, 'status_code'):
+            if hasattr(e, "response") and hasattr(e.response, "status_code"):
                 error_details = f"HTTP {e.response.status_code}: {error_details}"
-            if hasattr(e, 'response') and hasattr(e.response, 'text'):
+            if hasattr(e, "response") and hasattr(e.response, "text"):
                 error_details += f"\nResponse: {e.response.text[:500]}"
             return Reply(text=f"API Error: {error_details}")
 
@@ -581,19 +592,22 @@ class OpenAIMixin:
             logger.debug(f"Making async Function Calling request to {self.base_url}")
             logger.debug(f"Model: {request_params['model']}")
             logger.debug(f"Tools count: {len(request_params.get('tools', [])) if 'tools' in request_params else 0}")
-            
+
             # API 요청 내역 상세 출력
             import json
+
             logger.debug("=== Async Function Calling API Request ===")
             logger.debug(f"Endpoint: {self.base_url}/chat/completions")
             logger.debug(f"Headers: Authorization: Bearer {self.api_key[:8]}...")
             logger.debug("Request payload:")
             debug_payload = request_params.copy()
-            if 'messages' in debug_payload and len(debug_payload['messages']) > 2:
-                debug_payload['messages'] = debug_payload['messages'][:2] + [{"...": f"({len(debug_payload['messages'])-2} more messages)"}]
+            if "messages" in debug_payload and len(debug_payload["messages"]) > 2:
+                debug_payload["messages"] = debug_payload["messages"][:2] + [
+                    {"...": f"({len(debug_payload['messages'])-2} more messages)"}
+                ]
             logger.debug(json.dumps(debug_payload, indent=2, ensure_ascii=False))
             logger.debug("=" * 40)
-            
+
             # Trace 모드에서 콘솔에도 출력
             if llm_settings.trace_function_calls:
                 print(f"   🌐 비동기 API 요청: {self.base_url}/chat/completions")
@@ -602,31 +616,39 @@ class OpenAIMixin:
                 if tools:
                     print(f"   🛠️ 도구 목록: {[t['function']['name'] for t in tools]}")
                 print(f"   💬 메시지 개수: {len(request_params['messages'])}")
-            
+
             response = await async_client.chat.completions.create(**request_params)
 
             # API 응답 디버깅 출력 (비동기 버전)
             logger.debug("=== Async Function Calling API Response ===")
             logger.debug(f"Response status: Success")
             logger.debug(f"Usage: input={response.usage.prompt_tokens}, output={response.usage.completion_tokens}")
-            logger.debug(f"Response content: {response.choices[0].message.content[:200] if response.choices[0].message.content else 'None'}...")
+            logger.debug(
+                f"Response content: {response.choices[0].message.content[:200] if response.choices[0].message.content else 'None'}..."
+            )
             logger.debug(f"Response finish_reason: {response.choices[0].finish_reason}")
-            if hasattr(response.choices[0].message, 'tool_calls') and response.choices[0].message.tool_calls:
+            if hasattr(response.choices[0].message, "tool_calls") and response.choices[0].message.tool_calls:
                 logger.debug(f"Tool calls: {len(response.choices[0].message.tool_calls)} calls")
                 for i, tool_call in enumerate(response.choices[0].message.tool_calls):
                     logger.debug(f"  Tool {i+1}: {tool_call.function.name}({tool_call.function.arguments})")
             else:
                 logger.debug("Tool calls: None")
             logger.debug("=" * 40)
-            
+
             # Trace 모드에서 콘솔에도 응답 출력
             if llm_settings.trace_function_calls:
                 print(f"   ✅ 비동기 API 응답 성공")
-                print(f"   📊 토큰 사용량: 입력={response.usage.prompt_tokens}, 출력={response.usage.completion_tokens}")
-                if hasattr(response.choices[0].message, 'tool_calls') and response.choices[0].message.tool_calls:
+                print(
+                    f"   📊 토큰 사용량: 입력={response.usage.prompt_tokens}, 출력={response.usage.completion_tokens}"
+                )
+                if hasattr(response.choices[0].message, "tool_calls") and response.choices[0].message.tool_calls:
                     print(f"   🔧 도구 호출 요청: {len(response.choices[0].message.tool_calls)}개")
                 else:
-                    print(f"   💬 응답 내용: {response.choices[0].message.content[:100]}..." if response.choices[0].message.content else "   💬 응답 내용: (없음)")
+                    print(
+                        f"   💬 응답 내용: {response.choices[0].message.content[:100]}..."
+                        if response.choices[0].message.content
+                        else "   💬 응답 내용: (없음)"
+                    )
 
             # Reply 객체로 변환
             usage = Usage(input=response.usage.prompt_tokens or 0, output=response.usage.completion_tokens or 0)
@@ -643,26 +665,26 @@ class OpenAIMixin:
             logger.error("=== Async Function Calling API Error ===")
             logger.error(f"Error type: {type(e).__name__}")
             logger.error(f"Error message: {str(e)}")
-            if hasattr(e, 'response'):
+            if hasattr(e, "response"):
                 logger.error(f"HTTP status: {getattr(e.response, 'status_code', 'Unknown')}")
-                response_text = getattr(e.response, 'text', '')
+                response_text = getattr(e.response, "text", "")
                 if response_text:
                     logger.error(f"Response body: {response_text[:1000]}")
             logger.error("=" * 40)
-            
+
             # Trace 모드에서 콘솔에도 에러 출력
             if llm_settings.trace_function_calls:
                 print(f"   ❌ 비동기 API 오류: {type(e).__name__}")
-                if hasattr(e, 'response') and hasattr(e.response, 'status_code'):
+                if hasattr(e, "response") and hasattr(e.response, "status_code"):
                     print(f"   📄 HTTP 상태: {e.response.status_code}")
-                    if hasattr(e.response, 'text'):
+                    if hasattr(e.response, "text"):
                         print(f"   📝 응답 내용: {e.response.text[:200]}...")
-            
+
             # HTTP 응답 코드와 상세 정보도 포함
             error_details = str(e)
-            if hasattr(e, 'response') and hasattr(e.response, 'status_code'):
+            if hasattr(e, "response") and hasattr(e.response, "status_code"):
                 error_details = f"HTTP {e.response.status_code}: {error_details}"
-            if hasattr(e, 'response') and hasattr(e.response, 'text'):
+            if hasattr(e, "response") and hasattr(e.response, "text"):
                 error_details += f"\nResponse: {e.response.text[:500]}"
             return Reply(text=f"API Error: {error_details}")
 
@@ -851,4 +873,3 @@ class OpenAILLM(OpenAIMixin, BaseLLM):
             )
 
         return errors
-

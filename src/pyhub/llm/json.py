@@ -1,4 +1,4 @@
-from json import JSONDecodeError, loads, dumps
+from json import JSONDecodeError, dumps, loads
 from typing import Any
 
 from django.core.serializers.json import DjangoJSONEncoder

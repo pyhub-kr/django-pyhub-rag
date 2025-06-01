@@ -14,7 +14,7 @@ from rich.table import Table
 
 from pyhub import init
 from pyhub.caches import cache_clear_all
-from pyhub.config import DEFAULT_TOML_PATH, DEFAULT_ENV_PATH
+from pyhub.config import DEFAULT_ENV_PATH, DEFAULT_TOML_PATH
 from pyhub.llm.json import json_dumps
 from pyhub.llm.types import (
     LanguageEnum,
@@ -178,7 +178,9 @@ def upstage(
     is_verbose: bool = typer.Option(False, "--verbose"),
     is_force: bool = typer.Option(False, "--force", "-f", help="확인 없이 출력 폴더 삭제 후 재생성"),
     is_enable_cache: bool = typer.Option(
-        False, "--enable-cache", help="API 응답 캐시를 활성화합니다. 활성화하면 이전 API 응답을 재사용하여 빠른 처리와 비용 절약이 가능합니다."
+        False,
+        "--enable-cache",
+        help="API 응답 캐시를 활성화합니다. 활성화하면 이전 API 응답을 재사용하여 빠른 처리와 비용 절약이 가능합니다.",
     ),
     is_cache_clear_all: bool = typer.Option(
         False,

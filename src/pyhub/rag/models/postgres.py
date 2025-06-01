@@ -1,5 +1,5 @@
 import logging
-from typing import List, Literal, Type, Optional
+from typing import List, Literal, Optional, Type
 
 from asgiref.sync import sync_to_async
 from django.core import checks

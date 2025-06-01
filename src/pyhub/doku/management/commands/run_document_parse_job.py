@@ -1,5 +1,5 @@
 from time import sleep
-from typing import Optional, Annotated
+from typing import Annotated, Optional
 
 from django.conf import settings
 from django.core.management.base import CommandError
@@ -15,6 +15,7 @@ app = Typer()
 
 
 # TODO: python manage.py 를 통한 실행에서는 self.console.log 출력에서는 timezone 설정이 먹히지 않고, 시각이 UTC로 출력되는 현상
+
 
 class Command(RichCommand, TyperCommand):
     def handle(

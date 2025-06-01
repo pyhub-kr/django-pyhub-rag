@@ -7,7 +7,7 @@ from django.core.management import call_command
 from rich.console import Console
 
 from pyhub import init, print_for_main
-from pyhub.config import DEFAULT_TOML_PATH, DEFAULT_ENV_PATH
+from pyhub.config import DEFAULT_ENV_PATH, DEFAULT_TOML_PATH
 
 app = typer.Typer()
 console = Console()

@@ -4,10 +4,10 @@ from typing import Optional
 
 import typer
 from rich.console import Console
-from rich.prompt import Prompt
-from rich.table import Table
 from rich.markdown import Markdown
+from rich.prompt import Prompt
 from rich.syntax import Syntax
+from rich.table import Table
 
 from pyhub import init
 from pyhub.llm import LLM
