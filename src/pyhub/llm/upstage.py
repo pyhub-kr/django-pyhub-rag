@@ -41,6 +41,7 @@ class UpstageLLM(OpenAIMixin, BaseLLM):
         initial_messages: Optional[list[Message]] = None,
         api_key: Optional[str] = None,
         base_url: Optional[str] = None,
+        tools: Optional[list] = None,
     ):
         super().__init__(
             model=model,
@@ -52,6 +53,7 @@ class UpstageLLM(OpenAIMixin, BaseLLM):
             output_key=output_key,
             initial_messages=initial_messages,
             api_key=api_key or rag_settings.upstage_api_key,
+            tools=tools,
         )
 
         self.base_url = base_url or rag_settings.upstage_base_url

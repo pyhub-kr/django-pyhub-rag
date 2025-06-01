@@ -12,6 +12,7 @@ from django.core.files import File
 from django.template import Context, Template, TemplateDoesNotExist
 from django.template.loader import get_template
 
+from .settings import llm_settings
 from .types import (
     ChainReply,
     Embed,
@@ -29,7 +30,7 @@ class TemplateDict(dict):
     """템플릿 변수 중 존재하지 않는 키는 원래 형태({key})로 유지하는 딕셔너리"""
 
     def __missing__(self, key):
-        return '{' + key + '}'
+        return "{" + key + "}"
 
 
 @dataclass
@@ -57,6 +58,7 @@ class BaseLLM(abc.ABC):
         output_key: str = "text",
         initial_messages: Optional[list[Message]] = None,
         api_key: Optional[str] = None,
+        tools: Optional[list] = None,
     ):
         self.model = model
         self.embedding_model = embedding_model
@@ -67,6 +69,14 @@ class BaseLLM(abc.ABC):
         self.output_key = output_key
         self.history = initial_messages or []
         self.api_key = api_key
+
+        # 기본 도구 설정
+        self.default_tools = []
+        if tools:
+            # tools 모듈을 동적 import (순환 import 방지)
+            from .tools import ToolAdapter
+
+            self.default_tools = ToolAdapter.adapt_tools(tools)
 
     def check(self) -> list[Error]:
         return []
@@ -485,20 +495,45 @@ class BaseLLM(abc.ABC):
         use_history: bool = True,
         raise_errors: bool = False,
         enable_cache: bool = False,
+        tools: Optional[list] = None,
+        tool_choice: str = "auto",
+        max_tool_calls: int = 5,
     ) -> Union[Reply, Generator[Reply, None, None]]:
-        return self._ask_impl(
-            input=input,
-            files=files,
-            model=model,
-            context=context,
-            choices=choices,
-            choices_optional=choices_optional,
-            is_async=False,
-            stream=stream,
-            use_history=use_history,
-            raise_errors=raise_errors,
-            enable_cache=enable_cache,
-        )
+        # 기본 도구와 ask 도구를 합침
+        merged_tools = self._merge_tools(tools)
+
+        # 도구가 있으면 도구와 함께 처리
+        if merged_tools:
+            return self._ask_with_tools(
+                input=input,
+                files=files,
+                model=model,
+                context=context,
+                tools=merged_tools,
+                tool_choice=tool_choice,
+                max_tool_calls=max_tool_calls,
+                choices=choices,
+                choices_optional=choices_optional,
+                stream=stream,
+                use_history=use_history,
+                raise_errors=raise_errors,
+                enable_cache=enable_cache,
+                is_async=False,
+            )
+        else:
+            return self._ask_impl(
+                input=input,
+                files=files,
+                model=model,
+                context=context,
+                choices=choices,
+                choices_optional=choices_optional,
+                is_async=False,
+                stream=stream,
+                use_history=use_history,
+                raise_errors=raise_errors,
+                enable_cache=enable_cache,
+            )
 
     async def ask_async(
         self,
@@ -513,23 +548,396 @@ class BaseLLM(abc.ABC):
         raise_errors: bool = False,
         use_history: bool = True,
         enable_cache: bool = False,
+        tools: Optional[list] = None,
+        tool_choice: str = "auto",
+        max_tool_calls: int = 5,
     ) -> Union[Reply, AsyncGenerator[Reply, None]]:
-        return_value = self._ask_impl(
-            input=input,
-            files=files,
-            model=model,
-            context=context,
-            choices=choices,
-            choices_optional=choices_optional,
-            is_async=True,
-            stream=stream,
-            use_history=use_history,
-            raise_errors=raise_errors,
-            enable_cache=enable_cache,
-        )
+        # 기본 도구와 ask 도구를 합침
+        merged_tools = self._merge_tools(tools)
+
+        # 도구가 있으면 도구와 함께 처리
+        if merged_tools:
+            return_value = self._ask_with_tools(
+                input=input,
+                files=files,
+                model=model,
+                context=context,
+                tools=merged_tools,
+                tool_choice=tool_choice,
+                max_tool_calls=max_tool_calls,
+                choices=choices,
+                choices_optional=choices_optional,
+                stream=stream,
+                use_history=use_history,
+                raise_errors=raise_errors,
+                enable_cache=enable_cache,
+                is_async=True,
+            )
+        else:
+            return_value = self._ask_impl(
+                input=input,
+                files=files,
+                model=model,
+                context=context,
+                choices=choices,
+                choices_optional=choices_optional,
+                is_async=True,
+                stream=stream,
+                use_history=use_history,
+                raise_errors=raise_errors,
+                enable_cache=enable_cache,
+            )
+
         if stream:
             return return_value
         return await return_value
+
+    #
+    # Function Calling & Tool Support
+    #
+
+    def _merge_tools(self, ask_tools: Optional[list]) -> list:
+        """기본 도구와 ask 시 제공된 도구를 합칩니다.
+
+        Args:
+            ask_tools: ask 호출 시 제공된 도구들
+
+        Returns:
+            합쳐진 도구 리스트 (중복시 ask_tools가 우선)
+        """
+        # tools 모듈을 동적 import (순환 import 방지)
+        from .tools import ToolAdapter
+
+        # 1. 기본 tools로 시작 (name을 키로 하는 딕셔너리)
+        merged = {tool.name: tool for tool in self.default_tools}
+
+        # 2. ask tools 추가 (중복시 덮어씀)
+        if ask_tools:
+            adapted_ask_tools = ToolAdapter.adapt_tools(ask_tools)
+            for tool in adapted_ask_tools:
+                merged[tool.name] = tool
+
+        return list(merged.values())
+
+    def _ask_with_tools(
+        self,
+        input: Union[str, dict[str, Any]],
+        files: Optional[list[Union[str, Path, File]]] = None,
+        model: Optional[LLMChatModelType] = None,
+        context: Optional[dict[str, Any]] = None,
+        tools: Optional[list] = None,
+        tool_choice: str = "auto",
+        max_tool_calls: int = 5,
+        choices: Optional[list[str]] = None,
+        choices_optional: bool = False,
+        stream: bool = False,
+        use_history: bool = True,
+        raise_errors: bool = False,
+        enable_cache: bool = False,
+        is_async: bool = False,
+    ):
+        """도구와 함께 LLM 호출을 처리합니다.
+
+        Args:
+            tools: 이미 Tool 객체로 변환된 도구들의 리스트
+        """
+        # tools 모듈을 동적 import (순환 import 방지)
+        from .tools import ToolExecutor
+
+        # tools는 이미 _merge_tools에서 Tool 객체로 변환됨
+        adapted_tools = tools
+
+        # 도구 실행기 준비
+        executor = ToolExecutor(adapted_tools)
+
+        # Provider별 도구 스키마 변환 (하위 클래스에서 구현)
+        provider_tools = self._convert_tools_for_provider(adapted_tools)
+
+        if is_async:
+            return self._ask_with_tools_async(
+                input,
+                files,
+                model,
+                context,
+                adapted_tools,
+                provider_tools,
+                executor,
+                tool_choice,
+                max_tool_calls,
+                choices,
+                choices_optional,
+                stream,
+                use_history,
+                raise_errors,
+                enable_cache,
+            )
+        else:
+            return self._ask_with_tools_sync(
+                input,
+                files,
+                model,
+                context,
+                adapted_tools,
+                provider_tools,
+                executor,
+                tool_choice,
+                max_tool_calls,
+                choices,
+                choices_optional,
+                stream,
+                use_history,
+                raise_errors,
+                enable_cache,
+            )
+
+    def _ask_with_tools_sync(
+        self,
+        input,
+        files,
+        model,
+        context,
+        adapted_tools,
+        provider_tools,
+        executor,
+        tool_choice,
+        max_tool_calls,
+        choices,
+        choices_optional,
+        stream,
+        use_history,
+        raise_errors,
+        enable_cache,
+    ):
+        """동기 버전의 도구 호출 처리"""
+        # Trace 시작
+        if llm_settings.trace_function_calls:
+            print(f"🔍 [TRACE] Function Calling 시작")
+            print(f"   입력: {input}")
+            print(f"   사용 가능한 도구: {[tool.name for tool in adapted_tools]}")
+            print(f"   최대 호출 횟수: {max_tool_calls}")
+
+        # 초기 메시지 준비
+        current_messages = [*self.history] if use_history else []
+        human_prompt = self.get_human_prompt(input, context or {})
+
+        # 도구 호출 반복
+        for call_count in range(max_tool_calls):
+            try:
+                if llm_settings.trace_function_calls:
+                    print(f"\n📞 [TRACE] LLM 호출 #{call_count + 1}")
+
+                # LLM 호출 (도구 포함)
+                response = self._make_ask_with_tools_sync(
+                    human_prompt if call_count == 0 else None,
+                    current_messages,
+                    provider_tools,
+                    tool_choice,
+                    model,
+                    files if call_count == 0 else None,
+                    enable_cache,
+                )
+
+                # 도구 호출 추출
+                tool_calls = self._extract_tool_calls_from_response(response)
+
+                if llm_settings.trace_function_calls:
+                    if tool_calls:
+                        print(f"   LLM이 요청한 도구 호출: {len(tool_calls)}개")
+                        for i, call in enumerate(tool_calls):
+                            print(f"     {i+1}. {call['name']}({call['arguments']})")
+                    else:
+                        print(f"   도구 호출 없음, 최종 응답: {response.text[:100]}...")
+
+                # 도구 호출이 없으면 완료
+                if not tool_calls:
+                    if llm_settings.trace_function_calls:
+                        print(f"✅ [TRACE] Function Calling 완료 (총 {call_count + 1}회 호출)")
+                    if use_history and call_count == 0:
+                        human_message = Message(role="user", content=human_prompt, files=files)
+                        self._update_history(human_message, response.text)
+                    return response
+
+                # 도구 실행
+                if llm_settings.trace_function_calls:
+                    print(f"\n🛠️  [TRACE] 도구 실행 중...")
+
+                for tool_call in tool_calls:
+                    try:
+                        if llm_settings.trace_function_calls:
+                            # 인자를 더 읽기 쉽게 포맷팅
+                            args_str = ", ".join([f"{k}={v}" for k, v in tool_call['arguments'].items()])
+                            print(f"   실행: {tool_call['name']}({args_str})")
+
+                        result = executor.execute_tool(tool_call["name"], tool_call["arguments"])
+
+                        if llm_settings.trace_function_calls:
+                            print(f"   결과: {result}")
+
+                        # 도구 결과를 메시지에 추가
+                        current_messages.append(Message(role="assistant", content=f"[Tool Call: {tool_call['name']}]"))
+                        current_messages.append(Message(role="user", content=f"[Tool Result: {result}]"))
+                    except Exception as e:
+                        if llm_settings.trace_function_calls:
+                            print(f"   ❌ 오류: {str(e)}")
+                        if raise_errors:
+                            raise e
+                        error_msg = f"Tool execution error: {str(e)}"
+                        current_messages.append(Message(role="user", content=f"[Tool Error: {error_msg}]"))
+
+                # 첫 번째 호출이면 히스토리에 추가
+                if use_history and call_count == 0:
+                    human_message = Message(role="user", content=human_prompt, files=files)
+                    current_messages.insert(0, human_message)
+
+            except Exception as e:
+                if raise_errors:
+                    raise e
+                return Reply(text=f"Error in tool processing: {str(e)}")
+
+        # 최대 호출 횟수에 도달한 경우 최종 응답
+        try:
+            # 마지막 메시지를 human_message로 사용
+            if current_messages:
+                final_human_message = current_messages[-1]
+                final_messages = current_messages[:-1]
+            else:
+                final_human_message = Message(role="user", content="", files=files)
+                final_messages = []
+                
+            final_response = self._make_ask(
+                input_context={"enable_cache": enable_cache},
+                human_message=final_human_message,
+                messages=final_messages,
+                model=model
+            )
+            return final_response
+        except Exception as e:
+            if raise_errors:
+                raise e
+            return Reply(text=f"Final response error: {str(e)}")
+
+    async def _ask_with_tools_async(
+        self,
+        input,
+        files,
+        model,
+        context,
+        adapted_tools,
+        provider_tools,
+        executor,
+        tool_choice,
+        max_tool_calls,
+        choices,
+        choices_optional,
+        stream,
+        use_history,
+        raise_errors,
+        enable_cache,
+    ):
+        """비동기 버전의 도구 호출 처리"""
+        # 초기 메시지 준비
+        current_messages = [*self.history] if use_history else []
+        human_prompt = self.get_human_prompt(input, context or {})
+
+        # 도구 호출 반복
+        for call_count in range(max_tool_calls):
+            try:
+                # LLM 호출 (도구 포함)
+                response = await self._make_ask_with_tools_async(
+                    human_prompt if call_count == 0 else None,
+                    current_messages,
+                    provider_tools,
+                    tool_choice,
+                    model,
+                    files if call_count == 0 else None,
+                    enable_cache,
+                    )
+
+                # 도구 호출 추출
+                tool_calls = self._extract_tool_calls_from_response(response)
+
+                # 도구 호출이 없으면 완료
+                if not tool_calls:
+                    if use_history and call_count == 0:
+                        human_message = Message(role="user", content=human_prompt, files=files)
+                        self._update_history(human_message, response.text)
+                    return response
+
+                # 도구 실행
+                for tool_call in tool_calls:
+                    try:
+                        result = await executor.execute_tool_async(tool_call["name"], tool_call["arguments"])
+                        # 도구 결과를 메시지에 추가
+                        current_messages.append(Message(role="assistant", content=f"[Tool Call: {tool_call['name']}]"))
+                        current_messages.append(Message(role="user", content=f"[Tool Result: {result}]"))
+                    except Exception as e:
+                        if raise_errors:
+                            raise e
+                        error_msg = f"Tool execution error: {str(e)}"
+                        current_messages.append(Message(role="user", content=f"[Tool Error: {error_msg}]"))
+
+                # 첫 번째 호출이면 히스토리에 추가
+                if use_history and call_count == 0:
+                    human_message = Message(role="user", content=human_prompt, files=files)
+                    current_messages.insert(0, human_message)
+
+            except Exception as e:
+                if raise_errors:
+                    raise e
+                return Reply(text=f"Error in tool processing: {str(e)}")
+
+        # 최대 호출 횟수에 도달한 경우 최종 응답
+        try:
+            # 마지막 메시지를 human_message로 사용
+            if current_messages:
+                final_human_message = current_messages[-1]
+                final_messages = current_messages[:-1]
+            else:
+                final_human_message = Message(role="user", content="", files=files)
+                final_messages = []
+                
+            final_response = await self._make_ask_async(
+                input_context={"enable_cache": enable_cache},
+                human_message=final_human_message,
+                messages=final_messages,
+                model=model
+            )
+            return final_response
+        except Exception as e:
+            if raise_errors:
+                raise e
+            return Reply(text=f"Final response error: {str(e)}")
+
+    def _convert_tools_for_provider(self, tools):
+        """Provider별 도구 스키마 변환 (하위 클래스에서 구현)"""
+        # 기본적으로 빈 리스트 반환 (Function Calling 미지원)
+        return []
+
+    def _extract_tool_calls_from_response(self, response):
+        """응답에서 도구 호출 정보 추출 (하위 클래스에서 구현)"""
+        # 기본적으로 빈 리스트 반환
+        return []
+
+    def _make_ask_with_tools_sync(self, human_prompt, messages, tools, tool_choice, model, files, enable_cache):
+        """도구와 함께 동기 LLM 호출 (하위 클래스에서 구현)"""
+        # 기본적으로 일반 ask 호출
+        return self._make_ask(
+            input_context={},
+            human_message=Message(role="user", content=human_prompt or ""),
+            messages=messages,
+            model=model,
+        )
+
+    async def _make_ask_with_tools_async(self, human_prompt, messages, tools, tool_choice, model, files, enable_cache):
+        """도구와 함께 비동기 LLM 호출 (하위 클래스에서 구현)"""
+        # 기본적으로 일반 ask 호출
+        return await self._make_ask_async(
+            input_context={},
+            human_message=Message(role="user", content=human_prompt or ""),
+            messages=messages,
+            model=model,
+        )
+
 
     #
     # embed

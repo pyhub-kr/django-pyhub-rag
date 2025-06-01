@@ -8,7 +8,7 @@ from pyhub.llm.types import LLMEmbeddingModelType
 
 DEFAULTS = {
     "openai_base_url": "https://api.openai.com/v1",
-    "upstage_base_url": "https://api.upstage.ai/v1/solar",
+    "upstage_base_url": "https://api.upstage.ai/v1",
     "ollama_base_url": "http://localhost:11434",
     "embedding_model": "text-embedding-3-small",
     "embedding_dimensions": 1536,

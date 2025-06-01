@@ -21,6 +21,7 @@ from pyhub.caches import (
 from pyhub.rag.settings import rag_settings
 
 from .base import BaseLLM
+from .settings import llm_settings
 from .types import AnthropicChatModelType, Embed, EmbedList, Message, Reply, Usage
 from .utils.files import FileType, encode_files
 
@@ -38,6 +39,7 @@ class AnthropicLLM(BaseLLM):
         output_key: str = "text",
         initial_messages: Optional[list[Message]] = None,
         api_key: Optional[str] = None,
+        tools: Optional[list] = None,
     ):
         super().__init__(
             model=model,
@@ -48,6 +50,7 @@ class AnthropicLLM(BaseLLM):
             output_key=output_key,
             initial_messages=initial_messages,
             api_key=api_key or rag_settings.anthropic_api_key,
+            tools=tools,
         )
 
     def check(self) -> list[Error]:
@@ -375,6 +378,9 @@ class AnthropicLLM(BaseLLM):
         use_history: bool = True,
         raise_errors: bool = False,
         enable_cache: bool = False,
+        tools: Optional[list] = None,
+        tool_choice: str = "auto",
+        max_tool_calls: int = 5,
     ) -> Union[Reply, Generator[Reply, None, None]]:
         return super().ask(
             input=input,
@@ -387,6 +393,9 @@ class AnthropicLLM(BaseLLM):
             use_history=use_history,
             raise_errors=raise_errors,
             enable_cache=enable_cache,
+            tools=tools,
+            tool_choice=tool_choice,
+            max_tool_calls=max_tool_calls,
         )
 
     async def ask_async(
@@ -402,6 +411,9 @@ class AnthropicLLM(BaseLLM):
         raise_errors: bool = False,
         use_history: bool = True,
         enable_cache: bool = False,
+        tools: Optional[list] = None,
+        tool_choice: str = "auto",
+        max_tool_calls: int = 5,
     ) -> Union[Reply, AsyncGenerator[Reply, None]]:
         return await super().ask_async(
             input=input,
@@ -414,6 +426,9 @@ class AnthropicLLM(BaseLLM):
             use_history=use_history,
             raise_errors=raise_errors,
             enable_cache=enable_cache,
+            tools=tools,
+            tool_choice=tool_choice,
+            max_tool_calls=max_tool_calls,
         )
 
     def embed(
@@ -429,6 +444,137 @@ class AnthropicLLM(BaseLLM):
         model=None,
     ) -> Union[Embed, EmbedList]:
         raise NotImplementedError
+
+    def _convert_tools_for_provider(self, tools):
+        """Anthropic Tool Use 형식으로 도구 변환"""
+        from .tools import ProviderToolConverter
+        return [ProviderToolConverter.to_anthropic_tool(tool) for tool in tools]
+
+    def _extract_tool_calls_from_response(self, response):
+        """Anthropic 응답에서 tool_use 추출"""
+        tool_calls = []
+        
+        # Response가 Reply 객체인 경우 원본 응답에서 tool_use 추출
+        if hasattr(response, '_raw_response') and hasattr(response._raw_response, 'content'):
+            for content in response._raw_response.content:
+                if content.type == 'tool_use':
+                    tool_calls.append({
+                        "id": content.id,
+                        "name": content.name,
+                        "arguments": content.input
+                    })
+        
+        return tool_calls
+
+    def _make_ask_with_tools_sync(self, human_prompt, messages, tools, tool_choice, model, files, enable_cache):
+        """Anthropic Tool Use를 사용한 동기 호출"""
+        from .types import Message
+        
+        # 메시지 준비
+        anthropic_messages = []
+        for msg in messages:
+            anthropic_messages.append({
+                "role": msg.role,
+                "content": msg.content
+            })
+        
+        if human_prompt:
+            anthropic_messages.append({
+                "role": "user", 
+                "content": human_prompt
+            })
+        
+        # Anthropic API 호출
+        sync_client = SyncAnthropic(api_key=self.api_key)
+        request_params = {
+            "model": model or self.model,
+            "messages": anthropic_messages,
+            "temperature": self.temperature,
+            "max_tokens": self.max_tokens,
+        }
+        
+        if tools:
+            request_params["tools"] = tools
+        
+        try:
+            response = sync_client.messages.create(**request_params)
+            
+            # Reply 객체로 변환
+            content_text = ""
+            for content in response.content:
+                if content.type == 'text':
+                    content_text += content.text
+            
+            usage = Usage(
+                input=response.usage.input_tokens or 0,
+                output=response.usage.output_tokens or 0
+            )
+            
+            reply = Reply(text=content_text, usage=usage)
+            
+            # 원본 응답을 저장하여 tool_use 추출에 사용
+            reply._raw_response = response
+            
+            return reply
+            
+        except Exception as e:
+            logger.error(f"Anthropic API error: {e}")
+            return Reply(text=f"API Error: {str(e)}")
+
+    async def _make_ask_with_tools_async(self, human_prompt, messages, tools, tool_choice, model, files, enable_cache):
+        """Anthropic Tool Use를 사용한 비동기 호출"""
+        from .types import Message
+        
+        # 메시지 준비
+        anthropic_messages = []
+        for msg in messages:
+            anthropic_messages.append({
+                "role": msg.role,
+                "content": msg.content
+            })
+        
+        if human_prompt:
+            anthropic_messages.append({
+                "role": "user", 
+                "content": human_prompt
+            })
+        
+        # Anthropic API 호출
+        async_client = AsyncAnthropic(api_key=self.api_key)
+        request_params = {
+            "model": model or self.model,
+            "messages": anthropic_messages,
+            "temperature": self.temperature,
+            "max_tokens": self.max_tokens,
+        }
+        
+        if tools:
+            request_params["tools"] = tools
+        
+        try:
+            response = await async_client.messages.create(**request_params)
+            
+            # Reply 객체로 변환
+            content_text = ""
+            for content in response.content:
+                if content.type == 'text':
+                    content_text += content.text
+            
+            usage = Usage(
+                input=response.usage.input_tokens or 0,
+                output=response.usage.output_tokens or 0
+            )
+            
+            reply = Reply(text=content_text, usage=usage)
+            
+            # 원본 응답을 저장하여 tool_use 추출에 사용
+            reply._raw_response = response
+            
+            return reply
+            
+        except Exception as e:
+            logger.error(f"Anthropic API error: {e}")
+            return Reply(text=f"API Error: {str(e)}")
 
 
 __all__ = ["AnthropicLLM"]

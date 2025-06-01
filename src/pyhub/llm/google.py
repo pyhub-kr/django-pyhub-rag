@@ -26,6 +26,7 @@ from pyhub.caches import (
 from pyhub.rag.settings import rag_settings
 
 from .base import BaseLLM
+from .settings import llm_settings
 from .types import (
     Embed,
     EmbedList,
@@ -56,6 +57,7 @@ class GoogleLLM(BaseLLM):
         output_key: str = "text",
         initial_messages: Optional[list[Message]] = None,
         api_key: Optional[str] = None,
+        tools: Optional[list] = None,
     ):
         super().__init__(
             model=model,
@@ -67,6 +69,7 @@ class GoogleLLM(BaseLLM):
             output_key=output_key,
             initial_messages=initial_messages,
             api_key=api_key or rag_settings.google_api_key,
+            tools=tools,
         )
 
     def check(self) -> list[Error]:
@@ -353,6 +356,9 @@ class GoogleLLM(BaseLLM):
         use_history: bool = True,
         raise_errors: bool = False,
         enable_cache: bool = False,
+        tools: Optional[list] = None,
+        tool_choice: str = "auto",
+        max_tool_calls: int = 5,
     ) -> Union[Reply, Generator[Reply, None, None]]:
         return super().ask(
             input=input,
@@ -365,6 +371,9 @@ class GoogleLLM(BaseLLM):
             use_history=use_history,
             raise_errors=raise_errors,
             enable_cache=enable_cache,
+            tools=tools,
+            tool_choice=tool_choice,
+            max_tool_calls=max_tool_calls,
         )
 
     async def ask_async(
@@ -380,6 +389,9 @@ class GoogleLLM(BaseLLM):
         use_history: bool = True,
         raise_errors: bool = False,
         enable_cache: bool = False,
+        tools: Optional[list] = None,
+        tool_choice: str = "auto",
+        max_tool_calls: int = 5,
     ) -> Union[Reply, AsyncGenerator[Reply, None]]:
         return await super().ask_async(
             input=input,
@@ -392,6 +404,9 @@ class GoogleLLM(BaseLLM):
             use_history=use_history,
             raise_errors=raise_errors,
             enable_cache=enable_cache,
+            tools=tools,
+            tool_choice=tool_choice,
+            max_tool_calls=max_tool_calls,
         )
 
     def embed(
@@ -478,6 +493,177 @@ class GoogleLLM(BaseLLM):
         if isinstance(input, str):
             return Embed(response.embeddings[0].values, usage=usage)
         return EmbedList([Embed(v.values) for v in response.embeddings], usage=usage)
+
+    def _convert_tools_for_provider(self, tools):
+        """Google Function Calling 형식으로 도구 변환"""
+        from .tools import ProviderToolConverter
+        return [ProviderToolConverter.to_google_function(tool) for tool in tools]
+
+    def _extract_tool_calls_from_response(self, response):
+        """Google 응답에서 function_call 추출"""
+        tool_calls = []
+        
+        # Response가 Reply 객체인 경우 원본 응답에서 function_call 추출
+        if hasattr(response, '_raw_response') and hasattr(response._raw_response, 'candidates'):
+            candidates = response._raw_response.candidates
+            if candidates and len(candidates) > 0:
+                candidate = candidates[0]
+                if hasattr(candidate, 'content') and hasattr(candidate.content, 'parts'):
+                    for part in candidate.content.parts:
+                        # function_call 속성이 있고 None이 아닌지 확인
+                        if hasattr(part, 'function_call') and part.function_call is not None:
+                            # function_call 객체에 name과 args 속성이 있는지 확인
+                            if hasattr(part.function_call, 'name') and hasattr(part.function_call, 'args'):
+                                tool_calls.append({
+                                    "id": f"call_{len(tool_calls)}",  # Google doesn't provide call IDs
+                                    "name": part.function_call.name,
+                                    "arguments": part.function_call.args
+                                })
+                            else:
+                                # function_call 객체에 필요한 속성이 없는 경우 로깅
+                                logger.warning("function_call object missing required attributes: %s", part.function_call)
+        
+        return tool_calls
+
+    def _make_ask_with_tools_sync(self, human_prompt, messages, tools, tool_choice, model, files, enable_cache):
+        """Google Function Calling을 사용한 동기 호출"""
+        from .types import Message
+        from google.genai.types import FunctionDeclaration, Tool
+        
+        # 메시지 준비
+        google_messages = []
+        for msg in messages:
+            google_messages.append(Content(
+                role="user" if msg.role == "user" else "model",
+                parts=[Part(text=msg.content)]
+            ))
+        
+        if human_prompt:
+            google_messages.append(Content(
+                role="user",
+                parts=[Part(text=human_prompt)]
+            ))
+        
+        # 도구를 Google Tool 형식으로 변환
+        google_tools = []
+        if tools:
+            function_declarations = []
+            for tool in tools:
+                function_declarations.append(FunctionDeclaration(
+                    name=tool["name"],
+                    description=tool["description"],
+                    parameters=tool["parameters"]
+                ))
+            google_tools = [Tool(function_declarations=function_declarations)]
+        
+        # Google API 호출
+        client = genai.Client(api_key=self.api_key)
+        
+        system_prompt = None
+        if messages and messages[0].role == "system":
+            system_prompt = Content(parts=[Part(text=messages[0].content)])
+            google_messages = google_messages[1:]  # 시스템 메시지 제거
+        
+        config = GenerateContentConfig(
+            system_instruction=system_prompt,
+            max_output_tokens=self.max_tokens,
+            temperature=self.temperature,
+            tools=google_tools if google_tools else None,
+        )
+        
+        try:
+            response = client.models.generate_content(
+                model=model or self.model,
+                contents=google_messages,
+                config=config
+            )
+            
+            # Reply 객체로 변환
+            usage = Usage(
+                input=response.usage_metadata.prompt_token_count or 0,
+                output=response.usage_metadata.candidates_token_count or 0
+            )
+            
+            reply = Reply(text=response.text or "", usage=usage)
+            
+            # 원본 응답을 저장하여 function_call 추출에 사용
+            reply._raw_response = response
+            
+            return reply
+            
+        except Exception as e:
+            logger.error(f"Google API error: {e}")
+            return Reply(text=f"API Error: {str(e)}")
+
+    async def _make_ask_with_tools_async(self, human_prompt, messages, tools, tool_choice, model, files, enable_cache):
+        """Google Function Calling을 사용한 비동기 호출"""
+        from .types import Message
+        from google.genai.types import FunctionDeclaration, Tool
+        
+        # 메시지 준비
+        google_messages = []
+        for msg in messages:
+            google_messages.append(Content(
+                role="user" if msg.role == "user" else "model",
+                parts=[Part(text=msg.content)]
+            ))
+        
+        if human_prompt:
+            google_messages.append(Content(
+                role="user",
+                parts=[Part(text=human_prompt)]
+            ))
+        
+        # 도구를 Google Tool 형식으로 변환
+        google_tools = []
+        if tools:
+            function_declarations = []
+            for tool in tools:
+                function_declarations.append(FunctionDeclaration(
+                    name=tool["name"],
+                    description=tool["description"],
+                    parameters=tool["parameters"]
+                ))
+            google_tools = [Tool(function_declarations=function_declarations)]
+        
+        # Google API 호출
+        client = genai.Client(api_key=self.api_key)
+        
+        system_prompt = None
+        if messages and messages[0].role == "system":
+            system_prompt = Content(parts=[Part(text=messages[0].content)])
+            google_messages = google_messages[1:]  # 시스템 메시지 제거
+        
+        config = GenerateContentConfig(
+            system_instruction=system_prompt,
+            max_output_tokens=self.max_tokens,
+            temperature=self.temperature,
+            tools=google_tools if google_tools else None,
+        )
+        
+        try:
+            response = await client.aio.models.generate_content(
+                model=model or self.model,
+                contents=google_messages,
+                config=config
+            )
+            
+            # Reply 객체로 변환
+            usage = Usage(
+                input=response.usage_metadata.prompt_token_count or 0,
+                output=response.usage_metadata.candidates_token_count or 0
+            )
+            
+            reply = Reply(text=response.text or "", usage=usage)
+            
+            # 원본 응답을 저장하여 function_call 추출에 사용
+            reply._raw_response = response
+            
+            return reply
+            
+        except Exception as e:
+            logger.error(f"Google API error: {e}")
+            return Reply(text=f"API Error: {str(e)}")
 
 
 __all__ = ["GoogleLLM"]

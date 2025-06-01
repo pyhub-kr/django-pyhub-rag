@@ -20,6 +20,7 @@ from pyhub.caches import (
 from pyhub.rag.settings import rag_settings
 
 from .base import BaseLLM
+from .settings import llm_settings
 from .types import (
     Embed,
     EmbedList,
@@ -178,7 +179,7 @@ class OpenAIMixin:
         # 캐시된 응답인 경우 usage를 0으로 설정
         usage_input = 0 if is_cached else (response.usage.prompt_tokens or 0)
         usage_output = 0 if is_cached else (response.usage.completion_tokens or 0)
-        
+
         return Reply(
             text=response.choices[0].message.content,
             usage=Usage(input=usage_input, output=usage_output),
@@ -226,7 +227,7 @@ class OpenAIMixin:
         # 캐시된 응답인 경우 usage를 0으로 설정
         usage_input = 0 if is_cached else (response.usage.prompt_tokens or 0)
         usage_output = 0 if is_cached else (response.usage.completion_tokens or 0)
-        
+
         return Reply(
             text=response.choices[0].message.content,
             usage=Usage(input=usage_input, output=usage_output),
@@ -388,6 +389,283 @@ class OpenAIMixin:
             if cache_key is not None:
                 await cache_set_async(cache_key, reply_list, alias=self.cache_alias)
 
+    def _convert_tools_for_provider(self, tools):
+        """OpenAI Function Calling 형식으로 도구 변환"""
+        from .tools import ProviderToolConverter
+
+        return [ProviderToolConverter.to_openai_function(tool) for tool in tools]
+
+    def _extract_tool_calls_from_response(self, response):
+        """OpenAI 응답에서 tool_calls 추출"""
+        tool_calls = []
+
+        # Response가 Reply 객체인 경우 원본 응답에서 tool_calls 추출
+        if hasattr(response, "_raw_response") and hasattr(response._raw_response, "choices"):
+            message = response._raw_response.choices[0].message
+            if hasattr(message, "tool_calls") and message.tool_calls:
+                for tool_call in message.tool_calls:
+                    try:
+                        import json
+
+                        arguments = json.loads(tool_call.function.arguments)
+                        tool_calls.append({"id": tool_call.id, "name": tool_call.function.name, "arguments": arguments})
+                    except json.JSONDecodeError:
+                        logger.warning(f"Failed to parse tool call arguments: {tool_call.function.arguments}")
+
+        return tool_calls
+
+    def _make_ask_with_tools_sync(self, human_prompt, messages, tools, tool_choice, model, files, enable_cache):
+        """OpenAI Function Calling을 사용한 동기 호출"""
+        from .types import Message
+
+        # 메시지 준비
+        if human_prompt:
+            messages = messages + [Message(role="user", content=human_prompt, files=files)]
+
+        # OpenAI 메시지 형식으로 변환
+        openai_messages = []
+        for msg in messages:
+            openai_msg = {"role": msg.role, "content": msg.content}
+            if hasattr(msg, "files") and msg.files:
+                # 파일이 있는 경우 처리 (multimodal)
+                content = [{"type": "text", "text": msg.content}]
+                for file in msg.files:
+                    # 이미지 파일 처리 로직 (기존 코드 참조)
+                    pass
+                openai_msg["content"] = content
+            openai_messages.append(openai_msg)
+
+        # OpenAI API 호출
+        sync_client = SyncOpenAI(api_key=self.api_key, base_url=self.base_url)
+        request_params = {
+            "model": model or self.model,
+            "messages": openai_messages,
+            "temperature": self.temperature,
+            "max_tokens": self.max_tokens,
+        }
+
+        if tools:
+            request_params["tools"] = tools
+            if tool_choice != "auto":
+                request_params["tool_choice"] = tool_choice
+
+        try:
+            # 디버깅 정보 로깅
+            logger.debug(f"Making Function Calling request to {self.base_url}")
+            logger.debug(f"Model: {request_params['model']}")
+            logger.debug(f"Tools count: {len(tools) if tools else 0}")
+            
+            # API 요청 내역 상세 출력
+            import json
+            logger.debug("=== Function Calling API Request ===")
+            logger.debug(f"Endpoint: {self.base_url}/chat/completions")
+            logger.debug(f"Headers: Authorization: Bearer {self.api_key[:8]}...")
+            logger.debug("Request payload:")
+            # 요청 페이로드를 JSON 형태로 예쁘게 출력
+            debug_payload = request_params.copy()
+            if 'messages' in debug_payload and len(debug_payload['messages']) > 2:
+                # 메시지가 너무 길면 요약
+                debug_payload['messages'] = debug_payload['messages'][:2] + [{"...": f"({len(debug_payload['messages'])-2} more messages)"}]
+            logger.debug(json.dumps(debug_payload, indent=2, ensure_ascii=False))
+            logger.debug("=" * 40)
+            
+            # Trace 모드에서 콘솔에도 출력
+            if llm_settings.trace_function_calls:
+                print(f"   🌐 API 요청: {self.base_url}/chat/completions")
+                print(f"   📋 모델: {request_params['model']}")
+                print(f"   🔧 도구 개수: {len(tools) if tools else 0}")
+                if tools:
+                    print(f"   🛠️ 도구 목록: {[t['function']['name'] for t in tools]}")
+                print(f"   💬 메시지 개수: {len(request_params['messages'])}")
+            
+            response = sync_client.chat.completions.create(**request_params)
+
+            # API 응답 디버깅 출력
+            logger.debug("=== Function Calling API Response ===")
+            logger.debug(f"Response status: Success")
+            logger.debug(f"Usage: input={response.usage.prompt_tokens}, output={response.usage.completion_tokens}")
+            logger.debug(f"Response content: {response.choices[0].message.content[:200] if response.choices[0].message.content else 'None'}...")
+            logger.debug(f"Response finish_reason: {response.choices[0].finish_reason}")
+            if hasattr(response.choices[0].message, 'tool_calls') and response.choices[0].message.tool_calls:
+                logger.debug(f"Tool calls: {len(response.choices[0].message.tool_calls)} calls")
+                for i, tool_call in enumerate(response.choices[0].message.tool_calls):
+                    logger.debug(f"  Tool {i+1}: {tool_call.function.name}({tool_call.function.arguments})")
+            else:
+                logger.debug("Tool calls: None")
+            logger.debug("=" * 40)
+            
+            # Trace 모드에서 콘솔에도 응답 출력
+            if llm_settings.trace_function_calls:
+                print(f"   ✅ API 응답 성공")
+                print(f"   📊 토큰 사용량: 입력={response.usage.prompt_tokens}, 출력={response.usage.completion_tokens}")
+                if hasattr(response.choices[0].message, 'tool_calls') and response.choices[0].message.tool_calls:
+                    print(f"   🔧 도구 호출 요청: {len(response.choices[0].message.tool_calls)}개")
+                else:
+                    print(f"   💬 응답 내용: {response.choices[0].message.content[:100]}...'" if response.choices[0].message.content else "   💬 응답 내용: (없음)")
+
+            # Reply 객체로 변환
+            usage = Usage(input=response.usage.prompt_tokens or 0, output=response.usage.completion_tokens or 0)
+
+            reply = Reply(text=response.choices[0].message.content or "", usage=usage)
+
+            # 원본 응답을 저장하여 tool_calls 추출에 사용
+            reply._raw_response = response
+
+            return reply
+
+        except Exception as e:
+            # 디버깅 모드에서 에러 상세 출력
+            logger.error("=== Async Function Calling API Error ===")
+            logger.error(f"Error type: {type(e).__name__}")
+            logger.error(f"Error message: {str(e)}")
+            if hasattr(e, 'response'):
+                logger.error(f"HTTP status: {getattr(e.response, 'status_code', 'Unknown')}")
+                response_text = getattr(e.response, 'text', '')
+                if response_text:
+                    logger.error(f"Response body: {response_text[:1000]}")
+            logger.error("=" * 40)
+            
+            # Trace 모드에서 콘솔에도 에러 출력
+            if llm_settings.trace_function_calls:
+                print(f"   ❌ 비동기 API 오류: {type(e).__name__}")
+                if hasattr(e, 'response') and hasattr(e.response, 'status_code'):
+                    print(f"   📄 HTTP 상태: {e.response.status_code}")
+                    if hasattr(e.response, 'text'):
+                        print(f"   📝 응답 내용: {e.response.text[:200]}...")
+            
+            # HTTP 응답 코드와 상세 정보도 포함
+            error_details = str(e)
+            if hasattr(e, 'response') and hasattr(e.response, 'status_code'):
+                error_details = f"HTTP {e.response.status_code}: {error_details}"
+            if hasattr(e, 'response') and hasattr(e.response, 'text'):
+                error_details += f"\nResponse: {e.response.text[:500]}"
+            return Reply(text=f"API Error: {error_details}")
+
+    async def _make_ask_with_tools_async(self, human_prompt, messages, tools, tool_choice, model, files, enable_cache):
+        """OpenAI Function Calling을 사용한 비동기 호출"""
+        from .types import Message
+
+        # 메시지 준비
+        if human_prompt:
+            messages = messages + [Message(role="user", content=human_prompt, files=files)]
+
+        # OpenAI 메시지 형식으로 변환
+        openai_messages = []
+        for msg in messages:
+            openai_msg = {"role": msg.role, "content": msg.content}
+            if hasattr(msg, "files") and msg.files:
+                # 파일이 있는 경우 처리 (multimodal)
+                content = [{"type": "text", "text": msg.content}]
+                for file in msg.files:
+                    # 이미지 파일 처리 로직 (기존 코드 참조)
+                    pass
+                openai_msg["content"] = content
+            openai_messages.append(openai_msg)
+
+        # OpenAI API 호출
+        async_client = AsyncOpenAI(api_key=self.api_key, base_url=self.base_url)
+        request_params = {
+            "model": model or self.model,
+            "messages": openai_messages,
+            "temperature": self.temperature,
+            "max_tokens": self.max_tokens,
+        }
+
+        if tools:
+            request_params["tools"] = tools
+            if tool_choice != "auto":
+                request_params["tool_choice"] = tool_choice
+
+        try:
+            # 디버깅 정보 로깅 (비동기 버전)
+            logger.debug(f"Making async Function Calling request to {self.base_url}")
+            logger.debug(f"Model: {request_params['model']}")
+            logger.debug(f"Tools count: {len(request_params.get('tools', [])) if 'tools' in request_params else 0}")
+            
+            # API 요청 내역 상세 출력
+            import json
+            logger.debug("=== Async Function Calling API Request ===")
+            logger.debug(f"Endpoint: {self.base_url}/chat/completions")
+            logger.debug(f"Headers: Authorization: Bearer {self.api_key[:8]}...")
+            logger.debug("Request payload:")
+            debug_payload = request_params.copy()
+            if 'messages' in debug_payload and len(debug_payload['messages']) > 2:
+                debug_payload['messages'] = debug_payload['messages'][:2] + [{"...": f"({len(debug_payload['messages'])-2} more messages)"}]
+            logger.debug(json.dumps(debug_payload, indent=2, ensure_ascii=False))
+            logger.debug("=" * 40)
+            
+            # Trace 모드에서 콘솔에도 출력
+            if llm_settings.trace_function_calls:
+                print(f"   🌐 비동기 API 요청: {self.base_url}/chat/completions")
+                print(f"   📋 모델: {request_params['model']}")
+                print(f"   🔧 도구 개수: {len(tools) if tools else 0}")
+                if tools:
+                    print(f"   🛠️ 도구 목록: {[t['function']['name'] for t in tools]}")
+                print(f"   💬 메시지 개수: {len(request_params['messages'])}")
+            
+            response = await async_client.chat.completions.create(**request_params)
+
+            # API 응답 디버깅 출력 (비동기 버전)
+            logger.debug("=== Async Function Calling API Response ===")
+            logger.debug(f"Response status: Success")
+            logger.debug(f"Usage: input={response.usage.prompt_tokens}, output={response.usage.completion_tokens}")
+            logger.debug(f"Response content: {response.choices[0].message.content[:200] if response.choices[0].message.content else 'None'}...")
+            logger.debug(f"Response finish_reason: {response.choices[0].finish_reason}")
+            if hasattr(response.choices[0].message, 'tool_calls') and response.choices[0].message.tool_calls:
+                logger.debug(f"Tool calls: {len(response.choices[0].message.tool_calls)} calls")
+                for i, tool_call in enumerate(response.choices[0].message.tool_calls):
+                    logger.debug(f"  Tool {i+1}: {tool_call.function.name}({tool_call.function.arguments})")
+            else:
+                logger.debug("Tool calls: None")
+            logger.debug("=" * 40)
+            
+            # Trace 모드에서 콘솔에도 응답 출력
+            if llm_settings.trace_function_calls:
+                print(f"   ✅ 비동기 API 응답 성공")
+                print(f"   📊 토큰 사용량: 입력={response.usage.prompt_tokens}, 출력={response.usage.completion_tokens}")
+                if hasattr(response.choices[0].message, 'tool_calls') and response.choices[0].message.tool_calls:
+                    print(f"   🔧 도구 호출 요청: {len(response.choices[0].message.tool_calls)}개")
+                else:
+                    print(f"   💬 응답 내용: {response.choices[0].message.content[:100]}..." if response.choices[0].message.content else "   💬 응답 내용: (없음)")
+
+            # Reply 객체로 변환
+            usage = Usage(input=response.usage.prompt_tokens or 0, output=response.usage.completion_tokens or 0)
+
+            reply = Reply(text=response.choices[0].message.content or "", usage=usage)
+
+            # 원본 응답을 저장하여 tool_calls 추출에 사용
+            reply._raw_response = response
+
+            return reply
+
+        except Exception as e:
+            # 디버깅 모드에서 에러 상세 출력
+            logger.error("=== Async Function Calling API Error ===")
+            logger.error(f"Error type: {type(e).__name__}")
+            logger.error(f"Error message: {str(e)}")
+            if hasattr(e, 'response'):
+                logger.error(f"HTTP status: {getattr(e.response, 'status_code', 'Unknown')}")
+                response_text = getattr(e.response, 'text', '')
+                if response_text:
+                    logger.error(f"Response body: {response_text[:1000]}")
+            logger.error("=" * 40)
+            
+            # Trace 모드에서 콘솔에도 에러 출력
+            if llm_settings.trace_function_calls:
+                print(f"   ❌ 비동기 API 오류: {type(e).__name__}")
+                if hasattr(e, 'response') and hasattr(e.response, 'status_code'):
+                    print(f"   📄 HTTP 상태: {e.response.status_code}")
+                    if hasattr(e.response, 'text'):
+                        print(f"   📝 응답 내용: {e.response.text[:200]}...")
+            
+            # HTTP 응답 코드와 상세 정보도 포함
+            error_details = str(e)
+            if hasattr(e, 'response') and hasattr(e.response, 'status_code'):
+                error_details = f"HTTP {e.response.status_code}: {error_details}"
+            if hasattr(e, 'response') and hasattr(e.response, 'text'):
+                error_details += f"\nResponse: {e.response.text[:500]}"
+            return Reply(text=f"API Error: {error_details}")
+
     def ask(
         self,
         input: Union[str, dict[str, Any]],
@@ -401,6 +679,9 @@ class OpenAIMixin:
         use_history: bool = True,
         raise_errors: bool = False,
         enable_cache: bool = False,
+        tools: Optional[list] = None,
+        tool_choice: str = "auto",
+        max_tool_calls: int = 5,
     ) -> Union[Reply, Generator[Reply, None, None]]:
         return super().ask(
             input=input,
@@ -413,6 +694,9 @@ class OpenAIMixin:
             use_history=use_history,
             raise_errors=raise_errors,
             enable_cache=enable_cache,
+            tools=tools,
+            tool_choice=tool_choice,
+            max_tool_calls=max_tool_calls,
         )
 
     async def ask_async(
@@ -428,6 +712,9 @@ class OpenAIMixin:
         use_history: bool = True,
         raise_errors: bool = False,
         enable_cache: bool = False,
+        tools: Optional[list] = None,
+        tool_choice: str = "auto",
+        max_tool_calls: int = 5,
     ) -> Union[Reply, AsyncGenerator[Reply, None]]:
         return await super().ask_async(
             input=input,
@@ -440,6 +727,9 @@ class OpenAIMixin:
             use_history=use_history,
             raise_errors=raise_errors,
             enable_cache=enable_cache,
+            tools=tools,
+            tool_choice=tool_choice,
+            max_tool_calls=max_tool_calls,
         )
 
     def embed(
@@ -532,6 +822,7 @@ class OpenAILLM(OpenAIMixin, BaseLLM):
         initial_messages: Optional[list[Message]] = None,
         api_key: Optional[str] = None,
         base_url: Optional[str] = None,
+        tools: Optional[list] = None,
     ):
         super().__init__(
             model=model,
@@ -543,6 +834,7 @@ class OpenAILLM(OpenAIMixin, BaseLLM):
             output_key=output_key,
             initial_messages=initial_messages,
             api_key=api_key or rag_settings.openai_api_key,
+            tools=tools,
         )
         self.base_url = base_url or rag_settings.openai_base_url
 
@@ -559,3 +851,4 @@ class OpenAILLM(OpenAIMixin, BaseLLM):
             )
 
         return errors
+
