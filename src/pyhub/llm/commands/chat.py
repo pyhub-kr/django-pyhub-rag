@@ -6,7 +6,6 @@ import typer
 from rich.console import Console
 from rich.markdown import Markdown
 from rich.prompt import Prompt
-from rich.syntax import Syntax
 from rich.table import Table
 
 from pyhub import init
@@ -227,7 +226,7 @@ def chat(
                 console.print_exception()
 
     # 세션 종료
-    console.print(f"\n[bold blue]세션 종료[/bold blue]")
+    console.print("\n[bold blue]세션 종료[/bold blue]")
     if turn_count > 0:
         stats_table = Table(title="세션 통계")
         stats_table.add_column("항목", style="cyan")

@@ -20,8 +20,6 @@ from pyhub.llm.types import (
     LanguageEnum,
     LLMChatModelEnum,
     LLMChatModelType,
-    LLMVendorEnum,
-    LLMVendorType,
 )
 from pyhub.parser.upstage import UpstageDocumentParseParser
 from pyhub.parser.upstage.parser import ImageDescriptor

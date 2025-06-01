@@ -1,11 +1,10 @@
 """MCP client implementation for pyhub."""
 
-import asyncio
 import logging
 from contextlib import asynccontextmanager
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Union
 
-from .transports import Transport, create_transport
+from .transports import create_transport
 
 logger = logging.getLogger(__name__)
 

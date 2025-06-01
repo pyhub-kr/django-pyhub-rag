@@ -20,7 +20,6 @@ from pyhub.llm.base import BaseLLM, DescribeImageRequest
 from pyhub.llm.types import (
     GoogleChatModelType,
     LLMChatModelType,
-    LLMVendorType,
     OpenAIChatModelType,
     Reply,
 )

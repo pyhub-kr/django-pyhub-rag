@@ -7,9 +7,8 @@ Function Calling and Tool Integration for pyhub.llm
 
 import asyncio
 import inspect
-import json
 import logging
-from typing import Any, Callable, Dict, List, Optional, Type, Union, get_type_hints
+from typing import Any, Callable, Dict, List, Type, get_type_hints
 
 from pydantic import BaseModel, Field, create_model
 
@@ -196,7 +195,6 @@ class ProviderToolConverter:
         if hasattr(tool, "args_schema") and tool.args_schema:
             try:
                 # Pydantic 모델의 JSON schema 추출
-                import json
 
                 pydantic_schema = tool.args_schema.model_json_schema()
 

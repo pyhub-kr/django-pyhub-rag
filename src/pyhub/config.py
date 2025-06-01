@@ -27,12 +27,12 @@ class Config:
 
         Priority:
         1. PYHUB_CONFIG_DIR environment variable
-        2. ~/.pyhub-mcptools directory
+        2. ~/.pyhub-rag directory
         """
         config_dir = os.environ.get(cls.CONFIG_DIR_ENV)
         if config_dir:
             return Path(config_dir)
-        return Path.home() / ".pyhub-mcptools"
+        return Path.home() / ".pyhub-rag"
 
     @classmethod
     def get_default_toml_path(cls) -> Path:
@@ -41,7 +41,7 @@ class Config:
         Priority:
         1. PYHUB_TOML_PATH environment variable (absolute path)
         2. PYHUB_CONFIG_DIR / config.toml
-        3. ~/.pyhub-mcptools/config.toml
+        3. ~/.pyhub-rag/config.toml
         """
         # Check for explicit path
         toml_path = os.environ.get(cls.TOML_PATH_ENV)
@@ -58,7 +58,7 @@ class Config:
         Priority:
         1. PYHUB_ENV_PATH environment variable (absolute path)
         2. PYHUB_CONFIG_DIR / .env
-        3. ~/.pyhub-mcptools/.env
+        3. ~/.pyhub-rag/.env
         """
         # Check for explicit path
         env_path = os.environ.get(cls.ENV_PATH_ENV)

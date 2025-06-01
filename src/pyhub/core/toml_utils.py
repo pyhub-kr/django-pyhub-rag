@@ -1,11 +1,10 @@
 """TOML 관련 공통 유틸리티 함수들"""
 
 import os
-import shlex
 import subprocess
 import sys
 from pathlib import Path
-from typing import List, Optional
+from typing import List
 
 from rich.console import Console
 
@@ -17,7 +16,7 @@ def get_default_toml_content() -> str:
     from pathlib import Path
 
     # 실제 프롬프트 템플릿 로드
-    prompt_base = Path(__file__).parent.parent.parent / "parser" / "templates" / "prompts" / "describe"
+    prompt_base = Path(__file__).parent.parent / "parser" / "templates" / "prompts" / "describe"
 
     # 이미지 설명 프롬프트
     image_system_prompt = ""
@@ -42,57 +41,14 @@ def get_default_toml_content() -> str:
         table_user_prompt = table_user_path.read_text(encoding="utf-8").strip()
 
     return f'''[env]
-# API Keys
-UPSTAGE_API_KEY = ""
-OPENAI_API_KEY = ""
-ANTHROPIC_API_KEY = ""
-GOOGLE_API_KEY = ""
+# API Keys - 사용할 API 키의 주석을 제거하고 실제 키를 입력하세요
+# UPSTAGE_API_KEY = "up_xxxxx..."
+# OPENAI_API_KEY = "sk-xxxxx..."
+# ANTHROPIC_API_KEY = "sk-ant-xxxxx..."
+# GOOGLE_API_KEY = "AIxxxxx...."
+# DATABASE_URL = "postgresql://postgres:pw@localhost:5432/postgres"
 
-# Database
-DATABASE_URL = ""
-
-# Optional
-TOML_PATH = ""
-ENV_PATH = ""
-
-[rag]
-# RAG (Retrieval Augmented Generation) 설정
-# 기본 벡터 스토어 백엔드 선택 (pgvector, sqlite-vec)
-default_backend = "sqlite-vec"
-
-[rag.backends.pgvector]
-# PostgreSQL pgvector 벡터 데이터베이스 설정
-enabled = true
-# database_url = "postgresql://user:password@localhost:5432/vectordb"
-# default_table = "documents"
-# default_dimensions = 1536
-# index_type = "hnsw"  # 옵션: hnsw, ivfflat
-# distance_metric = "cosine"  # 옵션: cosine, l2, inner_product
-
-[rag.backends.sqlite-vec]
-# SQLite-vec 벡터 데이터베이스 설정
-enabled = true
-# db_path = "~/.pyhub/vector.db"
-# default_table = "documents"
-# default_dimensions = 1536
-# distance_metric = "cosine"  # 옵션: cosine, l2
-
-[mcp]
-# MCP (Model Context Protocol) 서버 설정
-# 여러 MCP 서버를 정의할 수 있습니다
-
-# [mcp.servers.math]
-# # 수학 도구를 제공하는 MCP 서버 예제
-# command = "python"
-# args = ["/path/to/math_server.py"]
-# # env = {{ PYTHONPATH = "/custom/path" }}  # 선택적: 환경 변수
-# # filter_tools = ["add", "multiply"]  # 선택적: 특정 도구만 로드
-
-# [mcp.servers.web]
-# # 웹 검색 도구를 제공하는 MCP 서버 예제
-# command = "node"
-# args = ["/path/to/web_search_server.js"]
-# # filter_tools = ["search", "browse"]
+USER_DEFAULT_TIME_ZONE = "Asia/Seoul"
 
 [prompt_templates.describe_image]
 system = """{image_system_prompt}"""
@@ -102,13 +58,6 @@ user = """{image_user_prompt}"""
 system = """{table_system_prompt}"""
 user = """{table_user_prompt}"""
 
-[prompt_templates.custom_template]
-system = "당신은 유용한 AI 어시스턴트입니다."
-user = "{{{{query}}}}"
-
-[cache]
-default_timeout = 2592000  # 30 days
-max_entries = 5000
 '''
 
 
@@ -146,7 +95,7 @@ def open_file_with_editor(file_path: Path, verbose: bool = False) -> bool:
             # Windows
             try:
                 subprocess.run(["start", str(file_path)], shell=True, check=True)
-                console.print(f"[green]✓ Windows 기본 프로그램으로 파일을 열었습니다.[/green]")
+                console.print("[green]✓ Windows 기본 프로그램으로 파일을 열었습니다.[/green]")
                 return True
             except subprocess.CalledProcessError:
                 pass
@@ -154,7 +103,7 @@ def open_file_with_editor(file_path: Path, verbose: bool = False) -> bool:
             # macOS
             try:
                 subprocess.run(["open", str(file_path)], check=True)
-                console.print(f"[green]✓ macOS 기본 프로그램으로 파일을 열었습니다.[/green]")
+                console.print("[green]✓ macOS 기본 프로그램으로 파일을 열었습니다.[/green]")
                 return True
             except subprocess.CalledProcessError:
                 pass
@@ -162,7 +111,7 @@ def open_file_with_editor(file_path: Path, verbose: bool = False) -> bool:
             # Linux
             try:
                 subprocess.run(["xdg-open", str(file_path)], check=True)
-                console.print(f"[green]✓ 기본 프로그램으로 파일을 열었습니다.[/green]")
+                console.print("[green]✓ 기본 프로그램으로 파일을 열었습니다.[/green]")
                 return True
             except subprocess.CalledProcessError:
                 pass
@@ -199,7 +148,7 @@ def open_file_with_editor(file_path: Path, verbose: bool = False) -> bool:
             elif ed == "code":
                 # VS Code - 새 창에서 열기
                 if verbose:
-                    console.print(f"[dim]  → VS Code를 새 창으로 실행합니다.[/dim]")
+                    console.print("[dim]  → VS Code를 새 창으로 실행합니다.[/dim]")
                 try:
                     process = subprocess.Popen(
                         [ed, "--new-window", str(file_path)], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
@@ -209,7 +158,7 @@ def open_file_with_editor(file_path: Path, verbose: bool = False) -> bool:
 
                     time.sleep(0.2)  # 잠시 대기하여 실행 확인
                     if process.poll() is None or process.returncode == 0:
-                        console.print(f"[green]✓ VS Code로 파일을 열었습니다.[/green]")
+                        console.print("[green]✓ VS Code로 파일을 열었습니다.[/green]")
                         return True
                 except Exception as e:
                     if verbose:
@@ -232,7 +181,7 @@ def open_file_with_editor(file_path: Path, verbose: bool = False) -> bool:
                         )
                     return True
                 except KeyboardInterrupt:
-                    console.print(f"[yellow]\n편집이 중단되었습니다.[/yellow]")
+                    console.print("[yellow]\n편집이 중단되었습니다.[/yellow]")
                     return True
 
             else:
@@ -262,13 +211,13 @@ def open_file_with_editor(file_path: Path, verbose: bool = False) -> bool:
             continue
 
     # 모든 시도가 실패한 경우
-    console.print(f"[red]오류: 파일을 열 수 있는 에디터를 찾을 수 없습니다.[/red]")
+    console.print("[red]오류: 파일을 열 수 있는 에디터를 찾을 수 없습니다.[/red]")
     console.print(f"[dim]시도한 에디터: {', '.join(editors)}[/dim]")
-    console.print(f"[dim]다음 방법들을 시도해보세요:[/dim]")
-    console.print(f"  1. [cyan]VISUAL[/cyan] 또는 [cyan]EDITOR[/cyan] 환경변수 설정:")
-    console.print(f"     [yellow]export EDITOR=nano[/yellow]  # 또는 원하는 에디터")
-    console.print(f"  2. 파일 내용을 직접 확인:")
-    console.print(f"     [cyan]pyhub toml show[/cyan]")
-    console.print(f"  3. 파일을 수동으로 편집:")
+    console.print("[dim]다음 방법들을 시도해보세요:[/dim]")
+    console.print("  1. [cyan]VISUAL[/cyan] 또는 [cyan]EDITOR[/cyan] 환경변수 설정:")
+    console.print("     [yellow]export EDITOR=nano[/yellow]  # 또는 원하는 에디터")
+    console.print("  2. 파일 내용을 직접 확인:")
+    console.print("     [cyan]pyhub toml show[/cyan]")
+    console.print("  3. 파일을 수동으로 편집:")
     console.print(f"     [yellow]{file_path}[/yellow]")
     return False

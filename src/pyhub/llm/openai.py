@@ -485,7 +485,7 @@ class OpenAIMixin:
 
             # API 응답 디버깅 출력
             logger.debug("=== Function Calling API Response ===")
-            logger.debug(f"Response status: Success")
+            logger.debug("Response status: Success")
             logger.debug(f"Usage: input={response.usage.prompt_tokens}, output={response.usage.completion_tokens}")
             logger.debug(
                 f"Response content: {response.choices[0].message.content[:200] if response.choices[0].message.content else 'None'}..."
@@ -501,7 +501,7 @@ class OpenAIMixin:
 
             # Trace 모드에서 콘솔에도 응답 출력
             if llm_settings.trace_function_calls:
-                print(f"   ✅ API 응답 성공")
+                print("   ✅ API 응답 성공")
                 print(
                     f"   📊 토큰 사용량: 입력={response.usage.prompt_tokens}, 출력={response.usage.completion_tokens}"
                 )
@@ -621,7 +621,7 @@ class OpenAIMixin:
 
             # API 응답 디버깅 출력 (비동기 버전)
             logger.debug("=== Async Function Calling API Response ===")
-            logger.debug(f"Response status: Success")
+            logger.debug("Response status: Success")
             logger.debug(f"Usage: input={response.usage.prompt_tokens}, output={response.usage.completion_tokens}")
             logger.debug(
                 f"Response content: {response.choices[0].message.content[:200] if response.choices[0].message.content else 'None'}..."
@@ -637,7 +637,7 @@ class OpenAIMixin:
 
             # Trace 모드에서 콘솔에도 응답 출력
             if llm_settings.trace_function_calls:
-                print(f"   ✅ 비동기 API 응답 성공")
+                print("   ✅ 비동기 API 응답 성공")
                 print(
                     f"   📊 토큰 사용량: 입력={response.usage.prompt_tokens}, 출력={response.usage.completion_tokens}"
                 )

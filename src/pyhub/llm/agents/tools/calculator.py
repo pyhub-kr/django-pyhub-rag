@@ -1,7 +1,6 @@
 """Calculator tool implementation."""
 
 import re
-from typing import Any, Dict
 
 from pydantic import BaseModel, Field, field_validator
 

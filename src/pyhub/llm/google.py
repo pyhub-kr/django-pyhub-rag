@@ -26,7 +26,6 @@ from pyhub.caches import (
 from pyhub.rag.settings import rag_settings
 
 from .base import BaseLLM
-from .settings import llm_settings
 from .types import (
     Embed,
     EmbedList,
@@ -534,7 +533,6 @@ class GoogleLLM(BaseLLM):
         """Google Function Calling을 사용한 동기 호출"""
         from google.genai.types import FunctionDeclaration, Tool
 
-        from .types import Message
 
         # 메시지 준비
         google_messages = []
@@ -599,7 +597,6 @@ class GoogleLLM(BaseLLM):
         """Google Function Calling을 사용한 비동기 호출"""
         from google.genai.types import FunctionDeclaration, Tool
 
-        from .types import Message
 
         # 메시지 준비
         google_messages = []

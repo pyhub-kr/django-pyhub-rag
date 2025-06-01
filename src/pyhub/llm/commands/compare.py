@@ -89,7 +89,7 @@ def compare(
     init(debug=True, log_level=log_level)
 
     # 비교 시작
-    console.print(f"\n[bold blue]🔍 모델 비교[/bold blue]")
+    console.print("\n[bold blue]🔍 모델 비교[/bold blue]")
     console.print(f"[dim]질문: {query}[/dim]")
     console.print(f"[dim]모델: {', '.join([m.value for m in models])}[/dim]\n")
 

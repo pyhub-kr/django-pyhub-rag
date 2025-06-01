@@ -367,7 +367,7 @@ def import_jsonl(
         # 기존 데이터 삭제
         if clear:
             cursor.execute(f"TRUNCATE TABLE {table_name}")
-            console.print(f"[yellow]기존 데이터를 삭제했습니다.[/yellow]")
+            console.print("[yellow]기존 데이터를 삭제했습니다.[/yellow]")
 
         # JSONL 파일 읽기 및 임포트
         total = 0
@@ -484,7 +484,7 @@ def similarity_search(
 
     try:
         # 쿼리 임베딩 생성
-        console.print(f"[dim]Generating embedding for query...[/dim]")
+        console.print("[dim]Generating embedding for query...[/dim]")
         llm = LLM.create(model=embedding_model)
         query_embedding = llm.embed(query)
 
@@ -595,7 +595,7 @@ def stats(
 
         # 인덱스 정보
         cursor.execute(
-            f"""
+            """
             SELECT 
                 indexname,
                 indexdef
@@ -609,7 +609,7 @@ def stats(
 
         # 테이블 크기
         cursor.execute(
-            f"""
+            """
             SELECT 
                 pg_size_pretty(pg_total_relation_size(%s::regclass))
         """,
@@ -624,13 +624,13 @@ def stats(
         console.print(f"Table size: {table_size}")
 
         if indexes:
-            console.print(f"\n[bold]Indexes:[/bold]")
+            console.print("\n[bold]Indexes:[/bold]")
             for idx_name, idx_def in indexes:
                 console.print(f"  • {idx_name}")
                 if "hnsw" in idx_def:
-                    console.print(f"    [dim]Type: HNSW[/dim]")
+                    console.print("    [dim]Type: HNSW[/dim]")
                 elif "ivfflat" in idx_def:
-                    console.print(f"    [dim]Type: IVFFlat[/dim]")
+                    console.print("    [dim]Type: IVFFlat[/dim]")
 
         cursor.close()
         conn.close()

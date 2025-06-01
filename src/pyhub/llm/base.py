@@ -711,7 +711,7 @@ class BaseLLM(abc.ABC):
         """동기 버전의 도구 호출 처리"""
         # Trace 시작
         if llm_settings.trace_function_calls:
-            print(f"🔍 [TRACE] Function Calling 시작")
+            print("🔍 [TRACE] Function Calling 시작")
             print(f"   입력: {input}")
             print(f"   사용 가능한 도구: {[tool.name for tool in adapted_tools]}")
             print(f"   최대 호출 횟수: {max_tool_calls}")
@@ -759,7 +759,7 @@ class BaseLLM(abc.ABC):
 
                 # 도구 실행
                 if llm_settings.trace_function_calls:
-                    print(f"\n🛠️  [TRACE] 도구 실행 중...")
+                    print("\n🛠️  [TRACE] 도구 실행 중...")
 
                 for tool_call in tool_calls:
                     try:

@@ -252,7 +252,7 @@ def ask(
             if no_stream:
                 # 비스트리밍 모드
                 if is_verbose:
-                    console.print(f"[dim]디버그: 비스트리밍 모드 사용[/dim]")
+                    console.print("[dim]디버그: 비스트리밍 모드 사용[/dim]")
                 response = llm.ask(query, stream=False, enable_cache=enable_cache)
                 response_text = response.text
                 usage = response.usage
@@ -260,7 +260,7 @@ def ask(
             else:
                 # 스트리밍 모드 (기본)
                 if is_verbose:
-                    console.print(f"[dim]디버그: 스트리밍 시작...[/dim]")
+                    console.print("[dim]디버그: 스트리밍 시작...[/dim]")
                 for chunk in llm.ask(query, stream=True, enable_cache=enable_cache):
                     if chunk.text:  # 텍스트가 있는 경우에만 출력
                         console.print(chunk.text, end="")

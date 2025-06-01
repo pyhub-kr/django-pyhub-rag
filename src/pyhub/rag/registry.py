@@ -3,7 +3,6 @@
 import logging
 from typing import Any, Dict, Optional
 
-from pyhub import load_toml
 from pyhub.config import DEFAULT_TOML_PATH
 
 from .backends import get_backend_class, list_backends
@@ -49,16 +48,20 @@ class VectorStoreRegistry:
             logger.warning(f"Failed to load TOML config: {e}")
             self._config = {}
 
-        # 기본값 설정
-        if "default_backend" not in self._config:
-            self._config["default_backend"] = "sqlite-vec"
+        # 기본값 설정 제거 - 명시적 백엔드 지정 필요
 
         if "backends" not in self._config:
             self._config["backends"] = {}
 
     def get_default_backend(self) -> str:
         """기본 백엔드 이름을 반환합니다."""
-        return self.config.get("default_backend", "sqlite-vec")
+        default_backend = self.config.get("default_backend")
+        if not default_backend:
+            raise ValueError(
+                "No default backend specified in configuration. "
+                "Please specify a backend explicitly using --backend option."
+            )
+        return default_backend
 
     def get_backend_config(self, backend_name: str) -> Dict[str, Any]:
         """특정 백엔드의 설정을 반환합니다."""
@@ -76,14 +79,18 @@ class VectorStoreRegistry:
         백엔드 인스턴스를 생성합니다.
 
         Args:
-            backend_name: 백엔드 이름 (None이면 기본 백엔드 사용)
+            backend_name: 백엔드 이름 (필수)
             **override_config: 설정 오버라이드
 
         Returns:
             백엔드 인스턴스
         """
         if backend_name is None:
-            backend_name = self.get_default_backend()
+            raise ValueError(
+                "Backend name is required. "
+                "Please specify a backend explicitly using --backend option. "
+                f"Available backends: {', '.join(list_backends())}"
+            )
 
         # 캐시 확인
         cache_key = f"{backend_name}:{hash(frozenset(override_config.items()))}"

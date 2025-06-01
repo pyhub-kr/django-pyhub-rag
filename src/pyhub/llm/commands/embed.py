@@ -459,7 +459,7 @@ def batch(
         # 완료
         total_time = time.time() - start_time
         console.print()  # 줄바꿈
-        console.print(f"[green]✓ 임베딩 완료![/green]")
+        console.print("[green]✓ 임베딩 완료![/green]")
 
         # 통계
         stats_table = Table(title="처리 통계")

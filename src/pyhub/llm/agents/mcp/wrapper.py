@@ -1,7 +1,7 @@
 """MCP tool wrapper for pyhub agents."""
 
 import logging
-from typing import Any, Dict, Optional, Type
+from typing import Any, Dict, Type
 
 from pydantic import BaseModel, Field, create_model
 

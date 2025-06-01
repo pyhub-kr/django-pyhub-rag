@@ -24,7 +24,6 @@ try:
 
     if settings.configured:
         from django.template import Context
-        from django.template import Template as DjangoTemplate
         from django.template.loader import get_template
 
         DJANGO_AVAILABLE = True

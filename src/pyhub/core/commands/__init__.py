@@ -68,17 +68,17 @@ def create(
 
     # 파일 확장자 확인
     if toml_path.suffix != ".toml":
-        console.print(f"[red]오류: 파일 확장자는 .toml이어야 합니다.[/red]")
+        console.print("[red]오류: 파일 확장자는 .toml이어야 합니다.[/red]")
         console.print(f"[dim]입력된 파일: {toml_path}[/dim]")
         raise typer.Exit(code=1)
 
     # 파일 존재 확인
     if toml_path.exists() and not force:
         console.print(f"[red]오류: {toml_path} 파일이 이미 존재합니다.[/red]")
-        console.print(f"[dim]다음 중 하나를 선택하세요:[/dim]")
-        console.print(f"  • 기존 파일을 덮어쓰려면: [cyan]pyhub toml create --force[/cyan]")
-        console.print(f"  • 기존 파일을 편집하려면: [cyan]pyhub toml edit[/cyan]")
-        console.print(f"  • 기존 파일을 확인하려면: [cyan]pyhub toml show[/cyan]")
+        console.print("[dim]다음 중 하나를 선택하세요:[/dim]")
+        console.print("  • 기존 파일을 덮어쓰려면: [cyan]pyhub toml create --force[/cyan]")
+        console.print("  • 기존 파일을 편집하려면: [cyan]pyhub toml edit[/cyan]")
+        console.print("  • 기존 파일을 확인하려면: [cyan]pyhub toml show[/cyan]")
         raise typer.Exit(code=1)
 
     if toml_path.exists() and force:
@@ -95,17 +95,17 @@ def create(
             f.write(toml_content)
 
     except PermissionError:
-        console.print(f"[red]오류: 파일을 생성할 권한이 없습니다.[/red]")
+        console.print("[red]오류: 파일을 생성할 권한이 없습니다.[/red]")
         console.print(f"[dim]경로: {toml_path}[/dim]")
         raise typer.Exit(code=1)
     except OSError as e:
-        console.print(f"[red]오류: 파일을 생성할 수 없습니다.[/red]")
+        console.print("[red]오류: 파일을 생성할 수 없습니다.[/red]")
         console.print(f"[dim]상세: {e}[/dim]")
         raise typer.Exit(code=1)
     else:
         console.print(f"[green]✓ 설정 파일이 생성되었습니다: {toml_path}[/green]")
-        console.print(f"[dim]다음 명령으로 파일을 편집할 수 있습니다:[/dim]")
-        console.print(f"  [cyan]pyhub toml edit[/cyan]")
+        console.print("[dim]다음 명령으로 파일을 편집할 수 있습니다:[/dim]")
+        console.print("  [cyan]pyhub toml edit[/cyan]")
 
 
 @toml_app.command()
@@ -119,15 +119,15 @@ def show(
     """TOML 설정 파일 내용을 출력합니다."""
     # 파일 확장자 확인
     if toml_path.suffix != ".toml":
-        console.print(f"[red]오류: 파일 확장자는 .toml이어야 합니다.[/red]")
+        console.print("[red]오류: 파일 확장자는 .toml이어야 합니다.[/red]")
         console.print(f"[dim]입력된 파일: {toml_path}[/dim]")
         raise typer.Exit(code=1)
 
     # 파일 존재 확인
     if not toml_path.exists():
         console.print(f"[red]오류: {toml_path} 파일이 존재하지 않습니다.[/red]")
-        console.print(f"[dim]다음 명령으로 새 설정 파일을 생성할 수 있습니다:[/dim]")
-        console.print(f"  [cyan]pyhub toml create[/cyan]")
+        console.print("[dim]다음 명령으로 새 설정 파일을 생성할 수 있습니다:[/dim]")
+        console.print("  [cyan]pyhub toml create[/cyan]")
         raise typer.Exit(code=1)
 
     # 파일 내용 출력
@@ -137,7 +137,7 @@ def show(
             content = f.read()
             print(content)
     except Exception as e:
-        console.print(f"[red]오류: 파일을 읽을 수 없습니다.[/red]")
+        console.print("[red]오류: 파일을 읽을 수 없습니다.[/red]")
         console.print(f"[dim]상세: {e}[/dim]")
         raise typer.Exit(code=1)
 
@@ -153,15 +153,15 @@ def validate(
     """TOML 설정 파일의 유효성을 검증합니다."""
     # 파일 확장자 확인
     if toml_path.suffix != ".toml":
-        console.print(f"[red]오류: 파일 확장자는 .toml이어야 합니다.[/red]")
+        console.print("[red]오류: 파일 확장자는 .toml이어야 합니다.[/red]")
         console.print(f"[dim]입력된 파일: {toml_path}[/dim]")
         raise typer.Exit(code=1)
 
     # 파일 존재 확인
     if not toml_path.exists():
         console.print(f"[red]오류: {toml_path} 파일이 존재하지 않습니다.[/red]")
-        console.print(f"[dim]다음 명령으로 새 설정 파일을 생성할 수 있습니다:[/dim]")
-        console.print(f"  [cyan]pyhub toml create[/cyan]")
+        console.print("[dim]다음 명령으로 새 설정 파일을 생성할 수 있습니다:[/dim]")
+        console.print("  [cyan]pyhub toml create[/cyan]")
         raise typer.Exit(code=1)
 
     console.print(f"[dim]{toml_path} 경로의 파일을 확인하겠습니다.[/dim]")
@@ -173,11 +173,11 @@ def validate(
         with toml_path.open("rt", encoding="utf-8") as f:
             toml_data = toml.load(f)
     except toml.TomlDecodeError as e:
-        console.print(f"[red]오류: 유효하지 않은 TOML 파일입니다.[/red]")
+        console.print("[red]오류: 유효하지 않은 TOML 파일입니다.[/red]")
         console.print(f"[dim]상세: {e}[/dim]")
         raise typer.Exit(code=1)
     except Exception as e:
-        console.print(f"[red]오류: 파일을 읽을 수 없습니다.[/red]")
+        console.print("[red]오류: 파일을 읽을 수 없습니다.[/red]")
         console.print(f"[dim]상세: {e}[/dim]")
         raise typer.Exit(code=1)
 
@@ -233,15 +233,15 @@ def edit(
 
     # 파일 확장자 확인
     if toml_path.suffix != ".toml":
-        console.print(f"[red]오류: 파일 확장자는 .toml이어야 합니다.[/red]")
+        console.print("[red]오류: 파일 확장자는 .toml이어야 합니다.[/red]")
         console.print(f"[dim]입력된 파일: {toml_path}[/dim]")
         raise typer.Exit(code=1)
 
     # 파일 존재 확인
     if not toml_path.exists():
         console.print(f"[red]오류: {toml_path} 파일이 존재하지 않습니다.[/red]")
-        console.print(f"[dim]다음 명령으로 새 설정 파일을 생성할 수 있습니다:[/dim]")
-        console.print(f"  [cyan]pyhub toml create[/cyan]")
+        console.print("[dim]다음 명령으로 새 설정 파일을 생성할 수 있습니다:[/dim]")
+        console.print("  [cyan]pyhub toml create[/cyan]")
         raise typer.Exit(code=1)
 
     console.print(f"[dim]{toml_path} 파일을 편집합니다...[/dim]")
@@ -285,7 +285,7 @@ def path(
                 console.print(f"[dim]  수정: {modified}[/dim]")
         else:
             console.print(f"[red]✗[/red] {abs_path}")
-            console.print(f"[dim]  파일이 존재하지 않습니다[/dim]")
+            console.print("[dim]  파일이 존재하지 않습니다[/dim]")
 
             # 환경변수 정보 표시
             if is_verbose:

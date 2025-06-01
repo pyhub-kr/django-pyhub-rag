@@ -46,6 +46,6 @@ class TestSQLiteVectorDocument3072(SQLiteVectorDocument):
         editable=False,
         embedding_model="text-embedding-3-large",
     )
-    
+
     class Meta:
         app_label = "test_app"

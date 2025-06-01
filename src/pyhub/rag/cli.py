@@ -13,7 +13,6 @@ from pyhub.config import DEFAULT_ENV_PATH, DEFAULT_TOML_PATH
 from pyhub.llm import LLM
 from pyhub.llm.types import LLMEmbeddingModelEnum
 
-from .backends.base import Document
 from .registry import get_vector_store, list_available_backends
 
 # CLI 앱 생성
@@ -79,7 +78,7 @@ def list_backends(
 @app.command(name="create-collection")
 def create_collection(
     name: str = typer.Argument(..., help="컬렉션 이름"),
-    backend: Optional[str] = typer.Option(None, "--backend", "-b", help="벡터 스토어 백엔드 (기본값: TOML 설정)"),
+    backend: str = typer.Option(..., "--backend", "-b", help="벡터 스토어 백엔드"),
     dimensions: int = typer.Option(1536, "--dimensions", "-d", help="벡터 차원"),
     distance_metric: str = typer.Option("cosine", "--distance-metric", help="거리 메트릭 (cosine, l2, inner_product)"),
     database_url: Optional[str] = typer.Option(None, "--database-url", help="데이터베이스 URL (pgvector용)"),
@@ -128,7 +127,7 @@ def create_collection(
 def import_jsonl(
     file_path: Path = typer.Argument(..., help="임포트할 JSONL 파일"),
     collection: str = typer.Option(..., "--collection", "-c", help="대상 컬렉션"),
-    backend: Optional[str] = typer.Option(None, "--backend", "-b", help="벡터 스토어 백엔드 (기본값: TOML 설정)"),
+    backend: str = typer.Option(..., "--backend", "-b", help="벡터 스토어 백엔드"),
     batch_size: int = typer.Option(1000, "--batch-size", help="배치 크기"),
     clear: bool = typer.Option(False, "--clear", help="기존 데이터 삭제"),
     database_url: Optional[str] = typer.Option(None, "--database-url", help="데이터베이스 URL (pgvector용)"),
@@ -189,7 +188,7 @@ def similarity_search(
     ctx: typer.Context,
     query: str = typer.Argument(None, help="검색할 텍스트"),
     collection: str = typer.Option(..., "--collection", "-c", help="검색할 컬렉션"),
-    backend: Optional[str] = typer.Option(None, "--backend", "-b", help="벡터 스토어 백엔드 (기본값: TOML 설정)"),
+    backend: str = typer.Option(..., "--backend", "-b", help="벡터 스토어 백엔드"),
     embedding_model: LLMEmbeddingModelEnum = typer.Option(
         LLMEmbeddingModelEnum.TEXT_EMBEDDING_3_SMALL, "--model", "-m", help="임베딩 모델"
     ),
@@ -231,7 +230,7 @@ def similarity_search(
         store = get_vector_store(backend, **config)
 
         # 쿼리 임베딩 생성
-        console.print(f"[dim]쿼리 임베딩 생성 중...[/dim]")
+        console.print("[dim]쿼리 임베딩 생성 중...[/dim]")
         llm = LLM.create(model=embedding_model)
         query_embedding = llm.embed(query)
 
@@ -264,7 +263,7 @@ def similarity_search(
 @app.command()
 def stats(
     collection: str = typer.Argument(..., help="통계를 확인할 컬렉션"),
-    backend: Optional[str] = typer.Option(None, "--backend", "-b", help="벡터 스토어 백엔드 (기본값: TOML 설정)"),
+    backend: str = typer.Option(..., "--backend", "-b", help="벡터 스토어 백엔드"),
     database_url: Optional[str] = typer.Option(None, "--database-url", help="데이터베이스 URL (pgvector용)"),
     db_path: Optional[Path] = typer.Option(None, "--db-path", help="데이터베이스 파일 경로 (sqlite-vec용)"),
     toml_path: Optional[Path] = typer.Option(
@@ -309,7 +308,7 @@ def stats(
             console.print(f"Database path: {info['db_path']}")
 
         if "indexes" in info and info["indexes"]:
-            console.print(f"\n[bold]Indexes:[/bold]")
+            console.print("\n[bold]Indexes:[/bold]")
             for idx in info["indexes"]:
                 console.print(f"  • {idx['name']} ({idx.get('type', 'Unknown')})")
 

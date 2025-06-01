@@ -1,7 +1,7 @@
 """LLM 관련 믹스인 클래스들"""
 
 from functools import wraps
-from typing import Any, Callable
+from typing import Callable
 
 from rich.console import Console
 
@@ -40,7 +40,7 @@ class RetryMixin:
                     console.print(f"[red]인증 오류: {e}[/red]")
                     console.print("[yellow]API 키를 확인해주세요.[/yellow]")
                     raise
-                except Exception as converted_e:
+                except Exception:
                     # 변환된 에러로 재시도
                     @retry_api_call(verbose=self.retry_verbose)
                     def retry_func():
@@ -135,5 +135,5 @@ class ValidationMixin:
         """embed 메서드에 검증 추가"""
         # 임베딩은 보통 8191 토큰 제한
         if len(text) // 4 > 8191:
-            console.print(f"[yellow]경고: 텍스트가 임베딩 토큰 제한(8191)을 " f"초과할 수 있습니다.[/yellow]")
+            console.print("[yellow]경고: 텍스트가 임베딩 토큰 제한(8191)을 " "초과할 수 있습니다.[/yellow]")
         return super().embed(text, *args, **kwargs)

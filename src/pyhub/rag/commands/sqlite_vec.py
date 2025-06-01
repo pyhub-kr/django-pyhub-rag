@@ -135,10 +135,10 @@ def command_create_table(
             console.print(f"[red]❌ {lines[0]}[/red]")
             if len(lines) > 1:
                 console.print(f"[dim]{lines[1]}[/dim]")
-            console.print(f"\n[yellow]💡 해결 방법:[/yellow]")
-            console.print(f"  • 다른 테이블 이름을 사용하세요")
-            console.print(f"  • 기존 테이블을 삭제하려면 SQLite 클라이언트를 사용하세요")
-            console.print(f"  • 기존 데이터를 유지하려면 import-jsonl 명령을 사용하세요")
+            console.print("\n[yellow]💡 해결 방법:[/yellow]")
+            console.print("  • 다른 테이블 이름을 사용하세요")
+            console.print("  • 기존 테이블을 삭제하려면 SQLite 클라이언트를 사용하세요")
+            console.print("  • 기존 데이터를 유지하려면 import-jsonl 명령을 사용하세요")
         else:
             console.print(f"[red]❌ {error_msg}[/red]")
         raise typer.Exit(code=1)

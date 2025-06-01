@@ -3,7 +3,6 @@
 import json
 import logging
 from typing import Any, Dict, List, Optional
-from urllib.parse import urlparse
 
 from .base import BaseVectorStore, Document, SearchResult
 
@@ -206,7 +205,7 @@ class PgVectorStore(BaseVectorStore):
             # 메타데이터 필터 추가
             if filter:
                 for key, value in filter.items():
-                    search_sql += f" AND metadata->%s = %s"
+                    search_sql += " AND metadata->%s = %s"
                     params.extend([key, json.dumps(value)])
 
             # 임계값 조건 추가

@@ -1,6 +1,5 @@
 from django.conf import settings
 from environ import Env
-import pytest
 
 
 def pytest_configure():

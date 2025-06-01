@@ -2,8 +2,7 @@
 
 import asyncio
 import logging
-from contextlib import asynccontextmanager
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List
 
 from ..base import Tool
 from .client import MCPClient

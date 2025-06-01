@@ -21,7 +21,6 @@ from pyhub.caches import (
 from pyhub.rag.settings import rag_settings
 
 from .base import BaseLLM
-from .settings import llm_settings
 from .types import AnthropicChatModelType, Embed, EmbedList, Message, Reply, Usage
 from .utils.files import FileType, encode_files
 
@@ -465,7 +464,6 @@ class AnthropicLLM(BaseLLM):
 
     def _make_ask_with_tools_sync(self, human_prompt, messages, tools, tool_choice, model, files, enable_cache):
         """Anthropic Tool Use를 사용한 동기 호출"""
-        from .types import Message
 
         # 메시지 준비
         anthropic_messages = []
@@ -511,7 +509,6 @@ class AnthropicLLM(BaseLLM):
 
     async def _make_ask_with_tools_async(self, human_prompt, messages, tools, tool_choice, model, files, enable_cache):
         """Anthropic Tool Use를 사용한 비동기 호출"""
-        from .types import Message
 
         # 메시지 준비
         anthropic_messages = []

@@ -2,7 +2,6 @@
 
 import json
 from pathlib import Path
-from typing import Optional
 
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction

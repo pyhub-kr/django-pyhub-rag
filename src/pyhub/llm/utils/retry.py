@@ -3,7 +3,7 @@
 import random
 import time
 from functools import wraps
-from typing import Any, Callable, Type, Union
+from typing import Any, Callable, Type
 
 from rich.console import Console
 
@@ -216,7 +216,7 @@ def retry_api_call(
                 except config["exceptions"] as e:
                     last_exception = e
                     continue
-                except Exception as e:
+                except Exception:
                     # 다른 예외는 바로 전파
                     raise
 
