@@ -123,14 +123,14 @@ def show(
         console.print(f"[red]오류: 파일 확장자는 .toml이어야 합니다.[/red]")
         console.print(f"[dim]입력된 파일: {toml_path}[/dim]")
         raise typer.Exit(code=1)
-    
+
     # 파일 존재 확인
     if not toml_path.exists():
         console.print(f"[red]오류: {toml_path} 파일이 존재하지 않습니다.[/red]")
         console.print(f"[dim]다음 명령으로 새 설정 파일을 생성할 수 있습니다:[/dim]")
         console.print(f"  [cyan]pyhub toml create[/cyan]")
         raise typer.Exit(code=1)
-    
+
     # 파일 내용 출력
     console.print(f"[dim]{toml_path} 경로의 파일을 출력하겠습니다.[/dim]")
     try:
@@ -157,19 +157,20 @@ def validate(
         console.print(f"[red]오류: 파일 확장자는 .toml이어야 합니다.[/red]")
         console.print(f"[dim]입력된 파일: {toml_path}[/dim]")
         raise typer.Exit(code=1)
-    
+
     # 파일 존재 확인
     if not toml_path.exists():
         console.print(f"[red]오류: {toml_path} 파일이 존재하지 않습니다.[/red]")
         console.print(f"[dim]다음 명령으로 새 설정 파일을 생성할 수 있습니다:[/dim]")
         console.print(f"  [cyan]pyhub toml create[/cyan]")
         raise typer.Exit(code=1)
-    
+
     console.print(f"[dim]{toml_path} 경로의 파일을 확인하겠습니다.[/dim]")
-    
+
     try:
         # TOML 파일 파싱 시도
         import toml
+
         with toml_path.open("rt", encoding="utf-8") as f:
             toml_data = toml.load(f)
     except toml.TomlDecodeError as e:
@@ -180,41 +181,41 @@ def validate(
         console.print(f"[red]오류: 파일을 읽을 수 없습니다.[/red]")
         console.print(f"[dim]상세: {e}[/dim]")
         raise typer.Exit(code=1)
-    
+
     # 환경변수 검증
     env_section = toml_data.get("env", {})
     if not env_section:
         console.print("[red]경고: 등록된 환경변수가 없습니다. (tip: env 항목으로 환경변수를 등록합니다.)[/red]")
     else:
         console.print(f"[green]INFO: 등록된 환경변수 = {', '.join(env_section.keys())}[/green]")
-        
+
         if "UPSTAGE_API_KEY" not in env_section:
             console.print("[yellow]경고: UPSTAGE_API_KEY 환경변수를 등록해주세요.[/yellow]")
-    
+
     # 프롬프트 템플릿 검증
     errors = []
     prompt_templates = toml_data.get("prompt_templates", {})
-    
+
     # 이미지 설명 프롬프트 검증
     describe_image = prompt_templates.get("describe_image", {})
     if "system" not in describe_image:
         errors.append("ERROR: [prompt_templates.describe_image] 의 system 항목이 누락되었습니다.")
     if "user" not in describe_image:
         errors.append("ERROR: [prompt_templates.describe_image] 의 user 항목이 누락되었습니다.")
-    
+
     # 테이블 설명 프롬프트 검증
     describe_table = prompt_templates.get("describe_table", {})
     if "system" not in describe_table:
         errors.append("ERROR: [prompt_templates.describe_table] 의 system 항목이 누락되었습니다.")
     if "user" not in describe_table:
         errors.append("ERROR: [prompt_templates.describe_table] 의 user 항목이 누락되었습니다.")
-    
+
     if not errors:
         console.print("[green]INFO: image/table에 대한 시스템/유저 프롬프트 템플릿이 모두 등록되어있습니다.[/green]")
     else:
         for error in errors:
             console.print(f"[red]{error}[/red]")
-    
+
     if not errors and env_section:
         console.print("\n[green]✓ TOML 파일 검증이 완료되었습니다.[/green]")
     else:
@@ -247,7 +248,7 @@ def edit(
     console.print(f"[dim]{toml_path} 파일을 편집합니다...[/dim]")
 
     # 공통 함수를 사용하여 파일 열기
-    if not open_file_with_editor(toml_path):
+    if not open_file_with_editor(toml_path, verbose=is_verbose):
         raise typer.Exit(code=1)
 
 
