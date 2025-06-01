@@ -1,6 +1,12 @@
-"""Vector store registry and configuration management."""
+"""Vector store registry and configuration management.
+
+.. deprecated:: 1.3.3
+   VectorStoreRegistry는 더 이상 사용되지 않습니다. 
+   대신 pyhub.rag.factory의 get_vector_store() 함수를 사용하세요.
+"""
 
 import logging
+import warnings
 from typing import Any, Dict, Optional
 
 from pyhub.config import DEFAULT_TOML_PATH
@@ -12,7 +18,12 @@ logger = logging.getLogger(__name__)
 
 
 class VectorStoreRegistry:
-    """벡터 스토어 레지스트리 및 설정 관리자."""
+    """벡터 스토어 레지스트리 및 설정 관리자.
+    
+    .. deprecated:: 1.3.3
+       VectorStoreRegistry는 더 이상 사용되지 않습니다.
+       대신 pyhub.rag.factory.get_vector_store() 함수를 사용하세요.
+    """
 
     def __init__(self, toml_path: Optional[str] = None):
         """
@@ -20,7 +31,16 @@ class VectorStoreRegistry:
 
         Args:
             toml_path: TOML 설정 파일 경로
+            
+        .. deprecated:: 1.3.3
+           VectorStoreRegistry는 더 이상 사용되지 않습니다.
         """
+        warnings.warn(
+            "VectorStoreRegistry는 더 이상 사용되지 않습니다. "
+            "pyhub.rag.factory.get_vector_store() 함수를 사용하세요.",
+            DeprecationWarning,
+            stacklevel=2
+        )
         self.toml_path = toml_path or DEFAULT_TOML_PATH
         self._config = None
         self._instances: Dict[str, BaseVectorStore] = {}
@@ -132,7 +152,17 @@ _registry = None
 
 
 def get_registry() -> VectorStoreRegistry:
-    """전역 레지스트리 인스턴스를 반환합니다."""
+    """전역 레지스트리 인스턴스를 반환합니다.
+    
+    .. deprecated:: 1.3.3
+       get_registry()는 더 이상 사용되지 않습니다.
+    """
+    warnings.warn(
+        "get_registry()는 더 이상 사용되지 않습니다. "
+        "pyhub.rag.factory.get_vector_store() 함수를 사용하세요.",
+        DeprecationWarning,
+        stacklevel=2
+    )
     global _registry
     if _registry is None:
         _registry = VectorStoreRegistry()
@@ -149,12 +179,33 @@ def get_vector_store(backend_name: Optional[str] = None, **config) -> BaseVector
 
     Returns:
         벡터 스토어 인스턴스
+        
+    .. deprecated:: 1.3.3
+       registry 기반 get_vector_store()는 더 이상 사용되지 않습니다.
+       pyhub.rag.factory.get_vector_store()를 사용하세요.
     """
+    warnings.warn(
+        "registry 기반 get_vector_store()는 더 이상 사용되지 않습니다. "
+        "pyhub.rag.factory.get_vector_store()를 사용하세요.",
+        DeprecationWarning,
+        stacklevel=2
+    )
     return get_registry().create_backend(backend_name, **config)
 
 
 def list_available_backends() -> list[str]:
-    """사용 가능한 백엔드 목록을 반환합니다."""
+    """사용 가능한 백엔드 목록을 반환합니다.
+    
+    .. deprecated:: 1.3.3
+       registry 기반 list_available_backends()는 더 이상 사용되지 않습니다.
+       pyhub.rag.factory.list_available_backends()를 사용하세요.
+    """
+    warnings.warn(
+        "registry 기반 list_available_backends()는 더 이상 사용되지 않습니다. "
+        "pyhub.rag.factory.list_available_backends()를 사용하세요.",
+        DeprecationWarning,
+        stacklevel=2
+    )
     return get_registry().list_available_backends()
 
 
