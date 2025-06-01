@@ -412,9 +412,12 @@ def make_settings(
 def get_databases(base_dir: Path):
     env = Env()
 
-    DEFAULT_DATABASE = f"sqlite:///{ base_dir / 'db.sqlite3'}"
+    default_database_url = env.str("DATABASE_URL", default=None) or ""
+    if not default_database_url:
+        os.environ["DATABASE_URL"] = f"sqlite:///{ base_dir / 'db.sqlite3'}"
+
     _databases = {
-        "default": env.db("DATABASE_URL", default=DEFAULT_DATABASE),
+        "default": env.db("DATABASE_URL"),
     }
 
     for key in os.environ.keys():
