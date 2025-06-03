@@ -5,6 +5,7 @@
 </div>
 
 + [PDF 슬라이드 다운로드](./slide.pdf)
++ [싼타페 유저가이드 샘플 PDF 다운로드](https://github.com/pyhub-kr/dump-data/tree/main/document-parse-%EC%8B%BC%ED%83%80%ED%8E%98-2025-40%EC%97%AC%ED%8E%98%EC%9D%B4%EC%A7%80) : 페이지 하단의 PDF 파일을 다운받아주세요.
 
 !!! TODO
 
